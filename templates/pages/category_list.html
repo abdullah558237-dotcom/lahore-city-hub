@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load core_tags static %}
+
+{% block title %}{{ category_title }} | Lahore City Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'core:directory_index' %}" class="text-decoration-none">Directories</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ category_title }}</li>
+    </ol>
+  </nav>
+
+  <!-- Category Banner Header -->
+  <div class="bg-white p-4 p-md-4 rounded-4 shadow-sm border border-light-subtle mb-4">
+    <div class="row align-items-center">
+      <div class="col-12 col-lg-8">
+        <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold mb-2">
+          LAHORE DIRECTORY GUIDE
+        </span>
+        <h1 class="h2 fw-bold text-dark mb-1">{{ category_title }}</h1>
+        <p class="text-secondary small mb-0">{{ category_description }}</p>
+      </div>
+      <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+        <span class="badge bg-light text-dark border p-2 font-monospace" style="font-size: 0.85rem;">
+          <i class="bi bi-check-circle-fill text-success me-1"></i>Showing {{ total_results }} Verified Entries
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Desktop Filter Sidebar -->
+    <div class="col-12 col-lg-3">
+      <!-- Mobile Filter Trigger Button -->
+      <div class="d-lg-none mb-3">
+        <button class="btn btn-lch-outline w-100 d-flex justify-content-between align-items-center"
+                type="button"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#filtersOffcanvas"
+                aria-controls="filtersOffcanvas">
+          <span><i class="bi bi-funnel-fill me-2"></i>Filter by Locality & Price</span>
+          <span class="badge bg-success">{{ total_results }}</span>
+        </button>
+      </div>
+
+      <!-- Offcanvas wrapper for mobile + static card for desktop -->
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="filtersOffcanvas" aria-labelledby="filtersOffcanvasLabel">
+        <div class="offcanvas-header border-bottom d-lg-none">
+          <h5 class="offcanvas-title fw-bold" id="filtersOffcanvasLabel">Directory Filters</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#filtersOffcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white w-100">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+              <h5 class="h6 fw-bold mb-0"><i class="bi bi-sliders me-2 text-success"></i>Refine Listings</h5>
+              <a href="?" class="text-decoration-none small text-muted">Clear All</a>
+            </div>
+
+            <form method="get" action="">
+              <!-- Locality Filter -->
+              <div class="mb-4">
+                <label class="form-label small fw-bold text-dark mb-2">Lahore Locality / Zone</label>
+                <select name="locality" class="form-select form-select-sm mb-2" onchange="this.form.submit()">
+                  <option value="" {% if not selected_locality %}selected{% endif %}>All Lahore Localities</option>
+                  {% for loc in GLOBAL_LOCALITIES %}
+                    <option value="{{ loc.slug }}" {% if selected_locality == loc.slug %}selected{% endif %}>
+                      {{ loc.name }} ({{ loc.zone }})
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Price Range Filter (for restaurants and services) -->
+              {% if category_slug == 'restaurants' or category_slug == 'businesses' %}
+              <div class="mb-4">
+                <label class="form-label small fw-bold text-dark mb-2">Price Category</label>
+                <div class="d-flex gap-1">
+                  {% for pt in "$ $$ $$$ $$$$"|make_list %}
+                    {% if pt != " " %}
+                      <a href="?locality={{ selected_locality }}&price={{ pt }}&sort={{ sort_by }}"
+                         class="btn btn-sm flex-grow-1 {% if selected_price == pt %}btn-success text-white{% else %}btn-outline-secondary{% endif %}"
+                         style="font-size: 0.78rem;">
+                        {{ pt }}
+                      </a>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Verified Status Only Toggle -->
+              <div class="form-check form-switch mb-4">
+                <input class="form-check-input" type="checkbox" name="verified_only" value="1" id="verifiedOnlySwitch" {% if verified_only %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label small fw-semibold text-dark" for="verifiedOnlySwitch">
+                  Verified Listings Only
+                </label>
+              </div>
+
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-sm btn-lch-primary fw-bold">
+                  Apply Filter
+                </button>
+                <a href="{% url 'core:category_list' category_slug=category_slug %}" class="btn btn-sm btn-light border text-muted">
+                  Reset
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Results Column -->
+    <div class="col-12 col-lg-9">
+      <!-- Sort and View Toolbar -->
+      <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded-3 shadow-sm border border-light-subtle mb-3">
+        <!-- Active Filter Indicator -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="text-muted small fw-medium">Active:</span>
+          {% if selected_locality %}
+            <span class="badge bg-light text-dark border">
+              Locality: <strong>{{ selected_locality|title }}</strong>
+              <a href="?price={{ selected_price }}&sort={{ sort_by }}" class="text-danger ms-1 text-decoration-none">&times;</a>
+            </span>
+          {% endif %}
+          {% if selected_price %}
+            <span class="badge bg-light text-dark border">
+              Price: <strong>{{ selected_price }}</strong>
+              <a href="?locality={{ selected_locality }}&sort={{ sort_by }}" class="text-danger ms-1 text-decoration-none">&times;</a>
+            </span>
+          {% endif %}
+          {% if not selected_locality and not selected_price %}
+            <span class="badge bg-light text-muted border">All Localities</span>
+          {% endif %}
+        </div>
+
+        <!-- Sort Select & Grid/List View Mode -->
+        <div class="d-flex align-items-center gap-2">
+          <form method="get" class="d-flex align-items-center">
+            {% if selected_locality %}<input type="hidden" name="locality" value="{{ selected_locality }}">{% endif %}
+            {% if selected_price %}<input type="hidden" name="price" value="{{ selected_price }}">{% endif %}
+            <select name="sort" class="form-select form-select-sm" style="font-size: 0.82rem;" onchange="this.form.submit()">
+              <option value="recommended" {% if sort_by == 'recommended' %}selected{% endif %}>Recommended</option>
+              <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+              <option value="reviews" {% if sort_by == 'reviews' %}selected{% endif %}>Most Reviewed</option>
+            </select>
+          </form>
+
+          <div class="btn-group btn-group-sm" role="group" aria-label="View toggle">
+            <button type="button" class="btn btn-outline-secondary active" id="view-grid-btn" title="Grid View">
+              <i class="bi bi-grid-3x3-gap-fill"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="view-list-btn" title="List View">
+              <i class="bi bi-list-ul"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Directory Items Grid -->
+      <div id="directory-items-container" class="row g-4">
+        {% if items %}
+          {% for item in items %}
+            {% if category_slug == 'jobs' %}
+              {% include 'components/_job_card.html' with job=item %}
+            {% else %}
+              {% include 'components/_listing_card.html' with item=item %}
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="col-12">
+            {% include 'components/_empty_state.html' with title="No listings found matching this filter" message="Try choosing 'All Localities' or clearing your price filter to see more results." reset_url="?" %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Pagination Component -->
+      {% if items %}
+        {% include 'components/_pagination.html' %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

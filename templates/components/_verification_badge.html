@@ -1,0 +1,13 @@
+{% if is_verified %}
+  <span class="badge-verified" title="Audited and confirmed by Lahore City Hub editorial staff. Last verified: {{ last_verified|default:'Recently' }} (Source: {{ source|default:'Official Register' }})">
+    <i class="bi bi-patch-check-fill text-success"></i>
+    <span>Verified</span>
+    {% if show_date and last_verified %}
+      <span class="opacity-75 ms-1 fw-normal" style="font-size: 0.72rem;">&bull; {{ last_verified }}</span>
+    {% endif %}
+  </span>
+{% else %}
+  <span class="badge bg-light text-muted border" style="font-size: 0.74rem;">
+    <i class="bi bi-clock-history me-1"></i>Unverified
+  </span>
+{% endif %}

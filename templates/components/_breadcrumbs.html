@@ -1,0 +1,14 @@
+{% if breadcrumbs %}
+<nav aria-label="breadcrumb" class="py-2 mb-3">
+  <ol class="breadcrumb mb-0" style="font-size: 0.88rem;">
+    <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+    {% for crumb in breadcrumbs %}
+      {% if forloop.last %}
+        <li class="breadcrumb-item active text-truncate" aria-current="page" style="max-width: 250px;">{{ crumb.title }}</li>
+      {% else %}
+        <li class="breadcrumb-item"><a href="{{ crumb.url }}" class="text-decoration-none">{{ crumb.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ol>
+</nav>
+{% endif %}

@@ -1,0 +1,588 @@
+{% extends 'base.html' %}
+{% load core_tags static %}
+
+{% block title %}Lahore City Hub | Your Complete Guide to Lahore, Pakistan{% endblock %}
+
+{% block extra_head %}
+  {% if canonical_url %}
+  <link rel="canonical" href="{{ canonical_url }}">
+  {% endif %}
+  <!-- Structured Data (JSON-LD): WebSite and City Guide -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "{{ request.build_absolute_uri }}#website",
+        "url": "{{ request.build_absolute_uri }}",
+        "name": "Lahore City Hub",
+        "description": "Your Complete Guide to Lahore, Pakistan: Heritage places, food streets, 24/7 hospitals, jobs, and civic updates.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "{{ request.scheme }}://{{ request.get_host }}{% url 'core:search' %}?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "City",
+        "name": "Lahore",
+        "alternateName": "لاہور",
+        "url": "https://en.wikipedia.org/wiki/Lahore",
+        "containedInPlace": {
+          "@type": "AdministrativeArea",
+          "name": "Punjab, Pakistan"
+        }
+      }
+    ]
+  }
+  </script>
+{% endblock %}
+
+{% block content %}
+<!-- ========================================================================
+     1 & 2: HERO SECTION WITH MAIN SEARCH & POPULAR TAGS
+     ======================================================================== -->
+<section class="lch-hero text-center" aria-label="Lahore City Hub Introduction">
+  <div class="container position-relative">
+    <!-- Hero Badge -->
+    <div class="mb-3">
+      <span class="lch-hero-badge">
+        <i class="bi bi-geo-alt-fill text-warning" aria-hidden="true"></i>
+        <span>THE OFFICIAL CIVIC & CULTURAL DIRECTORY OF LAHORE</span>
+      </span>
+    </div>
+
+    <!-- Main Headline & Subtitle -->
+    <h1 class="display-4 fw-extrabold mb-3">
+      Your Complete Guide to Lahore
+    </h1>
+    <p class="lead mb-4">
+      Discover verified historical places, authentic dining, 24/7 hospitals, career opportunities, colleges, and daily city transit across Pakistan's cultural capital.
+    </p>
+
+    <!-- SECTION 2: MAIN SEARCH BAR -->
+    <div class="row justify-content-center mb-4">
+      <div class="col-12 col-md-10 col-lg-8">
+        <div class="lch-search-box">
+          <form action="{% url 'core:search' %}" method="get" class="row g-2 align-items-center" role="search" aria-label="Portal search">
+            <!-- Keyword Query -->
+            <div class="col-12 col-md-6">
+              <div class="input-group">
+                <span class="input-group-text bg-transparent border-0 text-muted ps-2">
+                  <i class="bi bi-search text-success" aria-hidden="true"></i>
+                </span>
+                <input type="text"
+                       name="q"
+                       id="hero-search-input"
+                       class="form-control"
+                       placeholder="Find places, food, hospitals, jobs..."
+                       aria-label="Search places, restaurants, hospitals, or jobs"
+                       required>
+              </div>
+            </div>
+
+            <!-- Locality Selector -->
+            <div class="col-12 col-md-4">
+              <div class="input-group">
+                <span class="input-group-text bg-transparent border-0 text-muted ps-1">
+                  <i class="bi bi-geo-alt text-danger" aria-hidden="true"></i>
+                </span>
+                <select name="locality" class="form-select text-secondary" aria-label="Filter by locality">
+                  <option value="" selected>All Lahore Localities</option>
+                  {% for loc in GLOBAL_LOCALITIES %}
+                    <option value="{{ loc.slug }}">{{ loc.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <!-- Search Action Button -->
+            <div class="col-12 col-md-2">
+              <button class="btn btn-lch-primary w-100 py-2 fw-bold" type="submit" aria-label="Submit search query">
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Quick Trending Search Tags -->
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-3" style="font-size: 0.85rem;">
+          <span class="text-white-50"><i class="bi bi-lightning-charge-fill text-warning me-1" aria-hidden="true"></i>Trending:</span>
+          <a href="{% url 'core:category_list' category_slug='places' %}?locality=walled-city" class="lch-search-pill" aria-label="Explore Badshahi Mosque">Badshahi Mosque</a>
+          <a href="{% url 'core:category_list' category_slug='restaurants' %}?locality=gulberg" class="lch-search-pill" aria-label="Explore MM Alam Road Food">MM Alam Food</a>
+          <a href="{% url 'core:category_list' category_slug='hospitals' %}" class="lch-search-pill" aria-label="Find 24/7 Emergency Healthcare">24/7 Emergency Care</a>
+          <a href="{% url 'core:category_list' category_slug='jobs' %}?locality=gulberg" class="lch-search-pill" aria-label="Browse Gulberg Tech Jobs">Gulberg Tech Jobs</a>
+          <a href="#transport-guides" class="lch-search-pill" aria-label="View Orange Line Metro Train Guide">Orange Line Metro</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     3: CATEGORY NAVIGATION (10 CORE MODULES)
+     ======================================================================== -->
+<section class="py-5 bg-white border-bottom" aria-label="Directory Categories">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1 mb-1" style="font-size: 0.74rem;">
+          EXPLORE BY TAXONOMY
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Discover Lahore by Category</h2>
+      </div>
+      <a href="{% url 'core:directory_index' %}" class="btn btn-sm btn-outline-secondary" aria-label="View all directory categories">
+        View All Directories <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+      {% for cat in GLOBAL_CATEGORIES %}
+      <div class="col">
+        <a href="{% url 'core:category_list' category_slug=cat.slug %}" class="lch-cat-card" aria-label="{{ cat.title }} Category">
+          <div class="lch-cat-icon">
+            <i class="bi {{ cat.icon }}" aria-hidden="true"></i>
+          </div>
+          <h3 class="h6 mb-1">{{ cat.title }}</h3>
+          <span class="count">
+            {% if cat.slug == 'places' and counts.places %}
+              {{ counts.places }} verified places
+            {% elif cat.slug == 'jobs' and counts.jobs %}
+              {{ counts.jobs }} open vacancies
+            {% elif cat.slug == 'restaurants' and counts.restaurants %}
+              {{ counts.restaurants }} dining spots
+            {% elif cat.slug == 'hospitals' and counts.hospitals %}
+              {{ counts.hospitals }} medical facilities
+            {% elif cat.slug == 'education' and counts.education %}
+              {{ counts.education }} institutions
+            {% elif cat.slug == 'businesses' and counts.businesses %}
+              {{ counts.businesses }} local businesses
+            {% else %}
+              Explore directory
+            {% endif %}
+          </span>
+        </a>
+      </div>
+      {% endfor %}
+      <!-- Emergency Helpline Hub Card -->
+      <div class="col">
+        <a href="#emergency-section" class="lch-cat-card bg-danger-subtle border-danger-subtle" aria-label="Civic Emergency Helplines">
+          <div class="lch-cat-icon bg-danger text-white">
+            <i class="bi bi-telephone-plus-fill" aria-hidden="true"></i>
+          </div>
+          <h3 class="h6 text-danger mb-1">Civic Helplines</h3>
+          <span class="count text-danger-emphasis">24/7 Emergency Contacts</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     4: FEATURED TOURIST PLACES
+     ======================================================================== -->
+<section class="py-5 bg-light" id="tourist-places" aria-label="Iconic Lahore Landmarks">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1 mb-1" style="font-size: 0.74rem;">
+          HERITAGE & TOURISM
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Iconic Lahore Landmarks & Heritage Sites</h2>
+        <p class="text-muted small mb-0">Mughal architecture, UNESCO World Heritage monuments, and historic gardens.</p>
+      </div>
+      <a href="{% url 'core:category_list' category_slug='places' %}" class="btn btn-sm btn-lch-outline" aria-label="View all tourist places in Lahore">
+        All Places ({{ counts.places|default:featured_places|length }}) <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    {% if featured_places %}
+      <div class="row g-4">
+        {% for item in featured_places %}
+          {% include 'components/_listing_card.html' with item=item %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card border-0 shadow-sm p-4 text-center bg-white rounded-3">
+        <div class="py-3">
+          <i class="bi bi-bank text-muted display-6 mb-2" aria-hidden="true"></i>
+          <h3 class="h6 fw-bold text-dark">No Tourist Places Published Yet</h3>
+          <p class="text-muted small mb-0">Our editorial team is actively documenting Lahore heritage sites. Check back soon!</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     5: LATEST PUBLISHED JOBS
+     ======================================================================== -->
+<section class="py-5 bg-white border-top border-bottom" id="lahore-jobs" aria-label="Career Opportunities in Lahore">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold px-2 py-1 mb-1" style="font-size: 0.74rem;">
+          CAREERS & OPPORTUNITIES
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Latest Job Openings in Lahore</h2>
+        <p class="text-muted small mb-0">Verified vacancies across Gulberg, DHA, Arfa Karim Tower, and commercial corridors.</p>
+      </div>
+      <a href="{% url 'core:category_list' category_slug='jobs' %}" class="btn btn-sm btn-lch-outline" aria-label="View all published jobs in Lahore">
+        View All Jobs ({{ counts.jobs|default:latest_jobs|length }}) <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    {% if latest_jobs %}
+      <div class="row g-3">
+        {% for job in latest_jobs %}
+          {% include 'components/_job_card.html' with job=job %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card border-0 shadow-sm p-4 text-center bg-white rounded-3">
+        <div class="py-3">
+          <i class="bi bi-briefcase text-muted display-6 mb-2" aria-hidden="true"></i>
+          <h3 class="h6 fw-bold text-dark">No Active Job Openings Currently</h3>
+          <p class="text-muted small mb-0">No active vacancies are currently posted. Verified employers can submit job listings directly.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     6: POPULAR RESTAURANTS & CAFES
+     ======================================================================== -->
+<section class="py-5 bg-light" id="restaurants-cafes" aria-label="Trending Restaurants in Lahore">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold px-2 py-1 mb-1" style="font-size: 0.74rem;">
+          CULINARY CAPITAL OF PAKISTAN
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Trending Restaurants & Food Streets</h2>
+        <p class="text-muted small mb-0">From Fort Road rooftop havelis to Lakshmi Chowk karahi masters and MM Alam cafes.</p>
+      </div>
+      <a href="{% url 'core:category_list' category_slug='restaurants' %}" class="btn btn-sm btn-lch-outline" aria-label="Explore all restaurants in Lahore">
+        Explore Dining ({{ counts.restaurants|default:featured_restaurants|length }}) <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    {% if featured_restaurants %}
+      <div class="row g-4">
+        {% for item in featured_restaurants %}
+          {% include 'components/_listing_card.html' with item=item %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card border-0 shadow-sm p-4 text-center bg-white rounded-3">
+        <div class="py-3">
+          <i class="bi bi-cup-hot text-muted display-6 mb-2" aria-hidden="true"></i>
+          <h3 class="h6 fw-bold text-dark">No Dining Spots Listed Yet</h3>
+          <p class="text-muted small mb-0">Authentic food street spots and dining cafes will be published here.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     7: HEALTHCARE DIRECTORY HIGHLIGHTS (HOSPITALS)
+     ======================================================================== -->
+<section class="py-5 bg-white border-top border-bottom" id="hospitals-clinics" aria-label="Healthcare Directory in Lahore">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="badge bg-danger text-white fw-bold px-2 py-1 mb-1" style="font-size: 0.74rem;">
+          <i class="bi bi-heart-pulse-fill me-1" aria-hidden="true"></i>HEALTHCARE DIRECTORY
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Hospitals & 24/7 Emergency Medical Centers</h2>
+        <p class="text-muted small mb-0">Direct emergency telephone exchanges, trauma units, and specialized care centers.</p>
+      </div>
+      <a href="{% url 'core:category_list' category_slug='hospitals' %}" class="btn btn-sm btn-outline-danger" aria-label="View all hospitals in Lahore">
+        All Hospitals ({{ counts.hospitals|default:featured_hospitals|length }}) <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    {% if featured_hospitals %}
+      <div class="row g-4">
+        {% for item in featured_hospitals %}
+          {% include 'components/_listing_card.html' with item=item %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card border-0 shadow-sm p-4 text-center bg-white rounded-3">
+        <div class="py-3">
+          <i class="bi bi-hospital text-muted display-6 mb-2" aria-hidden="true"></i>
+          <h3 class="h6 fw-bold text-dark">No Hospitals Listed Yet</h3>
+          <p class="text-muted small mb-0">Verified 24/7 emergency medical centers and tertiary hospitals will appear here.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     8: EDUCATIONAL INSTITUTIONS
+     ======================================================================== -->
+<section class="py-5 bg-light" id="education-directory" aria-label="Educational Institutions in Lahore">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold px-2 py-1 mb-1" style="font-size: 0.74rem;">
+          ACADEMIC HUBS
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Universities & Degree Colleges in Lahore</h2>
+        <p class="text-muted small mb-0">HEC-recognized public and private institutions shaping Pakistan's next generation.</p>
+      </div>
+      <a href="{% url 'core:category_list' category_slug='education' %}" class="btn btn-sm btn-lch-outline" aria-label="View all educational institutions in Lahore">
+        All Institutions ({{ counts.education|default:featured_education|length }}) <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    {% if featured_education %}
+      <div class="row g-4">
+        {% for item in featured_education %}
+          {% include 'components/_listing_card.html' with item=item %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card border-0 shadow-sm p-4 text-center bg-white rounded-3">
+        <div class="py-3">
+          <i class="bi bi-mortarboard text-muted display-6 mb-2" aria-hidden="true"></i>
+          <h3 class="h6 fw-bold text-dark">No Educational Institutions Listed Yet</h3>
+          <p class="text-muted small mb-0">Recognized universities, medical colleges, and institutions will be listed here.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     9: FEATURED BUSINESSES
+     ======================================================================== -->
+<section class="py-5 bg-white border-top border-bottom" id="local-businesses" aria-label="Local Businesses in Lahore">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold px-2 py-1 mb-1" style="font-size: 0.74rem;">
+          COMMERCE & SERVICES
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Verified Local Businesses & Services</h2>
+        <p class="text-muted small mb-0">Support Lahore's artisanal craftsmen, legal attorneys, solar contractors, and retail shops.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{% url 'core:business_submission' %}" class="btn btn-sm btn-lch-accent" aria-label="Submit or claim your business profile">
+          <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Claim Your Business
+        </a>
+        <a href="{% url 'core:category_list' category_slug='businesses' %}" class="btn btn-sm btn-outline-secondary" aria-label="Browse all business listings">
+          Browse Directory
+        </a>
+      </div>
+    </div>
+
+    {% if featured_businesses %}
+      <div class="row g-4">
+        {% for item in featured_businesses %}
+          {% include 'components/_listing_card.html' with item=item %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card border-0 shadow-sm p-4 text-center bg-white rounded-3">
+        <div class="py-3">
+          <i class="bi bi-shop text-muted display-6 mb-2" aria-hidden="true"></i>
+          <h3 class="h6 fw-bold text-dark">No Local Businesses Listed Yet</h3>
+          <p class="text-muted small mb-0">Verified enterprises and service providers will be featured here.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     PUBLIC TRANSIT: TRANSPORT GUIDES & ORANGE LINE METRO
+     ======================================================================== -->
+<section class="py-5 bg-light" id="transport-guides" aria-label="Public Transit Routes and Guides">
+  <div class="container-fluid px-lg-5">
+    <div class="mb-4">
+      <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1 mb-1" style="font-size: 0.74rem;">
+        PUBLIC TRANSIT NETWORKS
+      </span>
+      <h2 class="h3 fw-bold text-dark mb-1">Lahore Public Transit & Route Guides</h2>
+      <p class="text-muted small mb-0">Navigating the Orange Line Metro Train, Green Line Metrobus, and intercity bus terminals.</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Orange Line Card -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100 shadow-sm border-0 rounded-3 p-4 bg-white">
+          <div class="d-flex align-items-center mb-3">
+            <div class="rounded-3 p-3 bg-warning text-dark me-3" style="font-size: 1.8rem;">
+              <i class="bi bi-train-front" aria-hidden="true"></i>
+            </div>
+            <div>
+              <h3 class="h6 fw-bold mb-0">Orange Line Metro Train (OLMT)</h3>
+              <span class="badge bg-warning-subtle text-dark border border-warning" style="font-size: 0.72rem;">26 Stations</span>
+            </div>
+          </div>
+          <p class="text-muted small mb-3">
+            Connects Ali Town to Dera Gujran across 27.1 km. Direct stops at Anarkali, Chauburji, Lakshmi, and Shalamar Gardens.
+          </p>
+          <ul class="list-unstyled small text-muted mb-3">
+            <li><i class="bi bi-clock me-1 text-success" aria-hidden="true"></i> <strong>Hours:</strong> 06:00 AM – 10:00 PM Daily</li>
+            <li><i class="bi bi-cash me-1 text-success" aria-hidden="true"></i> <strong>Fare:</strong> PKR 20 – 40 (Distance Based)</li>
+          </ul>
+          <a href="{% url 'core:category_list' category_slug='places' %}?locality=walled-city" class="btn btn-sm btn-outline-dark mt-auto" aria-label="View Orange Line Station Map and Guide">
+            View Station Map & Guide <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Metrobus Card -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100 shadow-sm border-0 rounded-3 p-4 bg-white">
+          <div class="d-flex align-items-center mb-3">
+            <div class="rounded-3 p-3 bg-success text-white me-3" style="font-size: 1.8rem;">
+              <i class="bi bi-bus-front" aria-hidden="true"></i>
+            </div>
+            <div>
+              <h3 class="h6 fw-bold mb-0">Lahore Metrobus (Green Line)</h3>
+              <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.72rem;">27 Stations</span>
+            </div>
+          </div>
+          <p class="text-muted small mb-3">
+            Dedicated corridor connecting Gajjumata to Shahdara through Ferozepur Road, Kalma Chowk, MAO College, and Azadi Chowk.
+          </p>
+          <ul class="list-unstyled small text-muted mb-3">
+            <li><i class="bi bi-clock me-1 text-success" aria-hidden="true"></i> <strong>Hours:</strong> 06:00 AM – 10:30 PM Daily</li>
+            <li><i class="bi bi-cash me-1 text-success" aria-hidden="true"></i> <strong>Fare:</strong> Flat PKR 30 via Metro Token / Card</li>
+          </ul>
+          <a href="{% url 'core:category_list' category_slug='places' %}?locality=walled-city" class="btn btn-sm btn-outline-dark mt-auto" aria-label="View Lahore Metrobus Corridors">
+            View Corridors <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Intercity & Airport Card -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100 shadow-sm border-0 rounded-3 p-4 bg-white">
+          <div class="d-flex align-items-center mb-3">
+            <div class="rounded-3 p-3 bg-primary text-white me-3" style="font-size: 1.8rem;">
+              <i class="bi bi-airplane" aria-hidden="true"></i>
+            </div>
+            <div>
+              <h3 class="h6 fw-bold mb-0">Airport & Intercity Transit</h3>
+              <span class="badge bg-primary-subtle text-primary border border-primary" style="font-size: 0.72rem;">Allama Iqbal Int'l (LHE)</span>
+            </div>
+          </div>
+          <p class="text-muted small mb-3">
+            Airport access via Ring Road; Daewoo Express Thokar terminal, Lahore Junction Railway Station, and Speedo feeder buses.
+          </p>
+          <ul class="list-unstyled small text-muted mb-3">
+            <li><i class="bi bi-signpost-2 me-1 text-primary" aria-hidden="true"></i> <strong>Ring Road:</strong> 15 mins to DHA / Cantt</li>
+            <li><i class="bi bi-taxi-front me-1 text-primary" aria-hidden="true"></i> <strong>Cabs:</strong> Authorized airport taxi counter</li>
+          </ul>
+          <a href="{% url 'core:contact' %}" class="btn btn-sm btn-outline-dark mt-auto" aria-label="View Travel Logistics for Lahore">
+            Travel Logistics <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     10: UPCOMING EVENTS IN LAHORE
+     ======================================================================== -->
+<section class="py-5 bg-white border-top border-bottom" id="upcoming-events" aria-label="Upcoming Cultural Events in Lahore">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="badge bg-purple text-white fw-bold px-2 py-1 mb-1" style="font-size: 0.74rem; background-color: #6f42c1;">
+          CULTURE & HAPPENINGS
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Upcoming Events & Festivals in Lahore</h2>
+        <p class="text-muted small mb-0">Literary gatherings, art exhibitions, tech expos, and Sufi festivals.</p>
+      </div>
+      <a href="{% url 'core:category_list' category_slug='places' %}" class="btn btn-sm btn-lch-outline" aria-label="View full Lahore event calendar">
+        View Calendar ({{ counts.events|default:upcoming_events|length }}) <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    {% if upcoming_events %}
+      <div class="row g-4">
+        {% for event in upcoming_events %}
+          {% include 'components/_event_card.html' with event=event %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card border-0 shadow-sm p-4 text-center bg-white rounded-3">
+        <div class="py-3">
+          <i class="bi bi-calendar-event text-muted display-6 mb-2" aria-hidden="true"></i>
+          <h3 class="h6 fw-bold text-dark">No Upcoming Events Scheduled</h3>
+          <p class="text-muted small mb-0">Check back soon for cultural festivals, literary events, and conferences in Lahore.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     11: LATEST CITY UPDATES & ADVISORIES
+     ======================================================================== -->
+<section class="py-5 bg-light" id="city-updates" aria-label="Verified Civic Notices and City Advisories">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="badge bg-dark text-white fw-bold px-2 py-1 mb-1" style="font-size: 0.74rem;">
+          <i class="bi bi-broadcast me-1" aria-hidden="true"></i>VERIFIED CIVIC BROADCASTS
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Latest City Notices, Smog & Traffic Advisories</h2>
+        <p class="text-muted small mb-0">Citing official notifications from Punjab EPA, Traffic Police, and Mass Transit Authority.</p>
+      </div>
+      <a href="{% url 'core:category_list' category_slug='places' %}" class="btn btn-sm btn-outline-secondary" aria-label="View all civic advisories">
+        All Advisories ({{ counts.updates|default:city_updates|length }}) <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    {% if city_updates %}
+      <div class="row g-4">
+        {% for update in city_updates %}
+          {% include 'components/_update_card.html' with update=update %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card border-0 shadow-sm p-4 text-center bg-white rounded-3">
+        <div class="py-3">
+          <i class="bi bi-broadcast text-muted display-6 mb-2" aria-hidden="true"></i>
+          <h3 class="h6 fw-bold text-dark">No Active Civic Advisories</h3>
+          <p class="text-muted small mb-0">All civic services, transit routes, and weather conditions are reported normal.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ========================================================================
+     NEWSLETTER SECTION
+     ======================================================================== -->
+<div class="container-fluid px-lg-5">
+  {% include 'components/_newsletter.html' %}
+</div>
+
+<!-- ========================================================================
+     12: FOOTER (Inherited from base.html via footer.html)
+     ======================================================================== -->
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us | Lahore City Hub Editorial & Civic Desk{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center mb-4 text-center">
+    <div class="col-12 col-md-8">
+      <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold px-3 py-1 mb-2">
+        EDITORIAL & CIVIC INQUIRIES
+      </span>
+      <h1 class="display-6 fw-bold text-dark mb-2">Get in Touch with Our Team</h1>
+      <p class="text-muted">
+        Have a listing correction, event submission, or feedback? Our Lahore-based editorial team is here to assist.
+      </p>
+    </div>
+  </div>
+
+  <div class="row g-4 justify-content-center">
+    <!-- Contact Form Column -->
+    <div class="col-12 col-lg-7">
+      <div class="card p-4 p-md-5 border-0 shadow-sm rounded-4 bg-white">
+        <h2 class="h5 fw-bold text-dark mb-3">Send a Message to Editorial</h2>
+        <form method="post" action="{% url 'core:contact' %}">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="contact-name">Full Name *</label>
+              <input type="text" name="name" id="contact-name" class="form-control" placeholder="Ahmad Khan" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="contact-email">Email Address *</label>
+              <input type="email" name="email" id="contact-email" class="form-control" placeholder="ahmad@example.pk" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="contact-phone">Phone Number (Optional)</label>
+              <input type="tel" name="phone" id="contact-phone" class="form-control" placeholder="+92 300 1234567">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="contact-subject">Inquiry Subject *</label>
+              <select name="subject" id="contact-subject" class="form-select" required>
+                <option value="Directory Listing Correction">Suggest a Listing Correction</option>
+                <option value="Business Ownership Verification">Business Ownership Claim Inquiry</option>
+                <option value="Event Submission">Submit an Event for Calendar</option>
+                <option value="Civic Feedback & Suggestions">Civic Portal Suggestion</option>
+                <option value="Technical or Bug Report">Technical Issue / Bug Report</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="contact-message">Your Message *</label>
+              <textarea name="message" id="contact-message" rows="5" class="form-control" placeholder="Please provide specific details, URLs, or updated contact numbers..." required></textarea>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-lch-primary px-4 py-2 fw-bold">
+                <i class="bi bi-send-fill me-1"></i>Submit Inquiry
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Editorial Desk Info Column -->
+    <div class="col-12 col-lg-4">
+      <div class="card p-4 border-0 shadow-sm rounded-4 bg-white mb-4">
+        <h3 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+          <i class="bi bi-geo-alt-fill text-danger me-2"></i>Editorial Office
+        </h3>
+        <p class="text-muted small mb-3">
+          <strong>Lahore City Hub Editorial Desk</strong><br>
+          Software Technology Hub, Ferozepur Road,<br>
+          Lahore, Punjab 54600, Pakistan
+        </p>
+        <p class="text-muted small mb-2">
+          <i class="bi bi-envelope-fill text-primary me-2"></i>editorial@lahorecityhub.pk
+        </p>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-clock-fill text-success me-2"></i>Mon – Sat: 09:00 AM – 06:00 PM PKT
+        </p>
+      </div>
+
+      <!-- Quick Emergency Card -->
+      <div class="card p-4 border-danger-subtle bg-danger-subtle rounded-4">
+        <h4 class="h6 fw-bold text-danger mb-2">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>Life-Critical Emergency?
+        </h4>
+        <p class="text-danger-emphasis small mb-3">
+          For acute medical emergencies, fires, or crime reporting, do not wait for email responses. Call authorized helplines immediately:
+        </p>
+        <div class="d-grid gap-2">
+          <a href="tel:1122" class="btn btn-danger btn-sm fw-bold">
+            <i class="bi bi-telephone-fill me-1"></i>Rescue 1122
+          </a>
+          <a href="tel:15" class="btn btn-outline-danger btn-sm fw-bold">
+            <i class="bi bi-shield-shaded me-1"></i>Lahore Police (15)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

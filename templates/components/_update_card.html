@@ -1,0 +1,37 @@
+<div class="col-12 col-md-4 d-flex">
+  <div class="card w-100 shadow-sm border border-light-subtle rounded-3 p-3 d-flex flex-column" style="border-left: 4px solid {% if update.severity == 'caution' %}#C0392B{% elif update.severity == 'emergency' %}#dc3545{% elif update.severity == 'notice' %}#D4A373{% else %}#0B4632{% endif %} !important;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="badge {% if update.severity == 'caution' or update.severity == 'emergency' %}bg-danger-subtle text-danger border-danger-subtle{% elif update.severity == 'notice' %}bg-warning-subtle text-warning-emphasis border-warning-subtle{% else %}bg-success-subtle text-success border-success-subtle{% endif %} border fw-bold" style="font-size: 0.74rem;">
+        <i class="bi {% if update.severity == 'caution' or update.severity == 'emergency' %}bi-exclamation-triangle-fill{% elif update.severity == 'notice' %}bi-info-circle-fill{% else %}bi-bell-fill{% endif %} me-1"></i>
+        {{ update.get_severity_display|default:update.severity_label }}
+      </span>
+      <span class="text-muted" style="font-size: 0.76rem;">{{ update.valid_from|date:"d M Y" }}</span>
+    </div>
+
+    <h3 class="h6 fw-bold mb-1">
+      {{ update.title }}
+    </h3>
+    <div class="text-muted small mb-2">
+      <i class="bi bi-shield-check text-primary me-1"></i>{{ update.issuing_authority }}
+    </div>
+
+    <p class="text-secondary small mb-3 flex-grow-1" style="font-size: 0.86rem; line-height: 1.5;">
+      {{ update.summary }}
+    </p>
+
+    <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto" style="font-size: 0.8rem;">
+      <span class="text-muted">Official Source</span>
+      {% if update.official_source_url %}
+      <a href="{{ update.official_source_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none fw-semibold" aria-label="Verify circular for {{ update.title }}">
+        Verify Circular <i class="bi bi-box-arrow-up-right ms-1"></i>
+      </a>
+      {% elif update.source_url %}
+      <a href="{{ update.source_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none fw-semibold" aria-label="Verify circular for {{ update.title }}">
+        Verify Circular <i class="bi bi-box-arrow-up-right ms-1"></i>
+      </a>
+      {% else %}
+      <span class="text-muted small">Government Gazette</span>
+      {% endif %}
+    </div>
+  </div>
+</div>

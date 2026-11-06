@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Submit or Claim a Business | Lahore City Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+      <div class="card p-4 p-md-5 border-0 shadow-sm rounded-4 bg-white">
+        <!-- Header Strip -->
+        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-bold px-3 py-1 mb-2" style="width: fit-content;">
+          COMMERCIAL DIRECTORY ONBOARDING
+        </span>
+        <h1 class="h2 fw-bold text-dark mb-2">Submit or Claim a Business Listing</h1>
+        <p class="text-secondary small mb-4" style="line-height: 1.6;">
+          Join Lahore City Hub's verified network. Once verified by our editorial desk, your profile displays an official verification badge, phone hotlinks, WhatsApp direct messaging, and priority locality search ranking.
+        </p>
+
+        <form method="post" action="{% url 'core:business_submission' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- Section 1: Business Identity -->
+          <h2 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+            <span class="badge bg-success rounded-circle me-1" style="font-size: 0.72rem;">1</span> Business Information
+          </h2>
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-8">
+              <label class="form-label small fw-bold text-dark" for="biz-name">Official Business Title *</label>
+              <input type="text" name="business_name" id="biz-name" class="form-control" placeholder="e.g. Butt Karahi or Gulberg Solar Solutions" required>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label small fw-bold text-dark" for="biz-cat">Primary Category *</label>
+              <select name="category" id="biz-cat" class="form-select" required>
+                <option value="Restaurants & Cafes">Restaurants & Dining</option>
+                <option value="Hospitals & Clinics">Healthcare & Clinics</option>
+                <option value="Education & Academies">Education & Schools</option>
+                <option value="Retail & Shopping">Retail & Handicrafts</option>
+                <option value="Professional & Legal">Professional Services</option>
+                <option value="Tourism & Leisure">Tourism & Leisure</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="biz-desc">Short Overview & Description *</label>
+              <textarea name="description" id="biz-desc" rows="3" class="form-control" placeholder="Describe your specialties, services, cuisine, or unique customer offerings..." required></textarea>
+            </div>
+          </div>
+
+          <!-- Section 2: Location & Localities -->
+          <h2 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+            <span class="badge bg-success rounded-circle me-1" style="font-size: 0.72rem;">2</span> Location & Lahore Locality
+          </h2>
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-5">
+              <label class="form-label small fw-bold text-dark" for="biz-locality">Lahore Locality / Zone *</label>
+              <select name="locality" id="biz-locality" class="form-select" required>
+                {% for loc in GLOBAL_LOCALITIES %}
+                  <option value="{{ loc.slug }}">{{ loc.name }} ({{ loc.zone }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-7">
+              <label class="form-label small fw-bold text-dark" for="biz-address">Physical Street Address *</label>
+              <input type="text" name="address" id="biz-address" class="form-control" placeholder="Shop / Plaza No, Street / Block, Landmark" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="biz-maps">Google Maps Route Link (Optional)</label>
+              <input type="url" name="google_maps_url" id="biz-maps" class="form-control" placeholder="https://maps.google.com/?q=...">
+            </div>
+          </div>
+
+          <!-- Section 3: Contact Channels -->
+          <h2 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+            <span class="badge bg-success rounded-circle me-1" style="font-size: 0.72rem;">3</span> Contact Channels
+          </h2>
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="biz-phone">Official Phone Number *</label>
+              <input type="tel" name="phone" id="biz-phone" class="form-control" placeholder="+92 42 35789901" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="biz-whatsapp">WhatsApp Business Number</label>
+              <input type="tel" name="whatsapp" id="biz-whatsapp" class="form-control" placeholder="+92 300 1234567">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="biz-email">Corporate Email Address</label>
+              <input type="email" name="email" id="biz-email" class="form-control" placeholder="contact@yourbusiness.pk">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="biz-website">Website or Social Profile</label>
+              <input type="url" name="website" id="biz-website" class="form-control" placeholder="https://www.yourbusiness.pk">
+            </div>
+          </div>
+
+          <!-- Section 4: Verification & Ownership Claim -->
+          <h2 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+            <span class="badge bg-success rounded-circle me-1" style="font-size: 0.72rem;">4</span> Proof of Ownership & Verification
+          </h2>
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="claim-role">Your Role with the Entity *</label>
+              <select name="role" id="claim-role" class="form-select" required>
+                <option value="Sole Proprietor / Owner">Sole Proprietor / Owner</option>
+                <option value="Managing Director / CEO">Managing Director / CEO</option>
+                <option value="General Manager / Head of Ops">General Manager / Operations</option>
+                <option value="Authorized Marketing Manager">Authorized Marketing Representative</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="claim-doc">Proof Document (SECP / Utility Bill / Letterhead) *</label>
+              <input type="file" name="proof_doc" id="claim-doc" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+              <div class="form-text" style="font-size: 0.74rem;">Max 10MB. Stored securely and accessible only to verification auditors.</div>
+            </div>
+            <div class="col-12">
+              <div class="form-check p-3 bg-light rounded-3 border">
+                <input class="form-check-input ms-0 me-2" type="checkbox" id="certCheck" required>
+                <label class="form-check-label small text-secondary" for="certCheck">
+                  <strong>Declaration of Authenticity:</strong> I solemnly affirm that the submitted information is accurate and that I am authorized to represent this entity on Lahore City Hub.
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <a href="{% url 'core:home' %}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+            <button type="submit" class="btn btn-lch-primary px-4 py-2 fw-bold">
+              <i class="bi bi-shield-check me-1"></i>Submit for Verification
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

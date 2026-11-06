@@ -1,0 +1,47 @@
+<div class="col-12 col-md-6 d-flex">
+  <div class="card w-100 shadow-sm border border-light-subtle rounded-3 p-3 d-flex flex-column" style="transition: all 0.2s ease;">
+    <div class="d-flex justify-content-between align-items-start mb-2">
+      <div>
+        <span class="badge bg-primary-subtle text-primary fw-semibold mb-1" style="font-size: 0.74rem;">
+          <i class="bi bi-tag-fill me-1"></i>{{ job.category.name|default:job.category }}
+        </span>
+        <h3 class="h6 fw-bold mb-1">
+          <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark" aria-label="Apply for {{ job.title }}">
+            {{ job.title }}
+          </a>
+        </h3>
+        <div class="text-muted small fw-medium">
+          <i class="bi bi-building me-1 text-secondary"></i>{{ job.employer.name|default:job.employer }}
+        </div>
+      </div>
+      <div>
+        {% include 'components/_verification_badge.html' with is_verified=job.is_verified %}
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 my-2" style="font-size: 0.8rem;">
+      <span class="badge bg-light text-dark border">
+        <i class="bi bi-geo-alt me-1 text-danger"></i>{{ job.locality.name|default:job.locality }}
+      </span>
+      <span class="badge bg-light text-dark border">
+        <i class="bi bi-clock me-1 text-info"></i>{{ job.get_employment_type_display|default:job.employment_type }}
+      </span>
+      <span class="badge bg-success-subtle text-success fw-bold border border-success-subtle">
+        <i class="bi bi-cash-stack me-1"></i>{{ job.salary_display }}
+      </span>
+    </div>
+
+    <p class="text-muted small mb-3 flex-grow-1">
+      {{ job.description|truncatechars:120 }}
+    </p>
+
+    <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto" style="font-size: 0.82rem;">
+      <span class="text-muted">
+        <i class="bi bi-calendar-event me-1"></i>Deadline: <strong>{{ job.deadline|date:"d M Y" }}</strong>
+      </span>
+      <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary fw-semibold" aria-label="Apply directly for {{ job.title }}">
+        Apply Directly <i class="bi bi-box-arrow-up-right ms-1"></i>
+      </a>
+    </div>
+  </div>
+</div>

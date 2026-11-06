@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create an Account | Lahore City Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-9 col-lg-6">
+      <div class="card p-4 p-md-5 border-0 shadow-sm rounded-4 bg-white">
+        <!-- Logo Emblem -->
+        <div class="text-center mb-4">
+          <img src="{% static 'img/brand/favicon.svg' %}" alt="Emblem" height="50" class="mb-2">
+          <h1 class="h4 fw-bold text-dark mb-1">Join the Lahore Community</h1>
+          <p class="text-muted small">Save favorite places, write verified reviews, and manage business claims</p>
+        </div>
+
+        <form method="post" action="{% url 'core:register' %}">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="reg-name">Full Name *</label>
+              <input type="text" name="name" id="reg-name" class="form-control" placeholder="Ahmad Raza Khan" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="reg-email">Email Address *</label>
+              <input type="email" name="email" id="reg-email" class="form-control" placeholder="ahmad@example.pk" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="reg-locality">Your Lahore Locality</label>
+              <select name="locality" id="reg-locality" class="form-select">
+                <option value="">Select your area...</option>
+                {% for loc in GLOBAL_LOCALITIES %}
+                  <option value="{{ loc.slug }}">{{ loc.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark">Primary Role</label>
+              <div class="d-flex gap-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="role" id="roleResident" value="resident" checked>
+                  <label class="form-check-label small" for="roleResident">
+                    Resident / Visitor
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="role" id="roleOwner" value="owner">
+                  <label class="form-check-label small" for="roleOwner">
+                    Business Owner / Manager
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="reg-password">Password *</label>
+              <input type="password" name="password" id="reg-password" class="form-control" placeholder="At least 8 characters" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="reg-confirm">Confirm Password *</label>
+              <input type="password" name="confirm_password" id="reg-confirm" class="form-control" placeholder="Re-enter password" required>
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                <label class="form-check-label small text-muted" for="termsCheck">
+                  I agree to the <a href="{% url 'core:terms' %}" class="text-success">Terms & Conditions</a> and <a href="{% url 'core:privacy' %}" class="text-success">Privacy Policy</a>.
+                </label>
+              </div>
+            </div>
+
+            <div class="col-12 d-grid mt-3">
+              <button type="submit" class="btn btn-lch-primary py-2 fw-bold">
+                Create Free Account
+              </button>
+            </div>
+
+            <div class="col-12 text-center small text-muted mt-3">
+              Already registered? <a href="{% url 'core:login' %}" class="text-success fw-bold text-decoration-none">Sign in here</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

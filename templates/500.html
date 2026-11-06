@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}500 - Server Error | Lahore City Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-4 text-center">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="mb-4">
+        <span class="display-1 fw-bold text-danger font-monospace">500</span>
+        <div class="text-muted fs-3 fw-bold mt-n2">Server Error</div>
+      </div>
+      <h1 class="h4 fw-bold text-dark mb-3">Something Went Wrong</h1>
+      <p class="text-muted mb-4">
+        Our technical team has been automatically alerted. Please try refreshing or return to the homepage.
+      </p>
+      <a href="{% url 'core:home' %}" class="btn btn-lch-primary">
+        <i class="bi bi-house-door me-1"></i>Return to Homepage
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

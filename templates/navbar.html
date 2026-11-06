@@ -1,0 +1,108 @@
+{% load core_tags static %}
+<header class="sticky-top">
+  <!-- Top Emergency Ribbon -->
+  {% include 'components/_emergency_ribbon.html' %}
+
+  <!-- Main Navigation Bar -->
+  <nav class="navbar navbar-expand-lg lch-navbar" aria-label="Main navigation">
+    <div class="container-fluid px-lg-5">
+      <!-- Brand Logo -->
+      <a class="navbar-brand d-flex align-items-center me-4" href="{% url 'core:home' %}">
+        <img src="{% static 'img/brand/logo.svg' %}" alt="Lahore City Hub" height="46">
+      </a>
+
+      <!-- Mobile Controls: Search trigger + Hamburger -->
+      <div class="d-flex align-items-center d-lg-none gap-2">
+        <a href="{% url 'core:search' %}" class="btn btn-sm btn-light border rounded-circle" title="Search">
+          <i class="bi bi-search"></i>
+        </a>
+        <button class="navbar-toggler border-0 p-1"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#lchMainNavbar"
+                aria-controls="lchMainNavbar"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+
+      <!-- Collapsible Navigation Items -->
+      <div class="collapse navbar-collapse" id="lchMainNavbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
+          <!-- Home -->
+          <li class="nav-item">
+            <a class="nav-link {% active_nav request 'home' %}" href="{% url 'core:home' %}">
+              <i class="bi bi-house-door me-1"></i>Home
+            </a>
+          </li>
+
+          <!-- Explore Directories Mega Dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="exploreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-grid me-1"></i>Explore Lahore
+            </a>
+            <ul class="dropdown-menu shadow-lg border-0 rounded-3 p-2" aria-labelledby="exploreDropdown" style="min-width: 260px;">
+              <li><h6 class="dropdown-header text-uppercase text-muted small fw-bold">Primary Directories</h6></li>
+              <li><a class="dropdown-item py-2 rounded-2" href="{% url 'core:category_list' category_slug='places' %}"><i class="bi bi-bank me-2 text-success"></i>Tourist Places & Heritage</a></li>
+              <li><a class="dropdown-item py-2 rounded-2" href="{% url 'core:category_list' category_slug='restaurants' %}"><i class="bi bi-cup-hot me-2 text-danger"></i>Restaurants & Food Streets</a></li>
+              <li><a class="dropdown-item py-2 rounded-2" href="{% url 'core:category_list' category_slug='hospitals' %}"><i class="bi bi-hospital me-2 text-danger"></i>Hospitals & 24/7 Care</a></li>
+              <li><a class="dropdown-item py-2 rounded-2" href="{% url 'core:category_list' category_slug='education' %}"><i class="bi bi-mortarboard me-2 text-primary"></i>Universities & Colleges</a></li>
+              <li><a class="dropdown-item py-2 rounded-2" href="{% url 'core:category_list' category_slug='jobs' %}"><i class="bi bi-briefcase me-2 text-info"></i>Lahore Jobs Directory</a></li>
+              <li><a class="dropdown-item py-2 rounded-2" href="{% url 'core:category_list' category_slug='businesses' %}"><i class="bi bi-shop me-2 text-warning"></i>Local Businesses</a></li>
+              <li><hr class="dropdown-divider my-2"></li>
+              <li><a class="dropdown-item py-2 rounded-2" href="{% url 'core:home' %}#transport-guides"><i class="bi bi-train-front me-2 text-success"></i>Orange Line & Transit Guides</a></li>
+              <li><a class="dropdown-item py-2 rounded-2" href="{% url 'core:home' %}#upcoming-events"><i class="bi bi-calendar-event me-2 text-primary"></i>Local Events Calendar</a></li>
+              <li><a class="dropdown-item py-2 rounded-2" href="{% url 'core:home' %}#city-updates"><i class="bi bi-megaphone me-2 text-dark"></i>City Updates & Smog Alerts</a></li>
+            </ul>
+          </li>
+
+          <!-- Localities Dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="localitiesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-geo-alt me-1"></i>Localities
+            </a>
+            <ul class="dropdown-menu shadow-lg border-0 rounded-3 p-2" aria-labelledby="localitiesDropdown" style="min-width: 230px;">
+              <li><h6 class="dropdown-header text-uppercase text-muted small fw-bold">Popular Neighborhoods</h6></li>
+              {% for loc in GLOBAL_LOCALITIES|slice:":7" %}
+                <li>
+                  <a class="dropdown-item py-2 rounded-2 d-flex justify-content-between align-items-center" href="{% url 'core:category_list' category_slug='places' %}?locality={{ loc.slug }}">
+                    <span>{{ loc.name }}</span>
+                    <span class="badge bg-light text-muted border font-monospace" style="font-size: 0.7rem;">{{ loc.count }}</span>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </li>
+
+          <!-- About -->
+          <li class="nav-item">
+            <a class="nav-link {% active_nav request 'about' %}" href="{% url 'core:about' %}">
+              About
+            </a>
+          </li>
+
+          <!-- Contact -->
+          <li class="nav-item">
+            <a class="nav-link {% active_nav request 'contact' %}" href="{% url 'core:contact' %}">
+              Contact
+            </a>
+          </li>
+        </ul>
+
+        <!-- Right Side User & Business Actions -->
+        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+          <a href="{% url 'core:business_submission' %}" class="btn btn-sm btn-lch-outline">
+            <i class="bi bi-plus-circle me-1"></i>List Business
+          </a>
+          <a href="{% url 'core:dashboard' %}" class="btn btn-sm btn-light border" title="Member Dashboard">
+            <i class="bi bi-person-circle me-1"></i>Dashboard
+          </a>
+          <a href="{% url 'core:login' %}" class="btn btn-sm btn-lch-primary">
+            Sign In
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

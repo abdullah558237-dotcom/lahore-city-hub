@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load core_tags static %}
+
+{% block title %}Search Results for "{{ query }}" | Lahore City Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+  <!-- Search Header Bar -->
+  <div class="bg-white p-4 rounded-4 shadow-sm border border-light-subtle mb-4">
+    <div class="row align-items-center">
+      <div class="col-12 col-lg-7">
+        <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold mb-2">
+          GLOBAL DISCOVERY RESULTS
+        </span>
+        <h1 class="h3 fw-bold text-dark mb-1">
+          {% if query %}Results for "<span class="text-success">{{ query }}</span>"{% else %}All City Listings{% endif %}
+          {% if locality %}<span class="text-muted fw-normal">in {{ locality|title }}</span>{% endif %}
+        </h1>
+        <p class="text-secondary small mb-0">
+          Found <strong>{{ total_hits }}</strong> verified matches across all Lahore City Hub directories.
+        </p>
+      </div>
+      <div class="col-12 col-lg-5 mt-3 mt-lg-0">
+        <!-- In-page Query Refinement Form -->
+        <form action="{% url 'core:search' %}" method="get" class="d-flex gap-2">
+          <input type="text" name="q" value="{{ query }}" class="form-control form-control-sm" placeholder="Refine search term..." aria-label="Search term">
+          <select name="locality" class="form-select form-select-sm" style="max-width: 170px;">
+            <option value="">All Localities</option>
+            {% for loc in GLOBAL_LOCALITIES %}
+              <option value="{{ loc.slug }}" {% if locality == loc.slug %}selected{% endif %}>{{ loc.name }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-sm btn-lch-primary px-3" type="submit">
+            <i class="bi bi-search"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if total_hits > 0 %}
+    <!-- Category Tabs Navigation -->
+    <ul class="nav nav-pills mb-4 gap-2 flex-wrap" id="searchResultsTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active rounded-pill px-3 py-1 btn-sm fw-semibold" id="all-tab" data-bs-toggle="pill" data-bs-target="#tab-all" type="button" role="tab">
+          All Hits <span class="badge bg-white text-dark ms-1">{{ total_hits }}</span>
+        </button>
+      </li>
+      {% if matched_places %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="places-tab" data-bs-toggle="pill" data-bs-target="#tab-places" type="button" role="tab">
+          Places <span class="badge bg-light text-muted ms-1">{{ matched_places|length }}</span>
+        </button>
+      </li>
+      {% endif %}
+      {% if matched_restaurants %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="restaurants-tab" data-bs-toggle="pill" data-bs-target="#tab-restaurants" type="button" role="tab">
+          Dining <span class="badge bg-light text-muted ms-1">{{ matched_restaurants|length }}</span>
+        </button>
+      </li>
+      {% endif %}
+      {% if matched_hospitals %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="hospitals-tab" data-bs-toggle="pill" data-bs-target="#tab-hospitals" type="button" role="tab">
+          Hospitals <span class="badge bg-light text-muted ms-1">{{ matched_hospitals|length }}</span>
+        </button>
+      </li>
+      {% endif %}
+      {% if matched_jobs %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="jobs-tab" data-bs-toggle="pill" data-bs-target="#tab-jobs" type="button" role="tab">
+          Jobs <span class="badge bg-light text-muted ms-1">{{ matched_jobs|length }}</span>
+        </button>
+      </li>
+      {% endif %}
+      {% if matched_education %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="education-tab" data-bs-toggle="pill" data-bs-target="#tab-education" type="button" role="tab">
+          Colleges & Unis <span class="badge bg-light text-muted ms-1">{{ matched_education|length }}</span>
+        </button>
+      </li>
+      {% endif %}
+    </ul>
+
+    <!-- Tab Panes -->
+    <div class="tab-content" id="searchResultsContent">
+      <!-- ALL RESULTS PANE -->
+      <div class="tab-pane fade show active" id="tab-all" role="tabpanel">
+        <div class="row g-4">
+          {% for item in matched_places %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+          {% for item in matched_restaurants %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+          {% for item in matched_hospitals %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+          {% for job in matched_jobs %}
+            {% include 'components/_job_card.html' with job=job %}
+          {% endfor %}
+          {% for item in matched_education %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+          {% for item in matched_businesses %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- PLACES ONLY PANE -->
+      {% if matched_places %}
+      <div class="tab-pane fade" id="tab-places" role="tabpanel">
+        <div class="row g-4">
+          {% for item in matched_places %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- RESTAURANTS ONLY PANE -->
+      {% if matched_restaurants %}
+      <div class="tab-pane fade" id="tab-restaurants" role="tabpanel">
+        <div class="row g-4">
+          {% for item in matched_restaurants %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- HOSPITALS ONLY PANE -->
+      {% if matched_hospitals %}
+      <div class="tab-pane fade" id="tab-hospitals" role="tabpanel">
+        <div class="row g-4">
+          {% for item in matched_hospitals %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- JOBS ONLY PANE -->
+      {% if matched_jobs %}
+      <div class="tab-pane fade" id="tab-jobs" role="tabpanel">
+        <div class="row g-3">
+          {% for job in matched_jobs %}
+            {% include 'components/_job_card.html' with job=job %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- EDUCATION ONLY PANE -->
+      {% if matched_education %}
+      <div class="tab-pane fade" id="tab-education" role="tabpanel">
+        <div class="row g-4">
+          {% for item in matched_education %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <!-- Empty State -->
+    {% include 'components/_empty_state.html' with title="No results found for '"|add:query|add:"'" message="Check your spelling, try broader keywords such as 'food', 'hospital', or remove specific locality constraints." reset_url="?" %}
+  {% endif %}
+</div>
+{% endblock %}

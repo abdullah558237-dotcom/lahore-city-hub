@@ -1,0 +1,27 @@
+<div class="lch-emergency-ribbon">
+  <div class="container-fluid px-lg-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <!-- Helplines Strip -->
+      <div class="d-flex align-items-center emergency-scroll gap-3">
+        <span class="lch-emergency-badge"><i class="bi bi-shield-fill-plus me-1"></i> LAHORE EMERGENCY</span>
+        <a href="tel:1122" title="Rescue 1122"><i class="bi bi-telephone-fill text-danger me-1"></i><strong>Rescue:</strong> 1122</a>
+        <span class="text-white-50">|</span>
+        <a href="tel:15" title="Lahore Police"><i class="bi bi-shield-shaded text-info me-1"></i><strong>Police:</strong> 15</a>
+        <span class="text-white-50">|</span>
+        <a href="tel:115" title="Edhi Ambulance"><i class="bi bi-heart-pulse-fill text-warning me-1"></i><strong>Edhi:</strong> 115</a>
+        <span class="text-white-50">|</span>
+        <a href="tel:1915" title="Lahore Traffic Police"><i class="bi bi-car-front-fill text-success me-1"></i><strong>Traffic Helpline:</strong> 1915</a>
+        <span class="text-white-50">|</span>
+        <a href="tel:1334" title="WASA Water & Sanitation"><i class="bi bi-droplet-fill text-primary me-1"></i><strong>WASA:</strong> 1334</a>
+      </div>
+
+      <!-- Smog & Air Advisory Pill -->
+      {% if CIVIC_SMOG_ADVISORY %}
+      <div class="d-none d-xl-flex align-items-center gap-2 text-white-50 font-monospace" style="font-size: 0.78rem;">
+        <i class="bi bi-wind text-warning"></i>
+        <span>Air Quality: <strong class="text-warning">{{ CIVIC_SMOG_ADVISORY.level }}</strong> in {{ CIVIC_SMOG_ADVISORY.location }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Member Dashboard | Lahore City Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- User Profile Header Banner -->
+  <div class="card p-4 p-md-4 rounded-4 shadow-sm border-0 bg-white mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold fs-3 shadow-sm" style="width: 64px; height: 64px;">
+          AR
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <h1 class="h4 fw-bold text-dark mb-0">{{ user_name }}</h1>
+            <span class="badge bg-success-subtle text-success border border-success-subtle">
+              <i class="bi bi-patch-check-fill me-1"></i>Verified Member
+            </span>
+          </div>
+          <p class="text-muted small mb-0">
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ user_locality }} &bull; {{ user_email }}
+          </p>
+        </div>
+      </div>
+      <div>
+        <a href="{% url 'core:business_submission' %}" class="btn btn-sm btn-lch-accent">
+          <i class="bi bi-plus-circle me-1"></i>Submit Business
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Metric Counters -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-4">
+      <div class="card p-3 rounded-3 shadow-sm border-0 bg-white d-flex flex-row align-items-center gap-3">
+        <div class="p-3 bg-danger-subtle text-danger rounded-3 fs-4">
+          <i class="bi bi-bookmark-heart-fill"></i>
+        </div>
+        <div>
+          <h2 class="h4 fw-bold mb-0 text-dark">{{ bookmarks|length }}</h2>
+          <span class="text-muted small">Saved Bookmarks</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-4">
+      <div class="card p-3 rounded-3 shadow-sm border-0 bg-white d-flex flex-row align-items-center gap-3">
+        <div class="p-3 bg-warning-subtle text-warning-emphasis rounded-3 fs-4">
+          <i class="bi bi-star-fill"></i>
+        </div>
+        <div>
+          <h2 class="h4 fw-bold mb-0 text-dark">{{ reviews|length }}</h2>
+          <span class="text-muted small">Reviews Posted</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-4">
+      <div class="card p-3 rounded-3 shadow-sm border-0 bg-white d-flex flex-row align-items-center gap-3">
+        <div class="p-3 bg-success-subtle text-success rounded-3 fs-4">
+          <i class="bi bi-shop"></i>
+        </div>
+        <div>
+          <h2 class="h4 fw-bold mb-0 text-dark">{{ claims|length }}</h2>
+          <span class="text-muted small">Claimed Businesses</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabbed Dashboard Navigation -->
+  <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active fw-bold text-dark" id="bookmarks-tab" data-bs-toggle="tab" data-bs-target="#tab-bookmarks" type="button" role="tab">
+        <i class="bi bi-bookmark me-1 text-danger"></i>Saved Places & Bookmarks ({{ bookmarks|length }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link fw-bold text-dark" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#tab-reviews" type="button" role="tab">
+        <i class="bi bi-chat-left-text me-1 text-warning"></i>My Reviews ({{ reviews|length }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link fw-bold text-dark" id="claims-tab" data-bs-toggle="tab" data-bs-target="#tab-claims" type="button" role="tab">
+        <i class="bi bi-briefcase me-1 text-success"></i>Business Claims ({{ claims|length }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link fw-bold text-dark" id="settings-tab" data-bs-toggle="tab" data-bs-target="#tab-settings" type="button" role="tab">
+        <i class="bi bi-gear me-1 text-secondary"></i>Preferences
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Panes Content -->
+  <div class="tab-content" id="dashboardTabsContent">
+    <!-- TAB 1: SAVED BOOKMARKS -->
+    <div class="tab-pane fade show active" id="tab-bookmarks" role="tabpanel">
+      <div class="row g-3">
+        {% for b in bookmarks %}
+        <div class="col-12 col-md-4">
+          <div class="card p-3 rounded-3 shadow-sm border border-light-subtle bg-white h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge bg-light text-success border border-success-subtle small">{{ b.category }}</span>
+              <button class="btn btn-sm btn-outline-danger py-0 px-2" title="Remove bookmark" onclick="this.closest('.col-12').remove(); alert('Bookmark removed.');">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+            <h3 class="h6 fw-bold mb-1">
+              <a href="{% url 'core:listing_detail' slug=b.slug %}" class="text-decoration-none text-dark">
+                {{ b.title }}
+              </a>
+            </h3>
+            <p class="text-muted small mb-3 flex-grow-1">
+              <i class="bi bi-geo-alt me-1 text-danger"></i>{{ b.locality }}
+            </p>
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
+              <span class="text-warning small fw-bold"><i class="bi bi-star-fill me-1"></i>{{ b.rating }}</span>
+              <a href="{% url 'core:listing_detail' slug=b.slug %}" class="btn btn-sm btn-lch-primary py-1 px-3">
+                View Details
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- TAB 2: MY REVIEWS -->
+    <div class="tab-pane fade" id="tab-reviews" role="tabpanel">
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+        <div class="d-flex flex-column gap-3">
+          {% for r in reviews %}
+          <div class="p-3 bg-light rounded-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <h4 class="h6 fw-bold text-dark mb-0">{{ r.title }}</h4>
+              <span class="badge {% if r.status == 'Approved & Published' %}bg-success-subtle text-success border border-success-subtle{% else %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% endif %}">
+                {{ r.status }}
+              </span>
+            </div>
+            <div class="text-muted small mb-2">
+              <span class="text-warning"><i class="bi bi-star-fill me-1"></i>{{ r.rating }} / 5.0</span>
+              &bull; Submitted on {{ r.date }}
+            </div>
+            <p class="text-secondary small mb-0">"{{ r.comment }}"</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: BUSINESS CLAIMS -->
+    <div class="tab-pane fade" id="tab-claims" role="tabpanel">
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+        <div class="d-flex flex-column gap-3">
+          {% for c in claims %}
+          <div class="p-3 bg-light rounded-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <h4 class="h6 fw-bold text-dark mb-0">{{ c.business }}</h4>
+                <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>{{ c.status }}</span>
+              </div>
+              <p class="text-muted small mb-0">Role: {{ c.role }} &bull; Claim Verified: {{ c.date }}</p>
+            </div>
+            <div>
+              <a href="{% url 'core:business_submission' %}" class="btn btn-sm btn-outline-dark">
+                Manage Business Profile
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: PREFERENCES & SETTINGS -->
+    <div class="tab-pane fade" id="tab-settings" role="tabpanel">
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+        <h4 class="h6 fw-bold text-dark mb-3">Notification & Alert Preferences</h4>
+        <form onsubmit="event.preventDefault(); alert('Preferences saved!');">
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="smogAlerts" checked>
+            <label class="form-check-label small fw-semibold" for="smogAlerts">
+              Receive Seasonal Smog & Air Quality Advisories for Lahore
+            </label>
+          </div>
+          <div class="form-check form-switch mb-4">
+            <input class="form-check-input" type="checkbox" id="eventsDigest" checked>
+            <label class="form-check-label small fw-semibold" for="eventsDigest">
+              Receive Weekly Weekend Lahore Cultural & Literary Digest
+            </label>
+          </div>
+          <button type="submit" class="btn btn-sm btn-lch-primary">Save Preferences</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Lahore City Hub | The Complete Guide to Lahore{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  {% include 'components/_breadcrumbs.html' with breadcrumbs=breadcrumbs %}
+
+  <!-- Hero Header -->
+  <div class="row align-items-center mb-5">
+    <div class="col-12 col-lg-7">
+      <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold px-3 py-1 mb-2">
+        ABOUT OUR PLATFORM
+      </span>
+      <h1 class="display-5 fw-extrabold text-dark mb-3">
+        Dedicated to the Heart & Heritage of Lahore
+      </h1>
+      <p class="lead text-secondary mb-4" style="line-height: 1.7;">
+        <strong>Lahore City Hub</strong> was conceived with a single, clear objective: to construct a reliable, high-speed, and verified civic directory for Pakistan's cultural and economic capital.
+      </p>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'core:category_list' category_slug='places' %}" class="btn btn-lch-primary">
+          Explore City Directory
+        </a>
+        <a href="{% url 'core:contact' %}" class="btn btn-lch-outline">
+          Contact Editorial Desk
+        </a>
+      </div>
+    </div>
+    <div class="col-12 col-lg-5 mt-4 mt-lg-0 text-center">
+      <div class="p-4 bg-white rounded-4 shadow-sm border border-light-subtle text-start">
+        <h5 class="fw-bold text-dark mb-3 border-bottom pb-2">
+          <i class="bi bi-shield-check text-success me-2"></i>The Verification Pledge
+        </h5>
+        <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-0">
+          <li><i class="bi bi-check2-circle text-success me-2"></i><strong>Zero Fictional Data:</strong> Every listed place, clinic, and contact is vetted.</li>
+          <li><i class="bi bi-check2-circle text-success me-2"></i><strong>Clear Timestamps:</strong> We display when information was last verified.</li>
+          <li><i class="bi bi-check2-circle text-success me-2"></i><strong>Civic Source Links:</strong> Citations to official government circulars and gazettes.</li>
+          <li><i class="bi bi-check2-circle text-success me-2"></i><strong>Unbiased Moderation:</strong> Reviews and claims are filtered for authenticity.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 Core Pillars Grid -->
+  <div class="row g-4 mb-5">
+    <div class="col-12 text-center mb-2">
+      <h2 class="h3 fw-bold text-dark">Our Architectural Pillars</h2>
+      <p class="text-muted small">How we ensure Lahore City Hub remains dependable for millions of residents and travelers.</p>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="card h-100 p-4 border-0 shadow-sm rounded-3 bg-white">
+        <div class="rounded-3 p-3 bg-success-subtle text-success d-inline-block mb-3" style="width: fit-content; font-size: 1.5rem;">
+          <i class="bi bi-patch-check"></i>
+        </div>
+        <h5 class="h6 fw-bold">Verified First</h5>
+        <p class="text-muted small mb-0">
+          We manually audit physical locations, phone exchanges, and operating timings to eliminate dead numbers and defunct hours.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="card h-100 p-4 border-0 shadow-sm rounded-3 bg-white">
+        <div class="rounded-3 p-3 bg-danger-subtle text-danger d-inline-block mb-3" style="width: fit-content; font-size: 1.5rem;">
+          <i class="bi bi-geo-alt"></i>
+        </div>
+        <h5 class="h6 fw-bold">Hyper-Local Taxonomy</h5>
+        <p class="text-muted small mb-0">
+          Tailored explicitly for Lahore's distinct geography: from the 12 historic gates of the Walled City to Gulberg and DHA Phase 8.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="card h-100 p-4 border-0 shadow-sm rounded-3 bg-white">
+        <div class="rounded-3 p-3 bg-warning-subtle text-warning-emphasis d-inline-block mb-3" style="width: fit-content; font-size: 1.5rem;">
+          <i class="bi bi-lightning-charge"></i>
+        </div>
+        <h5 class="h6 fw-bold">High-Speed & Accessible</h5>
+        <p class="text-muted small mb-0">
+          Lightweight, mobile-first server-rendered markup optimized for cellular data networks across Pakistan without bloated JavaScript.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="card h-100 p-4 border-0 shadow-sm rounded-3 bg-white">
+        <div class="rounded-3 p-3 bg-primary-subtle text-primary d-inline-block mb-3" style="width: fit-content; font-size: 1.5rem;">
+          <i class="bi bi-shield-lock"></i>
+        </div>
+        <h5 class="h6 fw-bold">Civic Integrity</h5>
+        <p class="text-muted small mb-0">
+          Transparent disclaimers: we do not promise search engine ranks or accept payments to alter factual contact data.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Community CTA -->
+  <div class="card p-5 border-0 rounded-4 text-white text-center shadow" style="background: linear-gradient(135deg, #0B4632 0%, #17543f 100%);">
+    <h2 class="h3 fw-bold mb-2">Own a Business or Institution in Lahore?</h2>
+    <p class="text-white-50 mx-auto mb-4" style="max-width: 550px;">
+      Claim your official listing, update opening hours, link your WhatsApp business line, and reach thousands of daily local searchers.
+    </p>
+    <div>
+      <a href="{% url 'core:business_submission' %}" class="btn btn-warning fw-bold text-dark px-4 py-2">
+        <i class="bi bi-plus-circle me-1"></i>Claim or Add Your Listing
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

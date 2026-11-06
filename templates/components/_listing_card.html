@@ -1,0 +1,111 @@
+{% load core_tags %}
+<div class="col-12 col-md-6 col-lg-4 d-flex">
+  <div class="lch-card w-100">
+    <div class="lch-card-img-wrap">
+      <img src="{% if item.primary_image %}{{ item.primary_image.url }}{% elif item.image %}{{ item.image }}{% else %}https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?auto=format&fit=crop&w=800&q=80{% endif %}"
+           alt="{{ item.title }}"
+           loading="lazy"
+           onerror="this.src='https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?auto=format&fit=crop&w=800&q=80'">
+      
+      <!-- Badges Overlay -->
+      <div class="lch-card-top-badges">
+        <div>
+          {% include 'components/_verification_badge.html' with is_verified=item.is_verified last_verified=item.last_verified source=item.source %}
+        </div>
+        <button class="btn btn-sm btn-light rounded-circle shadow-sm btn-bookmark-toggle"
+                style="width: 34px; height: 34px; padding: 0;"
+                title="Save to bookmarks"
+                type="button"
+                aria-label="Save {{ item.title }} to bookmarks">
+          <i class="bi bi-bookmark text-dark"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="lch-card-body">
+      <!-- Locality & Category Row -->
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="badge bg-light text-success border border-success-subtle fw-semibold" style="font-size: 0.74rem;">
+          <i class="bi bi-geo-alt-fill me-1"></i>{{ item.locality.name|default:item.locality|default:'Lahore' }}
+        </span>
+        {% if item.price_tier %}
+          <span class="badge bg-light text-dark border fw-bold" style="font-size: 0.74rem;">{{ item.price_tier }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Title -->
+      <h3 class="h5 mt-2 mb-1">
+        <a href="{% url 'core:listing_detail' slug=item.slug %}" class="lch-card-title">
+          {{ item.title }}
+        </a>
+      </h3>
+
+      <!-- Rating Row -->
+      {% if item.rating %}
+      <div class="mb-2">
+        {% include 'components/_rating_stars.html' with rating=item.rating reviews_count=item.reviews_count %}
+      </div>
+      {% endif %}
+
+      <!-- Summary -->
+      <p class="lch-card-desc">
+        {{ item.summary|truncatechars:125 }}
+      </p>
+
+      <!-- Key metadata snippets -->
+      <div class="mt-auto pt-2 border-top">
+        {% if item.opening_time %}
+          <div class="lch-card-meta mb-1">
+            <i class="bi bi-clock"></i> <span style="font-size: 0.82rem;">{{ item.opening_time|time:"g:i A" }} – {{ item.closing_time|time:"g:i A" }}</span>
+          </div>
+        {% elif item.timings %}
+          <div class="lch-card-meta mb-1">
+            <i class="bi bi-clock"></i> <span style="font-size: 0.82rem;">{{ item.timings }}</span>
+          </div>
+        {% elif item.ambulance_direct_phone %}
+          <div class="lch-card-meta mb-1 text-danger fw-bold">
+            <i class="bi bi-telephone-inbound-fill"></i> <span style="font-size: 0.82rem;">24/7 ER: {{ item.ambulance_direct_phone }}</span>
+          </div>
+        {% elif item.emergency_phone %}
+          <div class="lch-card-meta mb-1 text-danger fw-bold">
+            <i class="bi bi-telephone-inbound-fill"></i> <span style="font-size: 0.82rem;">24/7 ER: {{ item.emergency_phone }}</span>
+          </div>
+        {% elif item.cuisines.all %}
+          <div class="lch-card-meta mb-1">
+            <i class="bi bi-egg-fried"></i> <span style="font-size: 0.82rem;">{% for c in item.cuisines.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+          </div>
+        {% elif item.cuisine %}
+          <div class="lch-card-meta mb-1">
+            <i class="bi bi-egg-fried"></i> <span style="font-size: 0.82rem;">{{ item.cuisine }}</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="lch-card-footer">
+      <div>
+        {% if item.phone_number %}
+          <a href="tel:{{ item.phone_number }}" class="btn btn-sm btn-outline-secondary me-1" title="Call listing" aria-label="Call {{ item.title }}">
+            <i class="bi bi-telephone"></i>
+          </a>
+        {% elif item.phone %}
+          <a href="tel:{{ item.phone }}" class="btn btn-sm btn-outline-secondary me-1" title="Call listing" aria-label="Call {{ item.title }}">
+            <i class="bi bi-telephone"></i>
+          </a>
+        {% endif %}
+        {% if item.whatsapp_number %}
+          <a href="{{ item.whatsapp_number|whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success me-1" title="Chat on WhatsApp" aria-label="WhatsApp {{ item.title }}">
+            <i class="bi bi-whatsapp"></i>
+          </a>
+        {% elif item.whatsapp %}
+          <a href="{{ item.whatsapp|whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success me-1" title="Chat on WhatsApp" aria-label="WhatsApp {{ item.title }}">
+            <i class="bi bi-whatsapp"></i>
+          </a>
+        {% endif %}
+      </div>
+      <a href="{% url 'core:listing_detail' slug=item.slug %}" class="btn btn-sm btn-lch-primary">
+        View Guide <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+  </div>
+</div>

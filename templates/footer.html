@@ -1,0 +1,71 @@
+{% load static %}
+<footer class="lch-footer mt-auto">
+  <div class="container-fluid px-lg-5">
+    <div class="row g-4 justify-content-between">
+      <!-- Col 1: Brand & Verification Pledge -->
+      <div class="col-12 col-lg-4">
+        <div class="d-flex align-items-center mb-3">
+          <img src="{% static 'img/brand/logo.svg' %}" alt="Lahore City Hub" height="42" class="bg-white p-1 rounded-2">
+        </div>
+        <p class="text-white-50 small mb-3" style="line-height: 1.6; max-width: 380px;">
+          <strong>Lahore City Hub</strong> is the definitive civic, cultural, and commercial guide to Lahore, Pakistan. Built to provide reliable, verified contact details, opening timings, and transit logistics for residents, visitors, students, and businesses.
+        </p>
+        <div class="d-flex gap-2">
+          <a href="#" class="btn btn-sm btn-dark text-white border border-secondary rounded-circle" title="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="btn btn-sm btn-dark text-white border border-secondary rounded-circle" title="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="btn btn-sm btn-dark text-white border border-secondary rounded-circle" title="X (Twitter)"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" class="btn btn-sm btn-dark text-white border border-secondary rounded-circle" title="YouTube"><i class="bi bi-youtube"></i></a>
+        </div>
+      </div>
+
+      <!-- Col 2: Directory Hubs -->
+      <div class="col-6 col-md-3 col-lg-2">
+        <h6>City Directories</h6>
+        <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+          <li><a href="{% url 'core:category_list' category_slug='places' %}"><i class="bi bi-chevron-right text-success me-1"></i>Tourist Places</a></li>
+          <li><a href="{% url 'core:category_list' category_slug='restaurants' %}"><i class="bi bi-chevron-right text-success me-1"></i>Restaurants & Cafes</a></li>
+          <li><a href="{% url 'core:category_list' category_slug='hospitals' %}"><i class="bi bi-chevron-right text-success me-1"></i>Hospitals & 24/7 ER</a></li>
+          <li><a href="{% url 'core:category_list' category_slug='education' %}"><i class="bi bi-chevron-right text-success me-1"></i>Education & Unis</a></li>
+          <li><a href="{% url 'core:category_list' category_slug='jobs' %}"><i class="bi bi-chevron-right text-success me-1"></i>Lahore Jobs</a></li>
+          <li><a href="{% url 'core:category_list' category_slug='businesses' %}"><i class="bi bi-chevron-right text-success me-1"></i>Local Businesses</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Civic & Transit -->
+      <div class="col-6 col-md-3 col-lg-2">
+        <h6>Civic & Transit</h6>
+        <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+          <li><a href="tel:1122" class="text-danger fw-semibold"><i class="bi bi-telephone-fill me-1"></i>Rescue 1122</a></li>
+          <li><a href="tel:15"><i class="bi bi-shield-shaded me-1"></i>Police Emergency (15)</a></li>
+          <li><a href="tel:1915"><i class="bi bi-car-front me-1"></i>Traffic Police (1915)</a></li>
+          <li><a href="{% url 'core:home' %}#transport-guides"><i class="bi bi-train-front me-1"></i>Orange Line Metro</a></li>
+          <li><a href="{% url 'core:home' %}#transport-guides"><i class="bi bi-bus-front me-1"></i>Lahore Metrobus</a></li>
+          <li><a href="{% url 'core:home' %}#city-updates"><i class="bi bi-wind me-1"></i>Smog & Air Advisory</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Platform & Legal -->
+      <div class="col-12 col-md-4 col-lg-3">
+        <h6>Platform & Legal</h6>
+        <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+          <li><a href="{% url 'core:about' %}">About Lahore City Hub</a></li>
+          <li><a href="{% url 'core:contact' %}">Contact Our Editorial Team</a></li>
+          <li><a href="{% url 'core:business_submission' %}">Submit or Claim a Business</a></li>
+          <li><a href="{% url 'core:privacy' %}">Privacy & Data Policy</a></li>
+          <li><a href="{% url 'core:terms' %}">Terms & Listing Conditions</a></li>
+          <li><a href="{% url 'core:preview_404' %}" class="text-white-50">404 Error Preview</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom Copyright Bar -->
+    <div class="lch-footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+      <div>
+        &copy; {{ CURRENT_YEAR|default:'2026' }} <strong>Lahore City Hub</strong>. All rights reserved. Built with pride for Lahore.
+      </div>
+      <div class="text-white-50">
+        <i class="bi bi-patch-check text-success me-1"></i> Independent verified city guide. Unofficial and community-driven.
+      </div>
+    </div>
+  </div>
+</footer>

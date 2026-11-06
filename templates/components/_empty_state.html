@@ -1,0 +1,19 @@
+<div class="lch-empty-state my-4">
+  <div class="lch-empty-icon">
+    <i class="bi bi-search text-muted opacity-50"></i>
+  </div>
+  <h4 class="h5 fw-bold text-dark mb-2">
+    {{ title|default:"No verified listings found matching your criteria" }}
+  </h4>
+  <p class="text-muted small mx-auto mb-4" style="max-width: 450px;">
+    {{ message|default:"Try clearing specific filters, expanding your locality search, or checking your spelling for keywords." }}
+  </p>
+  <div class="d-flex justify-content-center gap-2">
+    <a href="{{ reset_url|default:'?' }}" class="btn btn-sm btn-lch-outline">
+      <i class="bi bi-arrow-counterclockwise me-1"></i>Reset All Filters
+    </a>
+    <a href="{% url 'core:home' %}" class="btn btn-sm btn-lch-primary">
+      <i class="bi bi-house me-1"></i>Return to Homepage
+    </a>
+  </div>
+</div>

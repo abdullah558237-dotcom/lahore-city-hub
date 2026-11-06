@@ -1,0 +1,11 @@
+# Lahore City Hub - Python Dependencies
+# Python 3.12+ / Django 5.2 LTS Foundation
+
+Django>=5.0,<5.3
+python-decouple>=3.8
+dj-database-url>=2.1.0
+pillow>=10.0.0
+whitenoise>=6.6.0
+
+# Optional PostgreSQL Driver (for production environments)
+# psycopg2-binary>=2.9.9

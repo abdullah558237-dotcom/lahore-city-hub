@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}404 - Page Not Found | Lahore City Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-4 text-center">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <!-- 404 Graphic -->
+      <div class="mb-4">
+        <span class="display-1 fw-bold text-success opacity-75 font-monospace">404</span>
+        <div class="text-muted fs-3 fw-bold mt-n2">Lost in the Walled City?</div>
+      </div>
+
+      <h1 class="h4 fw-bold text-dark mb-3">The requested Lahore page could not be found</h1>
+      <p class="text-muted mb-4" style="line-height: 1.6;">
+        The directory listing, transit guide, or civic page you were looking for may have moved, expired, or had its URL updated.
+      </p>
+
+      <!-- Embedded Search Bar -->
+      <div class="card p-3 shadow-sm border-0 bg-white rounded-3 mb-4">
+        <form action="{% url 'core:search' %}" method="get" class="d-flex gap-2">
+          <input type="text"
+                 name="q"
+                 class="form-control"
+                 placeholder="Search places, food, hospitals, jobs in Lahore..."
+                 aria-label="Search query">
+          <button class="btn btn-lch-primary px-3" type="submit">
+            <i class="bi bi-search me-1"></i>Search
+          </button>
+        </form>
+      </div>
+
+      <!-- Quick Recovery Links -->
+      <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+        <a href="{% url 'core:home' %}" class="btn btn-lch-primary">
+          <i class="bi bi-house-door me-1"></i>Return to Homepage
+        </a>
+        <a href="{% url 'core:category_list' category_slug='places' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-bank me-1"></i>Tourist Places
+        </a>
+        <a href="{% url 'core:category_list' category_slug='restaurants' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-cup-hot me-1"></i>Restaurants
+        </a>
+        <a href="{% url 'core:category_list' category_slug='hospitals' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-hospital me-1"></i>Hospitals
+        </a>
+      </div>
+
+      <div class="text-muted small">
+        Need assistance or want to report a broken link? <a href="{% url 'core:contact' %}" class="text-success fw-semibold">Contact our Lahore editorial team</a>.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

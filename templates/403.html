@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}403 - Permission Denied | Lahore City Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-4 text-center">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="mb-4">
+        <span class="display-1 fw-bold text-danger font-monospace">403</span>
+        <div class="text-muted fs-3 fw-bold mt-n2">Access Restricted</div>
+      </div>
+      <h1 class="h4 fw-bold text-dark mb-3">Permission Denied</h1>
+      <p class="text-muted mb-4">
+        You do not possess the required credentials or permissions to view or edit this resource.
+      </p>
+      <div class="d-flex justify-content-center gap-2">
+        <a href="{% url 'core:login' %}" class="btn btn-lch-outline">
+          <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+        </a>
+        <a href="{% url 'core:home' %}" class="btn btn-lch-primary">
+          <i class="bi bi-house-door me-1"></i>Return to Homepage
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

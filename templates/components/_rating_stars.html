@@ -1,0 +1,8 @@
+{% load core_tags %}
+<div class="d-inline-flex align-items-center gap-1">
+  <span class="lh-1">{{ rating|star_rating_html }}</span>
+  <span class="fw-bold ms-1" style="font-size: 0.88rem; color: var(--lch-dark);">{{ rating|default:"0.0" }}</span>
+  {% if reviews_count %}
+    <span class="text-muted" style="font-size: 0.8rem;">({{ reviews_count }})</span>
+  {% endif %}
+</div>
