@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+{% load core_tags static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block extra_head %}
+{% if canonical_url %}
+<link rel="canonical" href="{{ canonical_url }}">
+{% endif %}
+
+<!-- Schema.org JSON-LD Structured Data: TouristAttraction -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TouristAttraction",
+  "name": "{{ place.title }}",
+  {% if place.title_ur %}
+  "alternateName": "{{ place.title_ur }}",
+  {% endif %}
+  "description": "{{ place.summary|escapejs }}",
+  "image": "{% if place.primary_image %}{{ request.scheme }}://{{ request.get_host }}{{ place.primary_image.url }}{% else %}https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?auto=format&fit=crop&w=1200&q=80{% endif %}",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "{{ place.address|escapejs }}",
+    "addressLocality": "Lahore",
+    "addressRegion": "Punjab",
+    "postalCode": "{{ place.locality.postal_code|default:'54000' }}",
+    "addressCountry": "PK"
+  },
+  {% if place.latitude and place.longitude %}
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": {{ place.latitude }},
+    "longitude": {{ place.longitude }}
+  },
+  {% endif %}
+  {% if place.website %}
+  "url": "{{ place.website }}",
+  {% else %}
+  "url": "{{ canonical_url }}",
+  {% endif %}
+  {% if place.phone_number %}
+  "telephone": "{{ place.phone_number }}",
+  {% endif %}
+  "isAccessibleForFree": {% if place.is_free_entry %}true{% else %}false{% endif %},
+  "publicAccess": true
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'places:list' %}" class="text-decoration-none">Tourist Places</a></li>
+      {% if place.category %}
+      <li class="breadcrumb-item"><a href="{% url 'places:list' %}?category={{ place.category.slug }}" class="text-decoration-none">{{ place.category.name }}</a></li>
+      {% endif %}
+      <li class="breadcrumb-item active" aria-current="page">{{ place.title }}</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Banner with Image & Title Overlay -->
+  <div class="lch-detail-hero mb-4">
+    <img src="{% if place.primary_image %}{{ place.primary_image.url }}{% else %}https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?auto=format&fit=crop&w=1400&q=85{% endif %}"
+         alt="{{ place.title }}"
+         onerror="this.src='https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?auto=format&fit=crop&w=1400&q=85'">
+    <div class="lch-detail-hero-overlay">
+      <div class="d-flex flex-wrap gap-2 mb-2">
+        {% include 'components/_verification_badge.html' with is_verified=place.is_verified last_verified=place.last_verified_at|date:"M Y" source=place.source_url %}
+        <span class="badge bg-light text-dark fw-bold">
+          <i class="bi {{ place.category.icon_class|default:'bi-bank' }} me-1 text-success"></i>{{ place.category.name }}
+        </span>
+        {% if place.is_featured %}
+        <span class="badge bg-warning text-dark fw-bold">
+          <i class="bi bi-star-fill me-1"></i>Featured Landmark
+        </span>
+        {% endif %}
+        {% if place.wheelchair_accessible %}
+        <span class="badge bg-info text-white fw-bold">
+          <i class="bi bi-universal-access me-1"></i>Wheelchair Accessible
+        </span>
+        {% endif %}
+      </div>
+
+      <h1 class="display-6 fw-extrabold text-white mb-1">{{ place.title }}</h1>
+      {% if place.title_ur %}
+        <div class="text-white-50 fs-5 mb-2" style="font-family: var(--lch-font-urdu, 'Noto Nastaliq Urdu', serif); direction: rtl; text-align: left;">
+          {{ place.title_ur }}
+        </div>
+      {% endif %}
+      <p class="text-white-50 small mb-0">
+        <i class="bi bi-geo-alt-fill text-warning me-1"></i>{{ place.address }}
+        {% if place.locality %} &bull; {{ place.locality.name }} ({{ place.locality.zone.name }}){% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Key Metrics & Action Strip -->
+  <div class="card p-3 rounded-4 shadow-sm border-0 bg-white mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <span class="text-muted small">
+          <i class="bi bi-eye me-1 text-secondary"></i><strong>{{ place.view_count }}</strong> Views
+        </span>
+        <span class="text-muted">|</span>
+        <span class="text-muted small">
+          Last verified: <strong class="text-dark">{{ place.last_verified_at|date:"d M Y"|default:"Verified Editorial Record" }}</strong>
+        </span>
+        {% if place.architectural_era %}
+        <span class="text-muted">|</span>
+        <span class="text-muted small">
+          Era: <strong class="text-dark">{{ place.architectural_era }}</strong>
+        </span>
+        {% endif %}
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-sm btn-outline-secondary btn-bookmark-toggle" type="button" aria-label="Save {{ place.title }} to bookmarks">
+          <i class="bi bi-bookmark me-1"></i>Bookmark
+        </button>
+        <button class="btn btn-sm btn-outline-secondary btn-share-trigger" type="button" aria-label="Share this place page">
+          <i class="bi bi-share me-1"></i>Share
+        </button>
+        {% if place.google_maps_url %}
+        <a href="{{ place.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
+          <i class="bi bi-map me-1"></i>Directions
+        </a>
+        {% else %}
+        <a href="https://maps.google.com/?q={{ place.title }}+Lahore" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
+          <i class="bi bi-map me-1"></i>Directions
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Content Column (Left) -->
+    <div class="col-12 col-lg-8">
+      <!-- Overview & Description -->
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 border-bottom pb-2">
+          <i class="bi bi-info-circle text-success me-2"></i>Overview & Historical Significance
+        </h2>
+        <div class="lead text-dark mb-3" style="font-size: 1.05rem; font-weight: 500; line-height: 1.6;">
+          {{ place.summary }}
+        </div>
+        <div class="text-secondary" style="line-height: 1.8; white-space: pre-line;">
+          {{ place.description }}
+        </div>
+
+        <!-- Visitor Guidelines & Accessibility Grid -->
+        <h3 class="h6 fw-bold text-dark mt-4 mb-3">Visitor Guidelines & Accessibility</h3>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6">
+            <div class="p-3 bg-light rounded-3 d-flex align-items-center gap-3">
+              <i class="bi bi-camera-fill text-success fs-4"></i>
+              <div class="small">
+                <strong>Photography:</strong><br>
+                <span>{{ place.photography_policy|default:"Standard photography permitted. Commercial gear may require WCLA permits." }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="p-3 bg-light rounded-3 d-flex align-items-center gap-3">
+              <i class="bi bi-universal-access text-primary fs-4"></i>
+              <div class="small">
+                <strong>Wheelchair Access:</strong><br>
+                <span>{% if place.wheelchair_accessible %}Ramps available at main entrance and designated courtyards.{% else %}Limited wheelchair accessibility due to historic stairs and paving.{% endif %}</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="p-3 bg-light rounded-3 d-flex align-items-center gap-3">
+              <i class="bi bi-calendar-x text-danger fs-4"></i>
+              <div class="small">
+                <strong>Closed on Days:</strong><br>
+                <span>{{ place.closed_on_days|default:"Open Daily (Subject to prayer timings & national holidays)" }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="p-3 bg-light rounded-3 d-flex align-items-center gap-3">
+              <i class="bi bi-train-front text-warning fs-4"></i>
+              <div class="small">
+                <strong>Nearest Transit:</strong><br>
+                <span>
+                  {% if place.nearest_metro_station %}
+                    {{ place.nearest_metro_station.station_name }} ({{ place.nearest_metro_station.route.route_name }})
+                  {% else %}
+                    Public buses and rickshaws available nearby
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo Gallery Section -->
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 border-bottom pb-2">
+          <i class="bi bi-images text-success me-2"></i>Photo Gallery
+        </h2>
+        {% if place.gallery_images.all %}
+          <div class="row g-3">
+            {% for img in place.gallery_images.all %}
+            <div class="col-6 col-md-4">
+              <div class="rounded-3 overflow-hidden shadow-sm bg-light">
+                <img src="{{ img.image.url }}"
+                     class="img-fluid object-fit-cover w-100"
+                     style="height: 160px;"
+                     alt="{{ img.caption|default:place.title }}"
+                     loading="lazy">
+                {% if img.caption or img.photographer_credit %}
+                <div class="p-2 small text-muted bg-white border-top text-truncate" title="{{ img.caption }}">
+                  {{ img.caption|default:img.photographer_credit }}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <!-- Primary image preview if gallery empty -->
+          <div class="row g-2">
+            <div class="col-12">
+              <img src="{% if place.primary_image %}{{ place.primary_image.url }}{% else %}https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?auto=format&fit=crop&w=1200&q=80{% endif %}"
+                   class="img-fluid rounded-3 object-fit-cover w-100"
+                   style="max-height: 350px;"
+                   alt="{{ place.title }}"
+                   loading="lazy">
+              <p class="text-muted small mt-2 mb-0">Editorial primary photography for {{ place.title }}. Additional gallery images are actively being curated.</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Reviews Section -->
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+          <h2 class="h5 fw-bold text-dark mb-0">
+            <i class="bi bi-chat-heart text-success me-2"></i>Verified Visitor Reviews
+          </h2>
+          <button class="btn btn-sm btn-lch-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+            <i class="bi bi-pencil-square me-1"></i>Write a Review
+          </button>
+        </div>
+
+        {% if reviews %}
+          <div class="d-flex flex-column gap-3">
+            {% for rev in reviews %}
+            <div class="p-3 bg-light rounded-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <div>
+                  <strong class="text-dark">{{ rev.user.get_full_name|default:rev.user.email }}</strong>
+                  <span class="badge bg-white text-muted border ms-2" style="font-size: 0.72rem;">Verified Visitor</span>
+                </div>
+                <span class="text-muted small">{{ rev.created_at|date:"d M Y" }}</span>
+              </div>
+              <div class="mb-2">
+                {% include 'components/_rating_stars.html' with rating=rev.rating %}
+              </div>
+              {% if rev.title %}
+                <h6 class="fw-bold mb-1" style="font-size: 0.94rem;">{{ rev.title }}</h6>
+              {% endif %}
+              <p class="text-secondary small mb-0" style="line-height: 1.6;">
+                {{ rev.comment }}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="p-4 bg-light rounded-3 text-center">
+            <i class="bi bi-chat-dots text-muted display-6 mb-2"></i>
+            <h3 class="h6 fw-bold text-dark mb-1">No Reviews Yet for {{ place.title }}</h3>
+            <p class="text-muted small mb-3">Have you visited this landmark? Share your tips, photography advice, and visitor impressions.</p>
+            <button class="btn btn-sm btn-lch-outline" data-bs-toggle="modal" data-bs-target="#reviewModal">
+              Be the first to review
+            </button>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sidebar Column (Right) -->
+    <div class="col-12 col-lg-4">
+      <!-- Essential Facts Card -->
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white mb-4">
+        <h3 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+          <i class="bi bi-card-checklist text-success me-2"></i>Essential Facts & Logistics
+        </h3>
+        <table class="lch-fact-table w-100">
+          <tbody>
+            <tr>
+              <td class="label text-muted py-2">Opening Hours</td>
+              <td class="fw-medium text-dark py-2">
+                {% if place.opening_time and place.closing_time %}
+                  {{ place.opening_time|time:"g:i A" }} – {{ place.closing_time|time:"g:i A" }}
+                {% else %}
+                  <span class="text-muted">Inquire at entrance</span>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td class="label text-muted py-2">Closed On</td>
+              <td class="fw-medium text-dark py-2">{{ place.closed_on_days|default:"Open All 7 Days" }}</td>
+            </tr>
+            <tr>
+              <td class="label text-muted py-2">Pakistani Citizens</td>
+              <td class="fw-bold text-success py-2">
+                {% if place.entry_fee_pkr == 0 %}
+                  <span class="badge bg-success-subtle text-success">Free Entry</span>
+                {% else %}
+                  {{ place.entry_fee_pkr|format_pkr }}
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td class="label text-muted py-2">Foreign Visitors</td>
+              <td class="fw-bold text-success py-2">
+                {% if place.entry_fee_foreigner_pkr == 0 %}
+                  <span class="badge bg-success-subtle text-success">Free Entry</span>
+                {% else %}
+                  {{ place.entry_fee_foreigner_pkr|format_pkr }}
+                {% endif %}
+              </td>
+            </tr>
+            {% if place.architectural_era %}
+            <tr>
+              <td class="label text-muted py-2">Historical Era</td>
+              <td class="small fw-medium text-dark py-2">{{ place.architectural_era }}</td>
+            </tr>
+            {% endif %}
+            {% if place.source_url %}
+            <tr>
+              <td class="label text-muted py-2">Source Registry</td>
+              <td class="small py-2">
+                <a href="{{ place.source_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                  Official Record <i class="bi bi-box-arrow-up-right ms-1"></i>
+                </a>
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Location & Transit Card -->
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white mb-4">
+        <h3 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+          <i class="bi bi-geo-alt-fill text-danger me-2"></i>Location & Directions
+        </h3>
+        <p class="text-muted small mb-2">
+          <strong>Address:</strong><br>{{ place.address }}
+        </p>
+        {% if place.landmark %}
+        <p class="text-muted small mb-3">
+          <strong>Landmark:</strong><br>{{ place.landmark }}
+        </p>
+        {% endif %}
+
+        {% if place.nearest_metro_station %}
+        <div class="p-2 bg-light rounded-3 mb-3 small">
+          <i class="bi bi-train-front-fill text-warning me-1"></i>
+          <strong>Nearest Metro Station:</strong><br>
+          {{ place.nearest_metro_station.station_name }} ({{ place.nearest_metro_station.route.route_name }})
+        </div>
+        {% endif %}
+
+        {% if place.latitude and place.longitude %}
+        <div class="p-2 bg-light rounded-3 mb-3 small font-monospace">
+          <i class="bi bi-compass me-1 text-primary"></i>
+          Coordinates: {{ place.latitude }}, {{ place.longitude }}
+        </div>
+        {% endif %}
+
+        <div class="d-grid gap-2">
+          {% if place.google_maps_url %}
+          <a href="{{ place.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success btn-sm fw-bold">
+            <i class="bi bi-map me-1"></i>Open in Google Maps
+          </a>
+          {% else %}
+          <a href="https://maps.google.com/?q={{ place.title }}+Lahore" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success btn-sm fw-bold">
+            <i class="bi bi-map me-1"></i>Open in Google Maps
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Direct Contact Card (Only shown if verified contact numbers exist) -->
+      {% if place.phone_number or place.website or place.whatsapp_number or place.email %}
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white mb-4">
+        <h3 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+          <i class="bi bi-telephone-fill text-primary me-2"></i>Official Inquiries
+        </h3>
+        <div class="d-grid gap-2">
+          {% if place.phone_number %}
+          <a href="tel:{{ place.phone_number }}" class="btn btn-lch-primary btn-sm">
+            <i class="bi bi-telephone-outbound me-1"></i>Call: {{ place.phone_number }}
+          </a>
+          {% endif %}
+          {% if place.whatsapp_number %}
+          <a href="{{ place.whatsapp_number|whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm fw-bold">
+            <i class="bi bi-whatsapp me-1"></i>WhatsApp Inquiries
+          </a>
+          {% endif %}
+          {% if place.website %}
+          <a href="{{ place.website }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-dark btn-sm">
+            <i class="bi bi-globe me-1"></i>Official Website
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Nearby / Related Recommended Spots -->
+      {% if related_places %}
+      <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+        <h3 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+          <i class="bi bi-compass text-success me-2"></i>Nearby in {{ place.locality.name|default:"Lahore" }}
+        </h3>
+        <div class="d-flex flex-column gap-3">
+          {% for rel in related_places %}
+          <div class="d-flex align-items-center gap-3">
+            <img src="{% if rel.primary_image %}{{ rel.primary_image.url }}{% else %}https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?auto=format&fit=crop&w=120&q=80{% endif %}"
+                 class="rounded-3 object-fit-cover"
+                 style="width: 58px; height: 58px;"
+                 alt="{{ rel.title }}"
+                 loading="lazy">
+            <div>
+              <h4 class="h6 mb-0">
+                <a href="{{ rel.get_absolute_url }}" class="text-decoration-none text-dark fw-bold" style="font-size: 0.88rem;">
+                  {{ rel.title }}
+                </a>
+              </h4>
+              <span class="text-muted small" style="font-size: 0.76rem;">{{ rel.category.name }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Review Submission Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="reviewModalLabel">Submit a Review for {{ place.title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form onsubmit="event.preventDefault(); alert('Thank you! Your visitor review has been submitted for editorial moderation.'); bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Your Overall Rating *</label>
+            <select class="form-select" required>
+              <option value="5">★★★★★ (5 Stars - Exceptional)</option>
+              <option value="4">★★★★☆ (4 Stars - Very Good)</option>
+              <option value="3">★★★☆☆ (3 Stars - Average)</option>
+              <option value="2">★★☆☆☆ (2 Stars - Needs Improvement)</option>
+              <option value="1">★☆☆☆☆ (1 Star - Poor)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Review Title *</label>
+            <input type="text" class="form-control" placeholder="Summarize your experience..." required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Detailed Feedback *</label>
+            <textarea rows="4" class="form-control" placeholder="Share visitor tips, accessibility notes, timings, or suggestions..." required></textarea>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" required id="pledgeCheck">
+            <label class="form-check-label small text-muted" for="pledgeCheck">
+              I certify this review represents my authentic genuine personal visit.
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-lch-primary">Submit for Moderation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

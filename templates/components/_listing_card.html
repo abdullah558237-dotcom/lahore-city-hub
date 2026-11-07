@@ -35,7 +35,7 @@
 
       <!-- Title -->
       <h3 class="h5 mt-2 mb-1">
-        <a href="{% url 'core:listing_detail' slug=item.slug %}" class="lch-card-title">
+        <a href="{% if item.get_absolute_url %}{{ item.get_absolute_url }}{% else %}{% url 'core:listing_detail' slug=item.slug %}{% endif %}" class="lch-card-title">
           {{ item.title }}
         </a>
       </h3>
@@ -103,7 +103,7 @@
           </a>
         {% endif %}
       </div>
-      <a href="{% url 'core:listing_detail' slug=item.slug %}" class="btn btn-sm btn-lch-primary">
+      <a href="{% if item.get_absolute_url %}{{ item.get_absolute_url }}{% else %}{% url 'core:listing_detail' slug=item.slug %}{% endif %}" class="btn btn-sm btn-lch-primary">
         View Guide <i class="bi bi-arrow-right ms-1"></i>
       </a>
     </div>

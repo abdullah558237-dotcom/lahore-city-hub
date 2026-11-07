@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+{% load core_tags static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block extra_head %}
+  {% if canonical_url %}
+  <link rel="canonical" href="{{ canonical_url }}">
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'core:directory_index' %}" class="text-decoration-none">Directories</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Tourist Places & Heritage</li>
+    </ol>
+  </nav>
+
+  <!-- Places Header Banner -->
+  <div class="bg-white p-4 rounded-4 shadow-sm border border-light-subtle mb-4">
+    <div class="row align-items-center">
+      <div class="col-12 col-lg-8">
+        <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold mb-2">
+          HERITAGE & TOURISM DIRECTORY
+        </span>
+        <h1 class="h2 fw-bold text-dark mb-1">
+          {% if selected_category_obj %}
+            {{ selected_category_obj.name }} in Lahore
+          {% elif selected_locality_obj %}
+            Tourist Places in {{ selected_locality_obj.name }}
+          {% elif search_query %}
+            Search Results for "{{ search_query }}"
+          {% else %}
+            Tourist Places & Historical Heritage in Lahore
+          {% endif %}
+        </h1>
+        <p class="text-secondary small mb-0">
+          Discover verified historical monuments, UNESCO citadels, historic shrines, museums, and gardens across Lahore, Pakistan.
+        </p>
+      </div>
+      <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+        <span class="badge bg-light text-dark border p-2 font-monospace" style="font-size: 0.85rem;">
+          <i class="bi bi-check-circle-fill text-success me-1"></i>Showing {{ total_results }} Verified Entries
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Desktop / Mobile Filter Sidebar -->
+    <div class="col-12 col-lg-3">
+      <!-- Mobile Filter Trigger Button -->
+      <div class="d-lg-none mb-3">
+        <button class="btn btn-lch-outline w-100 d-flex justify-content-between align-items-center"
+                type="button"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#filtersOffcanvas"
+                aria-controls="filtersOffcanvas"
+                aria-label="Open filter sidebar">
+          <span><i class="bi bi-funnel-fill me-2"></i>Filter by Category & Area</span>
+          <span class="badge bg-success">{{ total_results }}</span>
+        </button>
+      </div>
+
+      <!-- Offcanvas container for mobile + static card on desktop -->
+      <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="filtersOffcanvas" aria-labelledby="filtersOffcanvasLabel">
+        <div class="offcanvas-header border-bottom d-lg-none">
+          <h5 class="offcanvas-title fw-bold" id="filtersOffcanvasLabel">Filter Places</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#filtersOffcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white w-100">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+              <h5 class="h6 fw-bold mb-0"><i class="bi bi-sliders me-2 text-success"></i>Refine Places</h5>
+              <a href="{% url 'places:list' %}" class="text-decoration-none small text-muted">Clear All</a>
+            </div>
+
+            <form method="get" action="{% url 'places:list' %}">
+              <!-- Search query persistence -->
+              {% if search_query %}
+                <input type="hidden" name="q" value="{{ search_query }}">
+              {% endif %}
+
+              <!-- Category Filter -->
+              <div class="mb-4">
+                <label class="form-label small fw-bold text-dark mb-2">Heritage Category</label>
+                <div class="list-group list-group-flush small">
+                  <a href="{% url 'places:list' %}?{% if selected_area %}area={{ selected_area }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}"
+                     class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-1 border-0 {% if not selected_category %}fw-bold text-success{% else %}text-muted{% endif %}">
+                    <span><i class="bi bi-grid-fill me-2"></i>All Categories</span>
+                  </a>
+                  {% for cat in categories %}
+                  <a href="{% url 'places:list' %}?category={{ cat.slug }}{% if selected_area %}&area={{ selected_area }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
+                     class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-1 border-0 {% if selected_category == cat.slug %}fw-bold text-success bg-success-subtle rounded-2{% else %}text-secondary{% endif %}">
+                    <span><i class="bi {{ cat.icon_class }} me-2"></i>{{ cat.name }}</span>
+                    <span class="badge bg-light text-muted border">{{ cat.active_places_count }}</span>
+                  </a>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Locality / Area Filter -->
+              <div class="mb-4">
+                <label class="form-label small fw-bold text-dark mb-2" for="localityFilterSelect">Lahore Locality / Area</label>
+                <select name="area" id="localityFilterSelect" class="form-select form-select-sm" onchange="this.form.submit()">
+                  <option value="" {% if not selected_area %}selected{% endif %}>All Lahore Localities</option>
+                  {% for loc in localities %}
+                    <option value="{{ loc.slug }}" {% if selected_area == loc.slug %}selected{% endif %}>
+                      {{ loc.name }} ({{ loc.zone.name }})
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Checkbox Toggles -->
+              <div class="border-top pt-3 mb-4">
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" name="verified_only" value="1" id="verifiedOnlySwitch" {% if verified_only %}checked{% endif %} onchange="this.form.submit()">
+                  <label class="form-check-label small fw-semibold text-dark" for="verifiedOnlySwitch">
+                    <i class="bi bi-patch-check-fill text-success me-1"></i>Verified Only
+                  </label>
+                </div>
+
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" name="wheelchair" value="1" id="wheelchairSwitch" {% if wheelchair_only %}checked{% endif %} onchange="this.form.submit()">
+                  <label class="form-check-label small fw-semibold text-dark" for="wheelchairSwitch">
+                    <i class="bi bi-universal-access text-primary me-1"></i>Wheelchair Accessible
+                  </label>
+                </div>
+
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" name="free_entry" value="1" id="freeEntrySwitch" {% if free_entry %}checked{% endif %} onchange="this.form.submit()">
+                  <label class="form-check-label small fw-semibold text-dark" for="freeEntrySwitch">
+                    <i class="bi bi-ticket-perforated text-warning me-1"></i>Free Public Entry
+                  </label>
+                </div>
+              </div>
+
+              <!-- Sorting Dropdown -->
+              <div class="mb-3">
+                <label class="form-label small fw-bold text-dark mb-1" for="sortOrderSelect">Sort Order</label>
+                <select name="sort" id="sortOrderSelect" class="form-select form-select-sm" onchange="this.form.submit()">
+                  <option value="recommended" {% if sort_by == 'recommended' %}selected{% endif %}>Featured & Recommended</option>
+                  <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Alphabetical (A to Z)</option>
+                  <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Recently Added</option>
+                  <option value="views" {% if sort_by == 'views' %}selected{% endif %}>Most Popular</option>
+                </select>
+              </div>
+
+              <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-sm btn-lch-primary py-2 fw-semibold">
+                  Apply Filters
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Results Column (Right) -->
+    <div class="col-12 col-lg-9">
+      <!-- Search & Controls Bar -->
+      <div class="bg-white p-3 rounded-4 shadow-sm border border-light-subtle mb-4">
+        <form method="get" action="{% url 'places:list' %}" class="row g-2 align-items-center">
+          <!-- Keyword Input -->
+          <div class="col-12 col-md-8">
+            <div class="input-group">
+              <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
+                <i class="bi bi-search text-success"></i>
+              </span>
+              <input type="text"
+                     name="q"
+                     class="form-control border-start-0"
+                     placeholder="Search places by name, historical era, Mughal architecture, address..."
+                     value="{{ search_query }}"
+                     aria-label="Search places">
+            </div>
+          </div>
+
+          <!-- Hidden Filters Preservation -->
+          {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+          {% if selected_area %}<input type="hidden" name="area" value="{{ selected_area }}">{% endif %}
+          {% if verified_only %}<input type="hidden" name="verified_only" value="1">{% endif %}
+          {% if wheelchair_only %}<input type="hidden" name="wheelchair" value="1">{% endif %}
+          {% if free_entry %}<input type="hidden" name="free_entry" value="1">{% endif %}
+          {% if sort_by %}<input type="hidden" name="sort" value="{{ sort_by }}">{% endif %}
+
+          <div class="col-12 col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-lch-primary w-100 fw-bold">Search Places</button>
+            {% if search_query %}
+              <a href="{% url 'places:list' %}?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_area %}area={{ selected_area }}&{% endif %}" class="btn btn-outline-secondary" title="Clear Search">
+                <i class="bi bi-x-lg"></i>
+              </a>
+            {% endif %}
+          </div>
+        </form>
+
+        <!-- Active Filter Badges -->
+        {% if selected_category or selected_area or search_query or verified_only or wheelchair_only or free_entry %}
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-2 border-top">
+          <span class="small text-muted fw-semibold">Active Filters:</span>
+          {% if selected_category_obj %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle">
+              Category: {{ selected_category_obj.name }}
+              <a href="{% url 'places:list' %}?{% if selected_area %}area={{ selected_area }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}" class="text-success ms-1"><i class="bi bi-x-circle-fill"></i></a>
+            </span>
+          {% endif %}
+          {% if selected_locality_obj %}
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+              Area: {{ selected_locality_obj.name }}
+              <a href="{% url 'places:list' %}?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}" class="text-primary ms-1"><i class="bi bi-x-circle-fill"></i></a>
+            </span>
+          {% endif %}
+          {% if search_query %}
+            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+              Keyword: "{{ search_query }}"
+            </span>
+          {% endif %}
+          {% if verified_only %}
+            <span class="badge bg-success text-white">Verified Only</span>
+          {% endif %}
+          {% if wheelchair_only %}
+            <span class="badge bg-primary text-white">Wheelchair Accessible</span>
+          {% endif %}
+          {% if free_entry %}
+            <span class="badge bg-warning text-dark">Free Entry</span>
+          {% endif %}
+          <a href="{% url 'places:list' %}" class="small text-danger ms-auto text-decoration-none fw-semibold">
+            <i class="bi bi-trash3 me-1"></i>Reset All
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Places Cards Grid -->
+      {% if places %}
+        <div class="row g-4 mb-4">
+          {% for item in places %}
+            {% include 'components/_listing_card.html' with item=item %}
+          {% endfor %}
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Places directory pagination" class="mt-4">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ extra_query_string }}" aria-label="Previous Page">
+                  <i class="bi bi-chevron-left me-1"></i>Previous
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-left me-1"></i>Previous</span>
+              </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              {% if page_obj.number == num %}
+                <li class="page-item active" aria-current="page">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+              {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ num }}{{ extra_query_string }}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ extra_query_string }}" aria-label="Next Page">
+                  Next<i class="bi bi-chevron-right ms-1"></i>
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link">Next<i class="bi bi-chevron-right ms-1"></i></span>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+
+      {% else %}
+        <!-- Empty State Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+          <div class="py-4">
+            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center p-4 mb-3" style="width: 80px; height: 80px;">
+              <i class="bi bi-bank display-6 text-muted"></i>
+            </div>
+            <h3 class="h5 fw-bold text-dark mb-2">No Tourist Places Found</h3>
+            <p class="text-secondary small mb-4" style="max-width: 480px; margin: 0 auto;">
+              No places currently match your selected filters. Try broadening your area selection, clearing search keywords, or resetting filter options.
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+              <a href="{% url 'places:list' %}" class="btn btn-lch-primary btn-sm px-4 py-2">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Reset All Filters
+              </a>
+              <a href="{% url 'core:home' %}" class="btn btn-outline-secondary btn-sm px-4 py-2">
+                Return to Home
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
