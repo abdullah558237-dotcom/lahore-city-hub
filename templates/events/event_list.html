@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'events:list' %}" class="text-decoration-none">Events</a></li>
+      {% if selected_category %}
+      <li class="breadcrumb-item active" aria-current="page">{{ selected_category.name }}</li>
+      {% elif date_filter == 'past' %}
+      <li class="breadcrumb-item active" aria-current="page">Past Events</li>
+      {% elif search_query %}
+      <li class="breadcrumb-item active" aria-current="page">Search: "{{ search_query }}"</li>
+      {% else %}
+      <li class="breadcrumb-item active" aria-current="page">Upcoming</li>
+      {% endif %}
+    </ol>
+  </nav>
+
+  <!-- Hero Header -->
+  <div class="card border-0 text-white shadow-sm rounded-4 mb-4 overflow-hidden position-relative" style="background: linear-gradient(135deg, #1b2838 0%, #0d1b2a 100%);">
+    <div class="card-body p-4 p-md-5">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <span class="badge bg-warning text-dark px-3 py-2 fw-semibold rounded-pill mb-2">
+            <i class="bi bi-calendar-event me-1"></i>Cultural & Civic Happenings
+          </span>
+          <h1 class="display-6 fw-bold mb-2">
+            Lahore Events, Expos & Festivals Calendar
+          </h1>
+          <p class="lead fs-6 mb-3 text-white-50">
+            From historic literary symposiums at Alhamra to tech summits at Expo Centre and food festivals across the city. Verified timings, venue directions, and official booking portals.
+          </p>
+          <div class="d-flex flex-wrap gap-3 text-white small">
+            <div><i class="bi bi-check-circle-fill me-1 text-success"></i> <strong>{{ total_results }}</strong> Cataloged Events</div>
+            <div><i class="bi bi-patch-check-fill me-1 text-info"></i> Verified Official Organizers</div>
+            <div><i class="bi bi-ticket-perforated-fill me-1 text-warning"></i> Direct Ticket & Registration Portals</div>
+          </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-block text-end">
+          <div class="p-3 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-25 text-start">
+            <div class="small fw-semibold text-uppercase tracking-wider text-warning mb-1">Timezone Compliance</div>
+            <p class="small mb-0 text-white">
+              All timings are published in <strong>Pakistan Standard Time (Asia/Karachi, PKT UTC+5)</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Date Navigation Filter Pills Strip -->
+  <div class="d-flex flex-wrap gap-2 mb-4 pb-2 border-bottom">
+    <a href="?date=upcoming{% if selected_category_slug %}&category={{ selected_category_slug }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm rounded-pill fw-semibold {% if date_filter == 'upcoming' %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+      <i class="bi bi-calendar-check me-1"></i>All Upcoming
+    </a>
+    <a href="?date=today{% if selected_category_slug %}&category={{ selected_category_slug }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm rounded-pill fw-semibold {% if date_filter == 'today' %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+      Today
+    </a>
+    <a href="?date=this_weekend{% if selected_category_slug %}&category={{ selected_category_slug }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm rounded-pill fw-semibold {% if date_filter == 'this_weekend' %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+      This Weekend
+    </a>
+    <a href="?date=this_week{% if selected_category_slug %}&category={{ selected_category_slug }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm rounded-pill fw-semibold {% if date_filter == 'this_week' %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+      Next 7 Days
+    </a>
+    <a href="?date=this_month{% if selected_category_slug %}&category={{ selected_category_slug }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm rounded-pill fw-semibold {% if date_filter == 'this_month' %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+      This Month
+    </a>
+    <a href="?date=past{% if selected_category_slug %}&category={{ selected_category_slug }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm rounded-pill fw-semibold {% if date_filter == 'past' %}btn-dark{% else %}btn-outline-secondary{% endif %} ms-auto">
+      <i class="bi bi-clock-history me-1"></i>Past Event Archive
+    </a>
+  </div>
+
+  <!-- Featured Upcoming Events Spotlight (if on upcoming root) -->
+  {% if featured_events and date_filter == 'upcoming' and not selected_category and not selected_ticket and not search_query %}
+  <div class="mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h2 class="h6 fw-bold text-uppercase tracking-wider text-muted mb-0">
+        <i class="bi bi-star-fill text-warning me-1"></i>Featured Events Spotlight
+      </h2>
+      <span class="badge bg-warning-subtle text-dark border border-warning-subtle small">Top Recommended</span>
+    </div>
+
+    <div class="row g-3">
+      {% for fe in featured_events %}
+      <div class="col-12 col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-4 bg-white position-relative hover-shadow" style="border-left: 5px solid #ffc107 !important;">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.72rem;">
+              <i class="bi bi-star-fill me-1"></i>Featured
+            </span>
+            <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.72rem;">
+              {{ fe.date_str }}
+            </span>
+          </div>
+
+          <h3 class="h6 fw-bold mb-1">
+            <a href="{{ fe.get_absolute_url }}" class="text-decoration-none text-dark hover-success">
+              {{ fe.title }}
+            </a>
+          </h3>
+
+          <div class="small text-muted mb-2">
+            <i class="bi bi-geo-alt text-danger me-1"></i>{{ fe.venue.name }} &bull; {{ fe.category.name }}
+          </div>
+
+          <p class="small text-secondary mb-3 flex-grow-1">
+            {{ fe.summary|truncatechars:95 }}
+          </p>
+
+          <a href="{{ fe.get_absolute_url }}" class="btn btn-sm btn-outline-dark w-100 fw-semibold">
+            View Details & Tickets <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- Filter Sidebar Column -->
+    <div class="col-lg-4 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 sticky-top" style="top: 80px; z-index: 10;">
+        <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+          <h2 class="h6 fw-bold mb-0 text-dark">
+            <i class="bi bi-funnel-fill text-warning me-2"></i>Filter Events
+          </h2>
+          {% if search_query or selected_category_slug or selected_ticket or date_filter != 'upcoming' %}
+          <a href="{% url 'events:list' %}" class="badge bg-danger-subtle text-danger text-decoration-none py-1 px-2" title="Reset all filters">
+            <i class="bi bi-x-circle me-1"></i>Reset
+          </a>
+          {% endif %}
+        </div>
+
+        <form method="get" action="{% url 'events:list' %}">
+          <!-- Keyword Search -->
+          <div class="mb-3">
+            <label for="search-input" class="form-label small fw-semibold text-secondary">Search Events or Venues</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+              <input type="text" name="q" id="search-input" class="form-control" placeholder="Literary, Tech, Alhamra..." value="{{ search_query }}">
+            </div>
+          </div>
+
+          <!-- Category Filter -->
+          <div class="mb-3">
+            <label for="category-select" class="form-label small fw-semibold text-secondary">Event Category</label>
+            <select name="category" id="category-select" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+              <option value="{{ cat.slug }}" {% if selected_category_slug == cat.slug %}selected{% endif %}>
+                {{ cat.name }} ({{ cat.upcoming_count }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Ticket Policy Filter -->
+          <div class="mb-3">
+            <label for="ticket-select" class="form-label small fw-semibold text-secondary">Ticketing / Admission</label>
+            <select name="ticket" id="ticket-select" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All Admission Types</option>
+              <option value="free" {% if selected_ticket == 'free' %}selected{% endif %}>Free Public Admission</option>
+              <option value="ticketed" {% if selected_ticket == 'ticketed' %}selected{% endif %}>Paid Ticket Required</option>
+              <option value="registration" {% if selected_ticket == 'registration' %}selected{% endif %}>Prior Registration</option>
+              <option value="invite_only" {% if selected_ticket == 'invite_only' %}selected{% endif %}>Invitation Only</option>
+            </select>
+          </div>
+
+          <!-- Date Preserve -->
+          {% if date_filter %}
+          <input type="hidden" name="date" value="{{ date_filter }}">
+          {% endif %}
+
+          <button type="submit" class="btn btn-sm btn-dark w-100 fw-semibold">
+            <i class="bi bi-filter me-1"></i>Apply Filters
+          </button>
+        </form>
+
+        <div class="mt-4 pt-3 border-top">
+          <div class="p-3 bg-light rounded-3 text-center">
+            <div class="small fw-bold text-dark mb-1">
+              <i class="bi bi-shield-check text-success me-1"></i>No Invented Events
+            </div>
+            <p class="small text-muted mb-0" style="font-size: 0.78rem;">
+              Every listing is verified with official organizers. Ticket links redirect directly to authorized booking gates.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Events Column -->
+    <div class="col-lg-8 col-xl-9">
+      <!-- Controls Strip -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge bg-dark text-white px-2 py-1 font-monospace" style="font-size: 0.8rem;">
+            {{ total_results }} Events
+          </span>
+
+          {% if selected_category %}
+          <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+            Category: {{ selected_category.name }}
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'category' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">&times;</a>
+          </span>
+          {% endif %}
+
+          {% if date_filter != 'upcoming' %}
+          <span class="badge bg-secondary-subtle text-secondary border">
+            Date: {{ date_filter|title }}
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'date' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">&times;</a>
+          </span>
+          {% endif %}
+
+          {% if search_query %}
+          <span class="badge bg-info-subtle text-info border border-info-subtle">
+            Query: "{{ search_query }}"
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'q' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">&times;</a>
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if events %}
+      <div class="row g-4">
+        {% for event in events %}
+        <div class="col-12 col-md-6 d-flex">
+          <div class="card w-100 shadow-sm border border-light-subtle rounded-4 overflow-hidden d-flex flex-column hover-shadow" style="transition: all 0.2s ease;">
+            <!-- Top Strip -->
+            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge bg-warning-subtle text-dark fw-semibold" style="font-size: 0.72rem;">
+                  <i class="bi {{ event.category.icon_class|default:'bi-calendar-event' }} me-1"></i>{{ event.category.name }}
+                </span>
+                {% if event.is_expired %}
+                <span class="badge bg-secondary text-white fw-bold ms-1" style="font-size: 0.68rem;">Concluded</span>
+                {% elif event.is_ongoing %}
+                <span class="badge bg-danger text-white fw-bold ms-1" style="font-size: 0.68rem;">Live Now</span>
+                {% endif %}
+              </div>
+              <span class="small text-muted font-monospace" style="font-size: 0.75rem;">
+                <i class="bi bi-clock me-1"></i>{{ event.time_str }}
+              </span>
+            </div>
+
+            <!-- Card Body -->
+            <div class="card-body p-4 d-flex flex-column flex-grow-1">
+              <div class="small fw-bold text-success mb-1">
+                <i class="bi bi-calendar-check me-1"></i>{{ event.date_str }}
+              </div>
+
+              <h3 class="h6 fw-bold mb-2">
+                <a href="{{ event.get_absolute_url }}" class="text-decoration-none text-dark hover-success">
+                  {{ event.title }}
+                </a>
+              </h3>
+
+              <div class="small text-muted mb-2">
+                <i class="bi bi-geo-alt-fill text-danger me-1"></i><strong>{{ event.venue.name }}</strong>
+                {% if event.address %}&bull; <span class="text-secondary">{{ event.address|truncatechars:40 }}</span>{% endif %}
+              </div>
+
+              <p class="text-secondary small mb-3 flex-grow-1" style="line-height: 1.6;">
+                {{ event.summary|truncatechars:115 }}
+              </p>
+
+              <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                <div>
+                  {% if event.ticket_policy == 'free' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">Free Entry</span>
+                  {% elif event.ticket_policy == 'ticketed' %}
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">
+                    {% if event.ticket_price_pkr %}PKR {{ event.ticket_price_pkr|floatformat:0 }}{% else %}Paid Ticket{% endif %}
+                  </span>
+                  {% elif event.ticket_policy == 'registration' %}
+                  <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold">Registration Req.</span>
+                  {% else %}
+                  <span class="badge bg-light text-secondary border fw-semibold">Invite Only</span>
+                  {% endif %}
+                </div>
+
+                <a href="{{ event.get_absolute_url }}" class="btn btn-sm btn-outline-dark fw-semibold">
+                  Details <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <nav aria-label="Event pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">&laquo; Previous</a></li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link bg-dark border-dark">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link text-dark" href="?page={{ num }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">Next &raquo;</a></li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
+        <i class="bi bi-calendar-x text-muted mb-3" style="font-size: 3rem;"></i>
+        <h3 class="h5 fw-bold text-dark mb-2">No Matching Events Found</h3>
+        <p class="text-secondary small mb-3">No cultural or civic events matched your filter criteria.</p>
+        <a href="{% url 'events:list' %}" class="btn btn-outline-dark btn-sm fw-semibold">
+          Reset All Filters
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

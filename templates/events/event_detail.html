@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block extra_head %}
+{% if canonical_url %}
+<link rel="canonical" href="{{ canonical_url }}">
+{% endif %}
+
+{% if event.title and event.start_datetime and event.venue %}
+<!-- Schema.org JSON-LD Structured Data: Event -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Event",
+  "name": "{{ event.title|escapejs }}",
+  "startDate": "{{ event.start_datetime|date:'c' }}",
+  "endDate": "{{ event.end_datetime|date:'c' }}",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "eventStatus": "{% if is_expired %}https://schema.org/EventCompleted{% else %}https://schema.org/EventScheduled{% endif %}",
+  "location": {
+    "@type": "Place",
+    "name": "{{ event.venue.name|escapejs }}",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "{{ event.address|escapejs }}",
+      "addressLocality": "{{ event.venue.locality.name|default:'Lahore'|escapejs }}",
+      "addressRegion": "Punjab",
+      "addressCountry": "PK"
+    }
+  },
+  "image": [
+    "{% if event.banner_image %}{{ request.scheme }}://{{ request.get_host }}{{ event.banner_image.url }}{% else %}https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80{% endif %}"
+  ],
+  "description": "{{ event.summary|default:event.description|truncatewords:50|escapejs }}",
+  "organizer": {
+    "@type": "Organization",
+    "name": "{{ event.organizer_name|escapejs }}"{% if event.source_url %},
+    "url": "{{ event.source_url }}"{% endif %}
+  }{% if event.ticket_policy == 'free' %},
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ canonical_url }}",
+    "price": "0",
+    "priceCurrency": "PKR",
+    "availability": "https://schema.org/InStock",
+    "validFrom": "{{ event.created_at|date:'c' }}"
+  }{% elif event.ticket_policy == 'ticketed' and event.ticket_price_pkr %},
+  "offers": {
+    "@type": "Offer",
+    "url": "{% if event.ticket_or_registration_url %}{{ event.ticket_or_registration_url }}{% else %}{{ canonical_url }}{% endif %}",
+    "price": "{{ event.ticket_price_pkr }}",
+    "priceCurrency": "PKR",
+    "availability": "{% if is_expired %}https://schema.org/Discontinued{% else %}https://schema.org/InStock{% endif %}",
+    "validFrom": "{{ event.created_at|date:'c' }}"
+  }{% endif %}
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'events:list' %}" class="text-decoration-none">Events</a></li>
+      <li class="breadcrumb-item"><a href="{{ event.category.get_absolute_url }}" class="text-decoration-none">{{ event.category.name }}</a></li>
+      <li class="breadcrumb-item active text-truncate" aria-current="page" style="max-width: 300px;">{{ event.title }}</li>
+    </ol>
+  </nav>
+
+  <!-- Expired Event Alert -->
+  {% if is_expired %}
+  <div class="alert alert-secondary border-secondary shadow-sm rounded-4 p-4 mb-4">
+    <div class="d-flex align-items-start gap-3">
+      <div class="p-2 bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-clock-history fs-4"></i>
+      </div>
+      <div>
+        <h5 class="alert-heading fw-bold mb-1">This Event Has Concluded</h5>
+        <p class="mb-2 text-muted small">
+          This event was scheduled from <strong>{{ event.start_datetime|date:"l, d M Y, h:i A" }}</strong> to <strong>{{ event.end_datetime|date:"l, d M Y, h:i A" }}</strong>. The session has ended and ticket bookings or entries are no longer active.
+        </p>
+        <div class="small">
+          <a href="{% url 'events:list' %}" class="btn btn-sm btn-outline-dark rounded-pill fw-semibold me-2">
+            <i class="bi bi-arrow-left me-1"></i>Browse Upcoming Events
+          </a>
+          <a href="{% url 'events:list' %}?date=past" class="btn btn-sm btn-light border rounded-pill">
+            Explore Past Event Archive
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% elif is_ongoing %}
+  <div class="alert alert-success border-success shadow-sm rounded-4 p-4 mb-4">
+    <div class="d-flex align-items-start gap-3">
+      <div class="p-2 bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-broadcast fs-4"></i>
+      </div>
+      <div>
+        <h5 class="alert-heading fw-bold mb-1 text-success">Happening Right Now!</h5>
+        <p class="mb-0 text-dark small">
+          This event is actively underway at <strong>{{ event.venue.name }}</strong> (ending at {{ event.end_datetime|date:"h:i A, d M Y" }} PKT). Please consult the venue entrance or organizer contact for current walk-in availability.
+        </p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Hero Section -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card-body p-4 p-md-5 bg-white">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-8">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span class="badge bg-primary text-white px-3 py-2 rounded-pill small fw-semibold">
+              <i class="bi {{ event.category.icon_class }} me-1"></i>{{ event.category.name }}
+            </span>
+
+            {% if event.verification_status == 'verified' %}
+            <span class="badge bg-success text-white px-3 py-2 rounded-pill small fw-semibold">
+              <i class="bi bi-patch-check-fill me-1"></i>Verified Event
+            </span>
+            {% else %}
+            <span class="badge bg-secondary-subtle text-dark border px-3 py-2 rounded-pill small">
+              <i class="bi bi-info-circle me-1"></i>Pending Verification
+            </span>
+            {% endif %}
+
+            {% if event.is_featured %}
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill small fw-bold">
+              <i class="bi bi-star-fill me-1"></i>Featured
+            </span>
+            {% endif %}
+
+            {% if event.ticket_policy == 'free' %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill small fw-semibold">
+              <i class="bi bi-gift me-1"></i>Free Entry
+            </span>
+            {% elif event.ticket_policy == 'ticketed' %}
+            <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-3 py-2 rounded-pill small fw-semibold">
+              <i class="bi bi-ticket-perforated me-1"></i>Paid Ticket Required
+            </span>
+            {% elif event.ticket_policy == 'registration' %}
+            <span class="badge bg-info-subtle text-dark border border-info-subtle px-3 py-2 rounded-pill small fw-semibold">
+              <i class="bi bi-pencil-square me-1"></i>Free with Prior Registration
+            </span>
+            {% elif event.ticket_policy == 'invite_only' %}
+            <span class="badge bg-secondary text-white px-3 py-2 rounded-pill small fw-semibold">
+              <i class="bi bi-lock me-1"></i>Invitation Only
+            </span>
+            {% endif %}
+          </div>
+
+          <h1 class="display-6 fw-bold mb-3 text-dark">{{ event.title }}</h1>
+
+          <div class="d-flex flex-wrap gap-4 text-muted small">
+            <div>
+              <i class="bi bi-calendar3 text-primary me-2 fs-6"></i>
+              <strong>{{ event.date_str }}</strong>
+              {% if event.start_datetime|date:"Y-m-d" != event.end_datetime|date:"Y-m-d" %}
+                &ndash; {{ event.end_datetime|date:"D, d M Y" }}
+              {% endif %}
+            </div>
+            <div>
+              <i class="bi bi-clock text-primary me-2 fs-6"></i>
+              <strong>{{ event.time_str }}</strong> &ndash; {{ event.end_datetime|date:"h:i A" }} (PKT UTC+5)
+            </div>
+            <div>
+              <i class="bi bi-geo-alt-fill text-danger me-2 fs-6"></i>
+              <strong>{{ event.venue.name }}</strong>, {{ event.venue.locality.name }}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 text-lg-end">
+          {% if not is_expired and event.ticket_or_registration_url %}
+          <a href="{{ event.ticket_or_registration_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg rounded-pill fw-semibold shadow-sm px-4 mb-2 w-100 w-lg-auto">
+            <i class="bi bi-ticket-detailed me-2"></i>Official Registration / Tickets
+          </a>
+          <div class="small text-muted text-center text-lg-end">Opens official external organizer portal</div>
+          {% elif is_expired %}
+          <button class="btn btn-secondary btn-lg rounded-pill fw-semibold px-4 w-100 w-lg-auto" disabled>
+            <i class="bi bi-lock-fill me-2"></i>Event Concluded
+          </button>
+          {% elif event.ticket_policy == 'free' %}
+          <div class="p-3 bg-light rounded-4 border text-center">
+            <span class="badge bg-success mb-2 px-3 py-1">Open Attendance</span>
+            <div class="fw-bold text-dark small">No Advance Ticket Required</div>
+            <div class="text-muted small">Walk-in attendance subject to venue seating capacity.</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Event Details & Sidebar -->
+  <div class="row g-4">
+    <!-- Left Main Column -->
+    <div class="col-lg-8">
+      <!-- Event Banner Image if available -->
+      {% if event.banner_image %}
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <img src="{{ event.banner_image.url }}" alt="{{ event.title }}" class="img-fluid w-100" style="max-height: 460px; object-fit: cover;">
+      </div>
+      {% endif %}
+
+      <!-- Overview & Description -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-4">
+        <h2 class="h5 fw-bold mb-3 border-bottom pb-2">
+          <i class="bi bi-file-text text-primary me-2"></i>Event Overview & Schedule
+        </h2>
+        <div class="text-secondary lh-lg mb-4" style="font-size: 1.05rem;">
+          {{ event.description|linebreaks }}
+        </div>
+
+        <!-- Event Timing Breakdown -->
+        <div class="bg-light p-4 rounded-4 border mb-4">
+          <h3 class="h6 fw-bold mb-3 text-dark">
+            <i class="bi bi-calendar-range me-2 text-primary"></i>Schedule & Timezone Details
+          </h3>
+          <div class="row g-3 small">
+            <div class="col-sm-6">
+              <div class="text-muted text-uppercase tracking-wider">Start Date & Time</div>
+              <div class="fw-bold fs-6 text-dark">{{ event.start_datetime|date:"l, d F Y" }}</div>
+              <div class="text-secondary">{{ event.start_datetime|date:"h:i A" }} Pakistan Standard Time (PKT)</div>
+            </div>
+            <div class="col-sm-6">
+              <div class="text-muted text-uppercase tracking-wider">End Date & Time</div>
+              <div class="fw-bold fs-6 text-dark">{{ event.end_datetime|date:"l, d F Y" }}</div>
+              <div class="text-secondary">{{ event.end_datetime|date:"h:i A" }} Pakistan Standard Time (PKT)</div>
+            </div>
+          </div>
+          <div class="mt-3 pt-3 border-top text-muted small">
+            <i class="bi bi-info-circle me-1"></i> Timezone standard: <code>Asia/Karachi (UTC+5)</code>. Please arrive 15&ndash;30 minutes before program sessions begin to allow for security screening.
+          </div>
+        </div>
+
+        <!-- Venue & Physical Location -->
+        <h2 class="h5 fw-bold mb-3 border-bottom pb-2">
+          <i class="bi bi-building text-primary me-2"></i>Venue & Location
+        </h2>
+        <div class="card border bg-light rounded-4 p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <h4 class="h6 fw-bold mb-1 text-dark">{{ event.venue.name }}</h4>
+              <div class="text-muted small mb-2">
+                <i class="bi bi-geo-alt me-1 text-danger"></i>{{ event.address }}
+              </div>
+              <span class="badge bg-white text-dark border small">
+                Neighborhood: {{ event.venue.locality.name }}
+              </span>
+              {% if event.venue.capacity %}
+              <span class="badge bg-white text-dark border small ms-1">
+                <i class="bi bi-people me-1"></i>Capacity: {{ event.venue.capacity|default:'N/A' }} attendees
+              </span>
+              {% endif %}
+            </div>
+            {% if event.venue.google_maps_url %}
+            <a href="{{ event.venue.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary rounded-pill text-nowrap">
+              <i class="bi bi-map me-1"></i>Google Maps
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Organizer Details -->
+        <h2 class="h5 fw-bold mb-3 border-bottom pb-2">
+          <i class="bi bi-person-badge text-primary me-2"></i>Organizer & Host
+        </h2>
+        <div class="d-flex align-items-center justify-content-between p-3 rounded-4 bg-light border">
+          <div>
+            <div class="fw-bold text-dark">{{ event.organizer_name }}</div>
+            {% if event.organizer_contact %}
+            <div class="text-muted small mt-1">
+              <i class="bi bi-envelope-at me-1"></i>{{ event.organizer_contact }}
+            </div>
+            {% endif %}
+          </div>
+          {% if event.source_url %}
+          <a href="{{ event.source_url }}" target="_blank" rel="noopener noreferrer nofollow" class="btn btn-sm btn-outline-secondary rounded-pill">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Official Website
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="col-lg-4">
+      <!-- Ticketing & Access Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <h3 class="h6 fw-bold text-uppercase tracking-wider text-muted mb-3">
+          <i class="bi bi-ticket-detailed text-primary me-2"></i>Ticketing & Entry
+        </h3>
+
+        <div class="mb-3">
+          <div class="text-muted small">Entry Policy</div>
+          <div class="fw-bold text-dark fs-6">{{ event.get_ticket_policy_display }}</div>
+        </div>
+
+        {% if event.ticket_price_pkr %}
+        <div class="mb-3">
+          <div class="text-muted small">Standard Ticket Price</div>
+          <div class="fw-bold text-success fs-5">PKR {{ event.ticket_price_pkr }}</div>
+        </div>
+        {% elif event.ticket_policy == 'free' %}
+        <div class="mb-3">
+          <div class="text-muted small">Standard Ticket Price</div>
+          <div class="fw-bold text-success fs-5">PKR 0 (Free Entry)</div>
+        </div>
+        {% endif %}
+
+        {% if not is_expired and event.ticket_or_registration_url %}
+        <a href="{{ event.ticket_or_registration_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold mb-2 shadow-sm">
+          <i class="bi bi-box-arrow-up-right me-2"></i>Book / Register Now
+        </a>
+        <div class="text-center text-muted small" style="font-size: 0.75rem;">
+          Verified official ticketing URL
+        </div>
+        {% elif is_expired %}
+        <button class="btn btn-secondary w-100 rounded-pill py-2 fw-semibold mb-2" disabled>
+          Registration Concluded
+        </button>
+        {% elif event.ticket_policy == 'free' %}
+        <div class="alert alert-light border small text-muted mb-0">
+          <i class="bi bi-check-circle-fill text-success me-1"></i>No advance booking required. Attend directly at the venue during operating hours.
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Verification & Editorial Standards Notice -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <h3 class="h6 fw-bold text-uppercase tracking-wider text-muted mb-3">
+          <i class="bi bi-shield-check text-success me-2"></i>Editorial Provenance
+        </h3>
+
+        <div class="small text-secondary mb-3">
+          Lahore City Hub maintains strict editorial integrity: we do not invent event schedules, ticket links, or prices.
+        </div>
+
+        <ul class="list-unstyled small mb-3 d-flex flex-column gap-2 text-muted">
+          <li>
+            <i class="bi bi-patch-check-fill text-success me-2"></i>Status: <strong>{{ event.get_verification_status_display }}</strong>
+          </li>
+          <li>
+            <i class="bi bi-calendar-check text-primary me-2"></i>Last Verified: <strong>{{ event.last_verified_date|default:event.updated_at|date:"M d, Y" }}</strong>
+          </li>
+          {% if event.source_url %}
+          <li>
+            <i class="bi bi-link-45deg text-info me-2"></i>Source: <a href="{{ event.source_url }}" target="_blank" rel="noopener noreferrer nofollow" class="text-break">Official Organizer Page</a>
+          </li>
+          {% endif %}
+        </ul>
+
+        <div class="pt-2 border-top text-muted" style="font-size: 0.75rem;">
+          Found an error or changed timing? <a href="{% url 'core:contact' %}">Report an update</a> to our verification desk.
+        </div>
+      </div>
+
+      <!-- Related Events in Category -->
+      {% if related_events %}
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <h3 class="h6 fw-bold text-uppercase tracking-wider text-muted mb-3">
+          <i class="bi bi-calendar-event me-2 text-primary"></i>Related Events
+        </h3>
+
+        <div class="d-flex flex-column gap-3">
+          {% for re in related_events %}
+          <div class="border-bottom pb-3 last-no-border">
+            <span class="badge bg-light text-dark border small mb-1">{{ re.date_str }}</span>
+            <h4 class="h6 mb-1">
+              <a href="{{ re.get_absolute_url }}" class="text-decoration-none text-dark fw-bold">
+                {{ re.title }}
+              </a>
+            </h4>
+            <div class="text-muted small">
+              <i class="bi bi-geo-alt me-1"></i>{{ re.venue.name }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="mt-3 text-center">
+          <a href="{{ event.category.get_absolute_url }}" class="small fw-semibold text-decoration-none">
+            View all {{ event.category.name }} <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Back to All Events -->
+      <a href="{% url 'events:list' %}" class="btn btn-outline-dark w-100 rounded-pill py-2">
+        <i class="bi bi-arrow-left me-1"></i>Back to All Events Calendar
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
