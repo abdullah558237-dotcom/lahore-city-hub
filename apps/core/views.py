@@ -346,29 +346,26 @@ def search_results_view(request):
 
 
 def login_view(request):
-    """User authentication sign-in screen."""
-    if request.method == 'POST':
-        messages.success(request, "Demonstration sign-in successful! Welcome back to Lahore City Hub.")
-    context = {
-        'page_title': 'Sign In to Your Account | Lahore City Hub',
-        'meta_description': 'Access your saved bookmarks, submitted reviews, and claimed business listings on Lahore City Hub.',
-    }
-    return render(request, 'pages/login.html', context)
+    """User authentication sign-in screen (delegates to apps.accounts)."""
+    from apps.accounts.views import login_view as accounts_login
+    return accounts_login(request)
 
 
 def register_view(request):
-    """User registration screen."""
-    if request.method == 'POST':
-        messages.success(request, "Account created successfully! Welcome to the Lahore City Hub community.")
-    context = {
-        'page_title': 'Create a Member Account | Lahore City Hub',
-        'meta_description': 'Join Lahore City Hub to bookmark favorite spots, submit verified reviews, and manage business listings.',
-    }
-    return render(request, 'pages/register.html', context)
+    """User registration screen (delegates to apps.accounts)."""
+    from apps.accounts.views import register_view as accounts_register
+    return accounts_register(request)
 
 
 def dashboard_view(request):
-    """User dashboard displaying saved bookmarks, reviews, and business claims."""
+    """
+    User dashboard. If authenticated, delegates to real accounts dashboard.
+    If anonymous and requesting demo view, provides sample demonstration data.
+    """
+    if request.user.is_authenticated:
+        from apps.accounts.views import dashboard_view as accounts_dashboard
+        return accounts_dashboard(request)
+
     bookmarks = [
         {"title": "Badshahi Mosque", "category": "Tourist Places", "locality": "Walled City", "rating": 4.9, "slug": "badshahi-mosque"},
         {"title": "Haveli Restaurant", "category": "Dining & Rooftop", "locality": "Fort Road Food Street", "rating": 4.9, "slug": "haveli-restaurant-fort-road"},

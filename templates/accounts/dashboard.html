@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+    </ol>
+  </nav>
+
+  <!-- User Header Banner -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+    <div class="card-body p-4 p-md-5">
+      <div class="row align-items-center g-3">
+        <div class="col-auto">
+          {% if user.avatar %}
+          <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="rounded-circle border shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
+          {% else %}
+          <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm fs-2 fw-bold" style="width: 80px; height: 80px;">
+            {{ user.first_name|default:user.username|slice:":1"|upper }}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="col">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+            <h1 class="h3 fw-bold text-dark mb-0">
+              {{ user.get_full_name|default:user.username }}
+            </h1>
+
+            {% if user.role == 'business_owner' %}
+            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill small fw-bold">
+              <i class="bi bi-briefcase-fill me-1"></i>Business Owner
+            </span>
+            {% elif user.role == 'admin' or user.is_staff %}
+            <span class="badge bg-danger text-white px-3 py-1 rounded-pill small fw-bold">
+              <i class="bi bi-shield-lock-fill me-1"></i>Administrator
+            </span>
+            {% elif user.role == 'moderator' %}
+            <span class="badge bg-info text-dark px-3 py-1 rounded-pill small fw-bold">
+              <i class="bi bi-patch-check-fill me-1"></i>Content Moderator
+            </span>
+            {% else %}
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill small fw-semibold">
+              <i class="bi bi-person-fill me-1"></i>Community Member
+            </span>
+            {% endif %}
+
+            {% if user.is_verified %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill small">
+              <i class="bi bi-check-circle-fill me-1"></i>Verified Account
+            </span>
+            {% endif %}
+          </div>
+
+          <div class="d-flex flex-wrap gap-3 text-muted small mt-2">
+            <div><i class="bi bi-envelope me-1"></i>{{ user.email }}</div>
+            {% if user.profile.home_locality %}
+            <div><i class="bi bi-geo-alt me-1"></i>{{ user.profile.home_locality }}</div>
+            {% endif %}
+            <div><i class="bi bi-calendar3 me-1"></i>Member since {{ user.date_joined|date:"M Y" }}</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-auto d-flex flex-wrap gap-2">
+          <a href="{% url 'accounts:profile' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+            <i class="bi bi-pencil me-1"></i>Edit Profile
+          </a>
+          <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-key me-1"></i>Change Password
+          </a>
+          {% if is_business_owner %}
+          <a href="{% url 'businesses:submit' %}" class="btn btn-success btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-plus-circle me-1"></i>Submit Business
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Submission & Activity Metrics -->
+  {% if is_business_owner or businesses %}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+        <div class="fs-4 fw-bold text-dark">{{ total_submissions }}</div>
+        <div class="small text-muted">Total Submissions</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+        <div class="fs-4 fw-bold text-success">{{ active_count }}</div>
+        <div class="small text-muted">Published & Live</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+        <div class="fs-4 fw-bold text-warning">{{ pending_count }}</div>
+        <div class="small text-muted">Pending Audit</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+        <div class="fs-4 fw-bold text-info">{{ verified_count }}</div>
+        <div class="small text-muted">Verified Records</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Main Tabs: Content Submissions & Bookmarks -->
+  <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+    <ul class="nav nav-tabs border-bottom mb-4" id="dashboardTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-bold" id="submissions-tab" data-bs-toggle="tab" data-bs-target="#submissions-pane" type="button" role="tab">
+          <i class="bi bi-folder-check me-2 text-primary"></i>Content Submission Status
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold" id="bookmarks-tab" data-bs-toggle="tab" data-bs-target="#bookmarks-pane" type="button" role="tab">
+          <i class="bi bi-bookmark-star me-2 text-warning"></i>Saved Places & Bookmarks
+        </button>
+      </li>
+      {% if edit_requests or claims %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold" id="requests-tab" data-bs-toggle="tab" data-bs-target="#requests-pane" type="button" role="tab">
+          <i class="bi bi-clock-history me-2 text-secondary"></i>Edit & Claim Requests
+        </button>
+      </li>
+      {% endif %}
+    </ul>
+
+    <div class="tab-content" id="dashboardTabContent">
+      <!-- Tab 1: Content Submission Status -->
+      <div class="tab-pane fade show active" id="submissions-pane" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h5 fw-bold mb-0 text-dark">My Business Listings</h2>
+          <a href="{% url 'businesses:submit' %}" class="btn btn-sm btn-outline-success rounded-pill fw-semibold">
+            <i class="bi bi-plus-lg me-1"></i>Submit New Listing
+          </a>
+        </div>
+
+        {% if businesses %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small">
+              <tr>
+                <th scope="col">Business Name</th>
+                <th scope="col">Category</th>
+                <th scope="col">Locality</th>
+                <th scope="col">Publication Status</th>
+                <th scope="col">Verification</th>
+                <th scope="col">Submitted</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in businesses %}
+              <tr>
+                <td>
+                  <div class="fw-bold text-dark">{{ b.title }}</div>
+                  <small class="text-muted">{{ b.address|truncatechars:35 }}</small>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">{{ b.category.name }}</span>
+                </td>
+                <td>{{ b.locality.name }}</td>
+                <td>
+                  {% if b.is_active %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle">
+                    <i class="bi bi-check-circle me-1"></i>Published & Live
+                  </span>
+                  {% else %}
+                  <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+                    <i class="bi bi-hourglass-split me-1"></i>Pending Editorial Approval
+                  </span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if b.verification_status == 'verified' or b.verification_status == 'claimed' %}
+                  <span class="badge bg-success text-white">Verified</span>
+                  {% else %}
+                  <span class="badge bg-secondary text-white">{{ b.get_verification_status_display }}</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">{{ b.created_at|date:"d M Y" }}</td>
+                <td class="text-end">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ b.get_absolute_url }}" class="btn btn-outline-dark" title="View Listing">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'businesses:edit' slug=b.slug %}" class="btn btn-outline-primary" title="Request Edit">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'businesses:delete' slug=b.slug %}" class="btn btn-outline-danger" title="Delete Listing">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center p-5 bg-light rounded-4 border">
+          <i class="bi bi-shop text-muted mb-3" style="font-size: 3rem;"></i>
+          <h3 class="h6 fw-bold text-dark mb-1">No Business Listings Found</h3>
+          <p class="text-muted small mb-3">You have not submitted or claimed any local business listings yet.</p>
+          <a href="{% url 'businesses:submit' %}" class="btn btn-sm btn-success rounded-pill px-4 fw-semibold">
+            <i class="bi bi-plus-circle me-1"></i>List Your Business for Free
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Tab 2: Saved Places & Bookmarks -->
+      <div class="tab-pane fade" id="bookmarks-pane" role="tabpanel">
+        <h2 class="h5 fw-bold mb-3 text-dark">Saved Places & Bookmarks</h2>
+        {% if bookmarks %}
+        <div class="row g-3">
+          {% for bm in bookmarks %}
+          <div class="col-12 col-md-6">
+            <div class="p-3 bg-light rounded-4 border d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-bold text-dark">{{ bm.content_object.title|default:bm.notes|default:'Saved Item' }}</div>
+                <small class="text-muted">Saved on {{ bm.created_at|date:"d M Y" }}</small>
+              </div>
+              {% if bm.content_object.get_absolute_url %}
+              <a href="{{ bm.content_object.get_absolute_url }}" class="btn btn-sm btn-outline-dark rounded-pill">
+                View <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center p-5 bg-light rounded-4 border">
+          <i class="bi bi-bookmark-heart text-muted mb-3" style="font-size: 3rem;"></i>
+          <h3 class="h6 fw-bold text-dark mb-1">No Saved Bookmarks Yet</h3>
+          <p class="text-muted small mb-3">Browse tourist places, restaurants, or cultural events and save them for easy reference.</p>
+          <a href="{% url 'places:list' %}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+            Explore Tourist Places
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Tab 3: Edit Requests & Claims -->
+      {% if edit_requests or claims %}
+      <div class="tab-pane fade" id="requests-pane" role="tabpanel">
+        <h2 class="h5 fw-bold mb-3 text-dark">Moderation & Audit Pipeline</h2>
+
+        {% if edit_requests %}
+        <h3 class="h6 fw-bold text-muted text-uppercase tracking-wider mt-3 mb-2">Edit Requests</h3>
+        <div class="table-responsive mb-4">
+          <table class="table table-sm table-hover align-middle">
+            <thead class="table-light small">
+              <tr>
+                <th>Business</th>
+                <th>Requested Changes</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for er in edit_requests %}
+              <tr>
+                <td><strong>{{ er.business.title }}</strong></td>
+                <td class="small">{{ er.proposed_changes|truncatechars:60 }}</td>
+                <td>
+                  {% if er.status == 'approved' %}
+                  <span class="badge bg-success">Approved</span>
+                  {% elif er.status == 'rejected' %}
+                  <span class="badge bg-danger">Rejected</span>
+                  {% else %}
+                  <span class="badge bg-warning text-dark">Pending Audit</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">{{ er.created_at|date:"d M Y" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+
+        {% if claims %}
+        <h3 class="h6 fw-bold text-muted text-uppercase tracking-wider mt-3 mb-2">Ownership Claims</h3>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle">
+            <thead class="table-light small">
+              <tr>
+                <th>Business</th>
+                <th>Claimant Role</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in claims %}
+              <tr>
+                <td><strong>{{ c.business.title }}</strong></td>
+                <td class="small">{{ c.role_at_business|default:'Owner' }}</td>
+                <td>
+                  {% if c.status == 'approved' %}
+                  <span class="badge bg-success">Approved</span>
+                  {% elif c.status == 'rejected' %}
+                  <span class="badge bg-danger">Rejected</span>
+                  {% else %}
+                  <span class="badge bg-warning text-dark">Pending Audit</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">{{ c.created_at|date:"d M Y" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

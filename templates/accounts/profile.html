@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile & Preferences | Lahore City Hub{% endblock %}
+{% block meta_description %}Manage your profile, Lahore locality, and community notification settings.{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Edit Profile</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+          <div>
+            <h1 class="h4 fw-bold text-dark mb-1">Edit Profile & Preferences</h1>
+            <p class="text-muted small mb-0">Update your public details and community notification preferences.</p>
+          </div>
+          <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-dark btn-sm rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+          </a>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger border-0 rounded-3 small py-2 mb-3">
+          {% for error in form.non_field_errors %}
+            <div><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Read-Only Account Security Metadata -->
+        <div class="p-3 bg-light rounded-4 border mb-4">
+          <div class="row g-3 small">
+            <div class="col-sm-4">
+              <span class="text-muted d-block">Account Email</span>
+              <strong class="text-dark">{{ user.email }}</strong>
+            </div>
+            <div class="col-sm-4">
+              <span class="text-muted d-block">Account Role</span>
+              <strong class="text-dark">{{ user.get_role_display }}</strong>
+            </div>
+            <div class="col-sm-4">
+              <span class="text-muted d-block">Verification Status</span>
+              {% if user.is_verified %}
+              <span class="badge bg-success-subtle text-success border border-success-subtle">Verified Member</span>
+              {% else %}
+              <span class="badge bg-secondary-subtle text-secondary border">Unverified</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <form method="post" action="{% url 'accounts:profile' %}" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          <div class="row g-3">
+            <!-- First Name -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.first_name.id_for_label }}">First Name</label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}
+              <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Last Name -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.last_name.id_for_label }}">Last Name</label>
+              {{ form.last_name }}
+              {% if form.last_name.errors %}
+              <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Phone Number -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+              {{ form.phone_number }}
+              {% if form.phone_number.errors %}
+              <div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Home Locality -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.home_locality.id_for_label }}">Home Locality / Area</label>
+              {{ form.home_locality }}
+              {% if form.home_locality.errors %}
+              <div class="text-danger small mt-1">{{ form.home_locality.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Bio -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="{{ form.bio.id_for_label }}">Bio / About You</label>
+              {{ form.bio }}
+              {% if form.bio.errors %}
+              <div class="text-danger small mt-1">{{ form.bio.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Avatar Upload -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="{{ form.avatar.id_for_label }}">Profile Picture (Avatar)</label>
+              {% if user.avatar %}
+              <div class="mb-2 d-flex align-items-center gap-2">
+                <img src="{{ user.avatar.url }}" alt="Current Avatar" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                <span class="small text-muted">Current avatar</span>
+              </div>
+              {% endif %}
+              {{ form.avatar }}
+              <div class="form-text small text-muted">Supported formats: JPG, PNG, WEBP. Maximum file size: 5MB.</div>
+              {% if form.avatar.errors %}
+              <div class="text-danger small mt-1">{{ form.avatar.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Notification Preferences -->
+            <div class="col-12 mt-4 pt-3 border-top">
+              <h2 class="h6 fw-bold text-dark mb-3">Community Notification Preferences</h2>
+              <div class="form-check mb-2">
+                {{ form.receive_smog_alerts }}
+                <label class="form-check-label small" for="{{ form.receive_smog_alerts.id_for_label }}">
+                  <strong>Receive Smog & Air Quality Advisories</strong>: Urgent red alerts and EPA guidelines for Lahore.
+                </label>
+              </div>
+              <div class="form-check">
+                {{ form.receive_event_digests }}
+                <label class="form-check-label small" for="{{ form.receive_event_digests.id_for_label }}">
+                  <strong>Receive Cultural Digest</strong>: Weekly highlights of literary festivals, expos, and food weekends.
+                </label>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="col-12 d-flex gap-2 mt-4 pt-3 border-top">
+              <button type="submit" class="btn btn-lch-primary py-2 px-4 fw-bold rounded-pill shadow-sm">
+                <i class="bi bi-check2-circle me-1"></i>Save Profile Changes
+              </button>
+              <a href="{% url 'accounts:dashboard' %}" class="btn btn-light border py-2 px-4 rounded-pill">
+                Cancel
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -132,6 +132,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Authentication URLs & Redirection
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'accounts:dashboard'
+LOGOUT_REDIRECT_URL = 'core:home'
+
 # Localization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Karachi'

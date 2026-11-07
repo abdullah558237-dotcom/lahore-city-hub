@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign In to Lahore City Hub | Lahore City Hub{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
+      <div class="card p-4 p-md-5 border-0 shadow-sm rounded-4 bg-white">
+        <!-- Logo Emblem -->
+        <div class="text-center mb-4">
+          <img src="{% static 'img/brand/favicon.svg' %}" alt="Emblem" height="50" class="mb-2">
+          <h1 class="h4 fw-bold text-dark mb-1">Sign In to Lahore City Hub</h1>
+          <p class="text-muted small">Access your bookmarks, reviews, and claimed listings</p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger border-0 rounded-3 small py-2 mb-3">
+          {% for error in form.non_field_errors %}
+            <div><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:login' %}" novalidate>
+          {% csrf_token %}
+          {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+          {% endif %}
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-dark" for="{{ form.username_or_email.id_for_label }}">Email or Username</label>
+            {{ form.username_or_email }}
+            {% if form.username_or_email.errors %}
+            <div class="text-danger small mt-1">{{ form.username_or_email.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <label class="form-label small fw-bold text-dark mb-0" for="{{ form.password.id_for_label }}">Password</label>
+              <a href="{% url 'accounts:password_reset' %}" class="small text-success text-decoration-none">Forgot password?</a>
+            </div>
+            <div class="mt-1">
+              {{ form.password }}
+            </div>
+            {% if form.password.errors %}
+            <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-check mb-4">
+            {{ form.remember_me }}
+            <label class="form-check-label small text-muted" for="{{ form.remember_me.id_for_label }}">
+              Remember my session on this device
+            </label>
+          </div>
+
+          <div class="d-grid mb-3">
+            <button type="submit" class="btn btn-lch-primary py-2 fw-bold shadow-sm">
+              <i class="bi bi-box-arrow-in-right me-1"></i>Sign In to Account
+            </button>
+          </div>
+
+          <div class="text-center small text-muted">
+            Don't have an account yet? <a href="{% url 'accounts:register' %}" class="text-success fw-bold text-decoration-none">Register for free</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

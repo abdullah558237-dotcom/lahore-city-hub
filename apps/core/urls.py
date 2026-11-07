@@ -23,7 +23,7 @@ urlpatterns = [
     # Accounts & User Workflows
     path('accounts/login/', views.login_view, name='login'),
     path('accounts/register/', views.register_view, name='register'),
-    path('accounts/dashboard/', views.dashboard_view, name='dashboard'),
+    path('member/dashboard/', views.dashboard_view, name='dashboard'),
     
     # Business Submissions
     path('businesses/submit/', views.business_submission_view, name='business_submission'),

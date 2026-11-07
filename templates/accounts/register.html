@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create an Account | Lahore City Hub{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-9 col-lg-7 col-xl-6">
+      <div class="card p-4 p-md-5 border-0 shadow-sm rounded-4 bg-white">
+        <!-- Logo Emblem -->
+        <div class="text-center mb-4">
+          <img src="{% static 'img/brand/favicon.svg' %}" alt="Emblem" height="50" class="mb-2">
+          <h1 class="h4 fw-bold text-dark mb-1">Join the Lahore Community</h1>
+          <p class="text-muted small">Save favorite places, write verified reviews, and manage business claims</p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger border-0 rounded-3 small py-2 mb-3">
+          {% for error in form.non_field_errors %}
+            <div><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:register' %}" novalidate>
+          {% csrf_token %}
+
+          <div class="row g-3">
+            <!-- Full Name -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="{{ form.full_name.id_for_label }}">Full Name *</label>
+              {{ form.full_name }}
+              {% if form.full_name.errors %}
+              <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Email Address -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.email.id_for_label }}">Email Address *</label>
+              {{ form.email }}
+              {% if form.email.errors %}
+              <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Phone Number -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+              {{ form.phone_number }}
+              {% if form.phone_number.errors %}
+              <div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Home Locality -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="{{ form.home_locality.id_for_label }}">Lahore Neighborhood / Locality</label>
+              {{ form.home_locality }}
+              {% if form.home_locality.errors %}
+              <div class="text-danger small mt-1">{{ form.home_locality.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Account Role Selection -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark d-block">Account Type</label>
+              <div class="p-3 bg-light rounded-3 border">
+                {% for radio in form.role %}
+                <div class="form-check mb-2 last-no-mb">
+                  {{ radio.tag }}
+                  <label class="form-check-label small" for="{{ radio.id_for_label }}">
+                    {{ radio.choice_label }}
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+              {% if form.role.errors %}
+              <div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.password.id_for_label }}">Password *</label>
+              {{ form.password }}
+              {% if form.password.errors %}
+              <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.confirm_password.id_for_label }}">Confirm Password *</label>
+              {{ form.confirm_password }}
+              {% if form.confirm_password.errors %}
+              <div class="text-danger small mt-1">{{ form.confirm_password.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Terms and Conditions Checkbox -->
+            <div class="col-12">
+              <div class="form-check">
+                {{ form.terms_accepted }}
+                <label class="form-check-label small text-muted" for="{{ form.terms_accepted.id_for_label }}">
+                  I agree to the <a href="{% url 'core:terms' %}" class="text-success text-decoration-none" target="_blank">Terms & Conditions</a> and <a href="{% url 'core:privacy' %}" class="text-success text-decoration-none" target="_blank">Privacy Policy</a>.
+                </label>
+              </div>
+              {% if form.terms_accepted.errors %}
+              <div class="text-danger small mt-1">{{ form.terms_accepted.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="col-12 d-grid mt-3">
+              <button type="submit" class="btn btn-lch-primary py-2 fw-bold shadow-sm">
+                <i class="bi bi-person-plus me-1"></i>Create Free Account
+              </button>
+            </div>
+
+            <div class="col-12 text-center small text-muted mt-3">
+              Already registered? <a href="{% url 'accounts:login' %}" class="text-success fw-bold text-decoration-none">Sign in here</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
