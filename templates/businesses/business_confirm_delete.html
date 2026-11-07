@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete {{ business.title }} | Lahore City Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'businesses:list' %}" class="text-decoration-none">Local Businesses</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'businesses:dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Delete Confirmation</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white text-center">
+        <div class="mb-3">
+          <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+        </div>
+        <h1 class="h4 fw-bold text-dark mb-2">Delete Business Listing?</h1>
+        <p class="text-secondary small mb-4">
+          Are you sure you want to permanently delete <strong>{{ business.title }}</strong>? This action cannot be undone. Associated reviews, edit requests, and claims will also be removed.
+        </p>
+
+        <form method="post" action="{% url 'businesses:delete' slug=business.slug %}">
+          {% csrf_token %}
+          <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'businesses:dashboard' %}" class="btn btn-outline-secondary btn-sm px-4">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn-danger btn-sm fw-bold px-4">
+              <i class="bi bi-trash-fill me-1"></i>Confirm Deletion
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

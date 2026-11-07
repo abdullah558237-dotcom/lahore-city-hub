@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'businesses:list' %}" class="text-decoration-none">Local Businesses</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Owner Dashboard</li>
+    </ol>
+  </nav>
+
+  <!-- Welcome Banner -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+      <div>
+        <span class="badge bg-dark text-white fw-bold px-3 py-1 mb-2">
+          <i class="bi bi-speedometer2 me-1"></i>MANAGED PORTAL
+        </span>
+        <h1 class="h3 fw-bold text-dark mb-1">
+          Business Owner & Submitter Dashboard
+        </h1>
+        <p class="text-secondary small mb-0">
+          Logged in as <strong>{{ request.user.email }}</strong>. Track your listings, submit edit requests, and review moderation status.
+        </p>
+      </div>
+      <div>
+        <a href="{% url 'businesses:submit' %}" class="btn btn-warning fw-bold text-dark btn-sm">
+          <i class="bi bi-plus-circle me-1"></i>Submit New Business
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metric Counters -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+        <div class="small text-muted fw-semibold mb-1">Total Managed</div>
+        <div class="h3 fw-bold text-dark mb-0">{{ total_count }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+        <div class="small text-muted fw-semibold mb-1">Published & Live</div>
+        <div class="h3 fw-bold text-success mb-0">{{ active_count }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+        <div class="small text-muted fw-semibold mb-1">Pending Audit</div>
+        <div class="h3 fw-bold text-warning mb-0">{{ pending_count }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+        <div class="small text-muted fw-semibold mb-1">Edit Requests</div>
+        <div class="h3 fw-bold text-info mb-0">{{ edit_requests.count }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <ul class="nav nav-pills mb-4 gap-2" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active rounded-pill fw-semibold px-3 py-2 small" id="listings-tab" data-bs-toggle="pill" data-bs-target="#listings-panel" type="button" role="tab">
+        <i class="bi bi-shop me-1"></i>My Businesses ({{ businesses.count }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold px-3 py-2 small" id="edits-tab" data-bs-toggle="pill" data-bs-target="#edits-panel" type="button" role="tab">
+        <i class="bi bi-pencil-square me-1"></i>Edit Requests ({{ edit_requests.count }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold px-3 py-2 small" id="claims-tab" data-bs-toggle="pill" data-bs-target="#claims-panel" type="button" role="tab">
+        <i class="bi bi-shield-check me-1"></i>Ownership Claims ({{ claims.count }})
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Content -->
+  <div class="tab-content" id="dashboardTabsContent">
+    <!-- Panel 1: My Businesses -->
+    <div class="tab-pane fade show active" id="listings-panel" role="tabpanel">
+      {% if businesses %}
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light small text-uppercase tracking-wider">
+              <tr>
+                <th scope="col" class="py-3 ps-4">Business</th>
+                <th scope="col" class="py-3">Category</th>
+                <th scope="col" class="py-3">Area</th>
+                <th scope="col" class="py-3">Public Status</th>
+                <th scope="col" class="py-3">Audit State</th>
+                <th scope="col" class="py-3 text-end pe-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for biz in businesses %}
+              <tr>
+                <td class="ps-4">
+                  <div class="fw-bold text-dark">{{ biz.title }}</div>
+                  <div class="small text-muted font-monospace" style="font-size: 0.75rem;">{{ biz.address|truncatechars:40 }}</div>
+                </td>
+                <td class="small">{{ biz.category.name }}</td>
+                <td class="small text-muted">{{ biz.locality.name|default:"Lahore" }}</td>
+                <td>
+                  {% if biz.is_active %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle">
+                    <i class="bi bi-check-circle me-1"></i>Live & Active
+                  </span>
+                  {% else %}
+                  <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+                    <i class="bi bi-clock-history me-1"></i>Unpublished (Draft)
+                  </span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if biz.verification_status == 'verified' or biz.verification_status == 'claimed' %}
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                    <i class="bi bi-patch-check-fill me-1"></i>{{ biz.get_verification_status_display }}
+                  </span>
+                  {% elif biz.verification_status == 'pending' %}
+                  <span class="badge bg-secondary-subtle text-secondary border">
+                    <i class="bi bi-hourglass-split me-1"></i>Pending Review
+                  </span>
+                  {% else %}
+                  <span class="badge bg-light text-muted border">
+                    {{ biz.get_verification_status_display }}
+                  </span>
+                  {% endif %}
+                </td>
+                <td class="text-end pe-4">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ biz.get_absolute_url }}" class="btn btn-outline-dark" title="View Profile">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'businesses:edit' slug=biz.slug %}" class="btn btn-outline-primary" title="Edit / Request Changes">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'businesses:delete' slug=biz.slug %}" class="btn btn-outline-danger" title="Delete Listing">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+        <i class="bi bi-shop text-muted mb-3" style="font-size: 2.5rem;"></i>
+        <h3 class="h6 fw-bold text-dark mb-1">No Businesses Under Your Account</h3>
+        <p class="text-secondary small mb-3">You haven't submitted or claimed any business listings yet.</p>
+        <div>
+          <a href="{% url 'businesses:submit' %}" class="btn btn-warning btn-sm fw-bold text-dark">
+            <i class="bi bi-plus-circle me-1"></i>Submit Your First Business
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Panel 2: Edit Requests -->
+    <div class="tab-pane fade" id="edits-panel" role="tabpanel">
+      {% if edit_requests %}
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light small text-uppercase tracking-wider">
+              <tr>
+                <th scope="col" class="py-3 ps-4">Business</th>
+                <th scope="col" class="py-3">Proposed Title</th>
+                <th scope="col" class="py-3">Status</th>
+                <th scope="col" class="py-3">Submitted</th>
+                <th scope="col" class="py-3 pe-4">Admin Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for req in edit_requests %}
+              <tr>
+                <td class="ps-4 fw-bold text-dark">{{ req.business.title }}</td>
+                <td class="small">{{ req.title }}</td>
+                <td>
+                  {% if req.status == 'approved' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle">
+                    <i class="bi bi-check-circle me-1"></i>Approved & Merged
+                  </span>
+                  {% elif req.status == 'rejected' %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                    <i class="bi bi-x-circle me-1"></i>Rejected
+                  </span>
+                  {% else %}
+                  <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+                    <i class="bi bi-hourglass me-1"></i>Pending Moderation
+                  </span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">{{ req.created_at|date:"M d, Y" }}</td>
+                <td class="small text-secondary pe-4">{{ req.admin_notes|default:"Awaiting audit" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+        <i class="bi bi-pencil-square text-muted mb-3" style="font-size: 2.5rem;"></i>
+        <h3 class="h6 fw-bold text-dark mb-1">No Pending Edit Requests</h3>
+        <p class="text-secondary small mb-0">When you edit an active listing, proposed changes appear here until approved.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Panel 3: Ownership Claims -->
+    <div class="tab-pane fade" id="claims-panel" role="tabpanel">
+      {% if claims %}
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light small text-uppercase tracking-wider">
+              <tr>
+                <th scope="col" class="py-3 ps-4">Business</th>
+                <th scope="col" class="py-3">Claimant Role</th>
+                <th scope="col" class="py-3">Official Email</th>
+                <th scope="col" class="py-3">Status</th>
+                <th scope="col" class="py-3 pe-4">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for claim in claims %}
+              <tr>
+                <td class="ps-4 fw-bold text-dark">{{ claim.business.title }}</td>
+                <td class="small">{{ claim.claimant_role }}</td>
+                <td class="small">{{ claim.official_email }}</td>
+                <td>
+                  {% if claim.status == 'approved' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle">Approved</span>
+                  {% elif claim.status == 'rejected' %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Rejected</span>
+                  {% else %}
+                  <span class="badge bg-warning-subtle text-dark border border-warning-subtle">Under Audit</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted pe-4">{{ claim.created_at|date:"M d, Y" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+        <i class="bi bi-shield-check text-muted mb-3" style="font-size: 2.5rem;"></i>
+        <h3 class="h6 fw-bold text-dark mb-1">No Ownership Claims Filed</h3>
+        <p class="text-secondary small mb-0">You have not submitted any ownership claims for existing directory listings.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

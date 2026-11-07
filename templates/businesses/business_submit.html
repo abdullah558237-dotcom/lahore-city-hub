@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'businesses:list' %}" class="text-decoration-none">Local Businesses</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Submit Listing</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-9">
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <!-- Header Strip -->
+        <div class="mb-4">
+          <span class="badge bg-warning text-dark fw-bold px-3 py-1 mb-2">
+            <i class="bi bi-shop me-1"></i>COMMERCIAL DIRECTORY ONBOARDING
+          </span>
+          <h1 class="h2 fw-bold text-dark mb-2">Submit or Claim a Business Listing</h1>
+          <p class="text-secondary small mb-3">
+            Join Lahore City Hub's verified business index. Showcase your enterprise across Gulberg, DHA, Johar Town, and all Lahore neighborhoods.
+          </p>
+
+          <!-- Security & Editorial Notice Alert -->
+          <div class="alert alert-info border-info-subtle bg-info-subtle text-dark rounded-3 d-flex align-items-start gap-2 p-3">
+            <i class="bi bi-shield-check text-primary fs-5 mt-1"></i>
+            <div class="small">
+              <strong>Security & Editorial Moderation Policy:</strong>
+              All new business submissions remain <strong>unpublished</strong> until verified and approved by our moderation desk. We do not tolerate fake or fraudulent submissions. Please provide verifiable contact information and valid URLs.
+            </div>
+          </div>
+        </div>
+
+        <form method="post" action="{% url 'businesses:submit' %}" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger rounded-3 py-2 px-3 mb-4 small">
+            {{ form.non_field_errors }}
+          </div>
+          {% endif %}
+
+          <!-- Section 1: Business Identity -->
+          <h2 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+            <span class="badge bg-dark rounded-circle me-1" style="font-size: 0.72rem;">1</span> Business Identity
+          </h2>
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-7">
+              <label class="form-label small fw-bold text-dark" for="{{ form.title.id_for_label }}">
+                {{ form.title.label }}
+              </label>
+              {{ form.title }}
+              {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md-5">
+              <label class="form-label small fw-bold text-dark" for="{{ form.category.id_for_label }}">
+                {{ form.category.label }}
+              </label>
+              {{ form.category }}
+              {% if form.category.errors %}<div class="text-danger small mt-1">{{ form.category.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.title_ur.id_for_label }}">
+                {{ form.title_ur.label }}
+              </label>
+              {{ form.title_ur }}
+              {% if form.title_ur.errors %}<div class="text-danger small mt-1">{{ form.title_ur.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.primary_image.id_for_label }}">
+                {{ form.primary_image.label }}
+              </label>
+              {{ form.primary_image }}
+              <div class="form-text small" style="font-size: 0.75rem;">Supported: JPG, PNG, WEBP, SVG. Max 5MB.</div>
+              {% if form.primary_image.errors %}<div class="text-danger small mt-1">{{ form.primary_image.errors }}</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- Section 2: Location & Address -->
+          <h2 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+            <span class="badge bg-dark rounded-circle me-1" style="font-size: 0.72rem;">2</span> Location & Locality
+          </h2>
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.locality.id_for_label }}">
+                {{ form.locality.label }}
+              </label>
+              {{ form.locality }}
+              {% if form.locality.errors %}<div class="text-danger small mt-1">{{ form.locality.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.landmark.id_for_label }}">
+                {{ form.landmark.label }}
+              </label>
+              {{ form.landmark }}
+              {% if form.landmark.errors %}<div class="text-danger small mt-1">{{ form.landmark.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="{{ form.address.id_for_label }}">
+                {{ form.address.label }}
+              </label>
+              {{ form.address }}
+              {% if form.address.errors %}<div class="text-danger small mt-1">{{ form.address.errors }}</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- Section 3: Contact & Communication -->
+          <h2 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+            <span class="badge bg-dark rounded-circle me-1" style="font-size: 0.72rem;">3</span> Contact & Operating Details
+          </h2>
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.phone_number.id_for_label }}">
+                {{ form.phone_number.label }}
+              </label>
+              {{ form.phone_number }}
+              {% if form.phone_number.errors %}<div class="text-danger small mt-1">{{ form.phone_number.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.whatsapp_number.id_for_label }}">
+                {{ form.whatsapp_number.label }}
+              </label>
+              {{ form.whatsapp_number }}
+              {% if form.whatsapp_number.errors %}<div class="text-danger small mt-1">{{ form.whatsapp_number.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.email.id_for_label }}">
+                {{ form.email.label }}
+              </label>
+              {{ form.email }}
+              {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.website.id_for_label }}">
+                {{ form.website.label }}
+              </label>
+              {{ form.website }}
+              {% if form.website.errors %}<div class="text-danger small mt-1">{{ form.website.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.operating_hours.id_for_label }}">
+                {{ form.operating_hours.label }}
+              </label>
+              {{ form.operating_hours }}
+              {% if form.operating_hours.errors %}<div class="text-danger small mt-1">{{ form.operating_hours.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label small fw-bold text-dark" for="{{ form.registration_number.id_for_label }}">
+                {{ form.registration_number.label }}
+              </label>
+              {{ form.registration_number }}
+              {% if form.registration_number.errors %}<div class="text-danger small mt-1">{{ form.registration_number.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="{{ form.source_url.id_for_label }}">
+                {{ form.source_url.label }}
+              </label>
+              {{ form.source_url }}
+              <div class="form-text small" style="font-size: 0.75rem;">Link to Chamber of Commerce listing, SECP profile, or official online register for faster verification.</div>
+              {% if form.source_url.errors %}<div class="text-danger small mt-1">{{ form.source_url.errors }}</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- Section 4: Proof of Ownership & Verification -->
+          <h2 class="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+            <span class="badge bg-dark rounded-circle me-1" style="font-size: 0.72rem;">4</span> Proof of Ownership & Verification
+          </h2>
+          <div class="row g-3 mb-4">
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="{{ form.summary.id_for_label }}">
+                {{ form.summary.label }}
+              </label>
+              {{ form.summary }}
+              {% if form.summary.errors %}<div class="text-danger small mt-1">{{ form.summary.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="{{ form.description.id_for_label }}">
+                {{ form.description.label }}
+              </label>
+              {{ form.description }}
+              {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-3 border-top">
+            <a href="{% url 'businesses:list' %}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-warning fw-bold text-dark px-4">
+              <i class="bi bi-check-circle-fill me-1"></i>Submit for Editorial Audit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

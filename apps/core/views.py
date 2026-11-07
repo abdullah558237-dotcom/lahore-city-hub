@@ -395,19 +395,9 @@ def dashboard_view(request):
 
 
 def business_submission_view(request):
-    """Business directory listing and ownership claim submission form."""
-    if request.method == 'POST':
-        biz_name = request.POST.get('business_name', '').strip()
-        if biz_name:
-            messages.success(request, f"Submission received for '{biz_name}'! Our verification team will review your proof documents within 48 hours.")
-        else:
-            messages.error(request, "Please enter your business title and contact phone number.")
-
-    context = {
-        'page_title': 'Submit or Claim a Business Listing | Lahore City Hub',
-        'meta_description': 'Submit your Lahore business listing or claim your existing company profile for verification and premium reach.',
-    }
-    return render(request, 'pages/business_submission.html', context)
+    """Business directory listing and ownership claim submission form (delegates to apps.businesses)."""
+    from apps.businesses.views import business_submit
+    return business_submit(request)
 
 
 def custom_404_view(request, exception=None):

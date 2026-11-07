@@ -7,9 +7,6 @@ urlpatterns = [
     # Admin Interface
     path('admin/', admin.site.urls),
 
-    # Core Hub & Public Views
-    path('', include(('apps.core.urls', 'core'), namespace='core')),
-
     # Domain Directories & Services (Namespaced)
     path('accounts/', include(('apps.accounts.urls', 'accounts'), namespace='accounts')),
     path('places/', include(('apps.places.urls', 'places'), namespace='places')),
@@ -22,6 +19,9 @@ urlpatterns = [
     path('events/', include(('apps.events.urls', 'events'), namespace='events')),
     path('updates/', include(('apps.updates.urls', 'updates'), namespace='updates')),
     path('reviews/', include(('apps.reviews.urls', 'reviews'), namespace='reviews')),
+
+    # Core Hub & Public Views
+    path('', include(('apps.core.urls', 'core'), namespace='core')),
 ]
 
 # Static and Media Serving in Development
