@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block extra_head %}
+<!-- Structured Data: Schema.org JobPosting -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  "title": "{{ job.title|escapejs }}",
+  "description": "{{ job.description|striptags|escapejs }}",
+  "datePosted": "{{ job.created_at|date:'c' }}",
+  "validThrough": "{{ job.deadline|date:'Y-m-d' }}",
+  "employmentType": "{{ job.employment_type|upper }}",
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "{{ job.employer.name|escapejs }}",
+    "sameAs": "{{ job.employer.website|default:'' }}"
+  },
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Lahore",
+      "addressRegion": "Punjab",
+      "addressCountry": "PK",
+      "streetAddress": "{{ job.employer.address|default:job.locality.name|escapejs }}"
+    }
+  }{% if job.salary_min_pkr and job.salary_max_pkr %},
+  "baseSalary": {
+    "@type": "MonetaryAmount",
+    "currency": "PKR",
+    "value": {
+      "@type": "QuantitativeValue",
+      "minValue": {{ job.salary_min_pkr }},
+      "maxValue": {{ job.salary_max_pkr }},
+      "unitText": "MONTH"
+    }
+  }
+  {% endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'jobs:list' %}" class="text-decoration-none">Jobs</a></li>
+      <li class="breadcrumb-item"><a href="{{ job.category.get_absolute_url }}" class="text-decoration-none">{{ job.category.name }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ job.title }}</li>
+    </ol>
+  </nav>
+
+  <!-- Expired Alert Notice -->
+  {% if is_expired %}
+  <div class="alert alert-warning border-warning d-flex align-items-center mb-4 rounded-3 shadow-sm" role="alert">
+    <i class="bi bi-exclamation-triangle-fill fs-3 text-warning me-3"></i>
+    <div>
+      <h2 class="h6 fw-bold mb-1">Application Deadline Has Passed</h2>
+      <p class="mb-0 small text-secondary">
+        This vacancy expired on <strong>{{ job.deadline|date:"d M Y" }}</strong>. Applications may no longer be accepted by {{ job.employer.name }}. Please check our <a href="{% url 'jobs:list' %}" class="alert-link">active job listings</a> for current opportunities.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Hero Header -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-4">
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <a href="{{ job.category.get_absolute_url }}" class="badge bg-primary-subtle text-primary fw-semibold text-decoration-none" style="font-size: 0.8rem;">
+            <i class="bi bi-tag-fill me-1"></i>{{ job.category.name }}
+          </a>
+          {% if job.is_featured %}
+          <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.8rem;">
+            <i class="bi bi-star-fill me-1"></i>Featured Opportunity
+          </span>
+          {% endif %}
+          {% if is_expired %}
+          <span class="badge bg-danger text-white fw-bold" style="font-size: 0.8rem;">
+            <i class="bi bi-clock-history me-1"></i>Expired
+          </span>
+          {% elif job.days_remaining <= 3 %}
+          <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold" style="font-size: 0.8rem;">
+            <i class="bi bi-fire me-1"></i>Closing Soon ({{ job.days_remaining }} days left)
+          </span>
+          {% endif %}
+        </div>
+
+        <h1 class="h3 fw-bold text-dark mb-2">{{ job.title }}</h1>
+
+        <div class="d-flex align-items-center gap-3 text-muted small flex-wrap">
+          <span>
+            <i class="bi bi-building me-1 text-secondary"></i>
+            <strong class="text-dark">{{ job.employer.name }}</strong>
+            {% if job.is_verified %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" title="Verified by Lahore City Hub">
+              <i class="bi bi-patch-check-fill me-1"></i>Verified
+            </span>
+            {% endif %}
+          </span>
+          <span>
+            <i class="bi bi-geo-alt me-1 text-danger"></i>{{ job.locality.name }} ({{ job.locality.zone.name }}), Lahore
+          </span>
+          <span>
+            <i class="bi bi-calendar-check me-1 text-info"></i>Posted {{ job.created_at|date:"d M Y" }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Quick Action CTA -->
+      <div class="text-md-end align-self-md-center">
+        {% if is_expired %}
+        <button class="btn btn-secondary fw-semibold px-4 py-2 disabled" aria-disabled="true">
+          <i class="bi bi-lock me-1"></i>Applications Closed
+        </button>
+        {% else %}
+        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary fw-bold px-4 py-2 shadow-sm" aria-label="Apply for {{ job.title }}">
+          Apply Now <i class="bi bi-box-arrow-up-right ms-1"></i>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Key Metrics Strip -->
+    <div class="row g-3 pt-3 mt-2 border-top">
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light">
+          <div class="text-muted small">Employment Type</div>
+          <strong class="text-dark"><i class="bi bi-clock me-1 text-primary"></i>{{ job.get_employment_type_display }}</strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light">
+          <div class="text-muted small">Experience Level</div>
+          <strong class="text-dark"><i class="bi bi-person-badge me-1 text-info"></i>{{ job.get_experience_level_display }}</strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light">
+          <div class="text-muted small">Salary Package</div>
+          <strong class="text-success"><i class="bi bi-cash-stack me-1"></i>{{ job.salary_display }}</strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light">
+          <div class="text-muted small">Application Deadline</div>
+          <strong class="{% if is_expired %}text-danger{% elif job.days_remaining <= 3 %}text-danger{% else %}text-dark{% endif %}">
+            <i class="bi bi-calendar-event me-1"></i>{{ job.deadline|date:"d M Y" }}
+          </strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Content Column -->
+    <div class="col-lg-8">
+      <!-- Role Description -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-card-text text-primary me-2"></i>Job Description
+        </h2>
+        <div class="text-secondary lh-lg mb-0" style="white-space: pre-line;">
+          {{ job.description }}
+        </div>
+      </div>
+
+      <!-- Qualifications & Education -->
+      {% if job.qualifications %}
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-mortarboard-fill text-primary me-2"></i>Required Qualifications & Education
+        </h2>
+        <div class="text-secondary lh-lg mb-0" style="white-space: pre-line;">
+          {{ job.qualifications }}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Requirements & Skills -->
+      {% if job.requirements %}
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-check2-circle text-primary me-2"></i>Skills & Experience Requirements
+        </h2>
+        <div class="text-secondary lh-lg mb-0" style="white-space: pre-line;">
+          {{ job.requirements }}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Application Instructions -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-light-subtle border-primary-subtle">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-send-fill text-primary me-2"></i>How to Apply
+        </h2>
+        {% if job.application_instructions %}
+        <div class="text-secondary mb-3 lh-lg" style="white-space: pre-line;">
+          {{ job.application_instructions }}
+        </div>
+        {% endif %}
+
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          {% if not is_expired %}
+            {% if job.application_url %}
+            <a href="{{ job.application_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary fw-semibold">
+              <i class="bi bi-box-arrow-up-right me-1"></i>Official Application Portal
+            </a>
+            {% endif %}
+            {% if job.application_email %}
+            <a href="mailto:{{ job.application_email }}?subject=Application for {{ job.title|urlencode }}" class="btn btn-outline-primary fw-semibold">
+              <i class="bi bi-envelope-fill me-1"></i>Email Resume ({{ job.application_email }})
+            </a>
+            {% endif %}
+          {% else %}
+          <div class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>Applications closed on {{ job.deadline|date:"d M Y" }}.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Source URL & Verification Disclaimer -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h3 class="h6 fw-bold text-dark mb-2">
+          <i class="bi bi-shield-check text-success me-2"></i>Verification & Source Disclosure
+        </h3>
+        <p class="small text-muted mb-2">
+          This vacancy has been cataloged for civic transparency by Lahore City Hub. Candidates are strictly advised never to pay money for recruitment or testing fees.
+        </p>
+        {% if job.source_url %}
+        <div class="small">
+          <strong>Official Source Listing:</strong>
+          <a href="{{ job.source_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+            {{ job.source_url }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sidebar Column -->
+    <div class="col-lg-4">
+      <!-- Apply / Action Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 sticky-top" style="top: 80px; z-index: 10;">
+        <h3 class="h6 fw-bold text-dark mb-3">Application Summary</h3>
+
+        <div class="mb-3">
+          <div class="small text-muted">Deadline</div>
+          <div class="h5 fw-bold {% if is_expired %}text-danger{% else %}text-dark{% endif %} mb-0">
+            {{ job.deadline|date:"l, d M Y" }}
+          </div>
+          {% if not is_expired %}
+          <div class="small text-muted mt-1">
+            <i class="bi bi-clock me-1"></i>{{ job.days_remaining }} day{{ job.days_remaining|pluralize }} remaining
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <div class="small text-muted">Offered Compensation</div>
+          <div class="h5 fw-bold text-success mb-0">
+            {{ job.salary_display }}
+          </div>
+          {% if job.is_salary_negotiable %}
+          <div class="badge bg-light text-secondary border mt-1">Negotiable based on experience</div>
+          {% endif %}
+        </div>
+
+        <div class="d-grid gap-2 mb-3">
+          {% if is_expired %}
+          <button class="btn btn-secondary fw-semibold py-2 disabled" aria-disabled="true">
+            Applications Closed
+          </button>
+          {% else %}
+          <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary fw-bold py-2 shadow-sm">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Submit Application
+          </a>
+          {% endif %}
+        </div>
+
+        <hr>
+
+        <!-- Employer Info -->
+        <h3 class="h6 fw-bold text-dark mb-2">About the Employer</h3>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="p-2 bg-light rounded-circle text-primary">
+            <i class="bi bi-building fs-5"></i>
+          </div>
+          <div>
+            <div class="fw-bold text-dark">{{ job.employer.name }}</div>
+            {% if job.employer.is_verified %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.72rem;">
+              <i class="bi bi-patch-check-fill me-1"></i>Verified Entity
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="small text-muted mb-2">
+          <i class="bi bi-geo-alt me-1 text-danger"></i>{{ job.employer.address }}, {{ job.locality.name }}
+        </div>
+
+        {% if job.employer.website %}
+        <div class="small mb-3">
+          <i class="bi bi-globe me-1 text-info"></i>
+          <a href="{{ job.employer.website }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+            Visit Company Website <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+        </div>
+        {% endif %}
+
+        <div class="d-grid">
+          <a href="{{ job.employer.get_absolute_url }}" class="btn btn-sm btn-outline-secondary">
+            View All Jobs by Employer
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Jobs Section -->
+  {% if related_jobs %}
+  <div class="pt-4 mt-4 border-top">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 fw-bold text-dark mb-0">
+        <i class="bi bi-briefcase me-2 text-primary"></i>Related Job Opportunities in Lahore
+      </h2>
+      <a href="{% url 'jobs:list' %}" class="small text-decoration-none fw-semibold">
+        Explore All Jobs <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-3">
+      {% for rel in related_jobs %}
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border border-light-subtle rounded-3 p-3">
+          <span class="badge bg-light text-primary border align-self-start mb-2" style="font-size: 0.72rem;">
+            {{ rel.category.name }}
+          </span>
+          <h3 class="h6 fw-bold mb-1">
+            <a href="{{ rel.get_absolute_url }}" class="text-decoration-none text-dark">
+              {{ rel.title }}
+            </a>
+          </h3>
+          <div class="small text-muted mb-2">
+            <i class="bi bi-building me-1"></i>{{ rel.employer.name }}
+          </div>
+          <div class="small text-success fw-bold mb-2">
+            {{ rel.salary_display }}
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top small text-muted">
+            <span>Deadline: {{ rel.deadline|date:"d M" }}</span>
+            <a href="{{ rel.get_absolute_url }}" class="btn btn-xs btn-outline-primary py-0 px-2 fw-semibold">
+              View
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

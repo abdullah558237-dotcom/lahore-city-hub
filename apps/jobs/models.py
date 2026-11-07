@@ -1,7 +1,11 @@
 from django.db import models
+from django.urls import reverse
+from django.utils import timezone
 from django.utils.text import slugify
+from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from apps.core.models import TimeStampedModel, SEOModel, Locality
+
 
 class JobCategory(TimeStampedModel):
     name = models.CharField(max_length=120, unique=True)
@@ -16,6 +20,9 @@ class JobCategory(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return f"{reverse('jobs:list')}?category={self.slug}"
 
 
 class Employer(TimeStampedModel):
@@ -34,6 +41,18 @@ class Employer(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return f"{reverse('jobs:list')}?employer={self.slug}"
+
+    def clean(self):
+        super().clean()
+        if self.website:
+            url_validator = URLValidator(schemes=['http', 'https'])
+            try:
+                url_validator(self.website)
+            except ValidationError:
+                raise ValidationError({'website': 'Enter a valid website URL starting with http:// or https://.'})
 
 
 class JobListing(TimeStampedModel, SEOModel):
@@ -68,9 +87,12 @@ class JobListing(TimeStampedModel, SEOModel):
     salary_max_pkr = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     is_salary_negotiable = models.BooleanField(default=True)
     description = models.TextField()
-    requirements = models.TextField(blank=True)
+    requirements = models.TextField(blank=True, verbose_name="Requirements & Skills")
+    qualifications = models.TextField(blank=True, verbose_name="Qualifications & Education")
+    application_instructions = models.TextField(blank=True, verbose_name="Application Instructions")
     application_url = models.URLField(max_length=500, blank=True)
     application_email = models.EmailField(blank=True)
+    source_url = models.URLField(max_length=500, blank=True, verbose_name="Source URL")
     deadline = models.DateField(db_index=True)
     is_active = models.BooleanField(default=True, db_index=True)
     is_featured = models.BooleanField(default=False, db_index=True)
@@ -95,9 +117,29 @@ class JobListing(TimeStampedModel, SEOModel):
     def __str__(self):
         return f"{self.title} at {self.employer.name}"
 
+    def get_absolute_url(self):
+        return reverse('jobs:detail', kwargs={'slug': self.slug})
+
     @property
     def is_verified(self):
         return self.verification_status == 'verified' or (self.employer and self.employer.is_verified)
+
+    @property
+    def is_expired(self):
+        if not self.deadline:
+            return False
+        return self.deadline < timezone.now().date()
+
+    @property
+    def days_remaining(self):
+        if not self.deadline:
+            return None
+        delta = (self.deadline - timezone.now().date()).days
+        return max(delta, 0)
+
+    @property
+    def publication_date(self):
+        return self.created_at.date() if self.created_at else None
 
     @property
     def salary_display(self):
@@ -125,6 +167,19 @@ class JobListing(TimeStampedModel, SEOModel):
 
     def clean(self):
         super().clean()
+        url_validator = URLValidator(schemes=['http', 'https'])
+        if self.application_url:
+            try:
+                url_validator(self.application_url)
+            except ValidationError:
+                raise ValidationError({'application_url': 'Enter a valid application URL starting with http:// or https://.'})
+
+        if self.source_url:
+            try:
+                url_validator(self.source_url)
+            except ValidationError:
+                raise ValidationError({'source_url': 'Enter a valid source URL starting with http:// or https://.'})
+
         if self.salary_min_pkr is not None and self.salary_min_pkr < 0:
             raise ValidationError({'salary_min_pkr': 'Minimum salary cannot be negative.'})
         if self.salary_max_pkr is not None and self.salary_max_pkr < 0:

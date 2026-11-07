@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'jobs:list' %}" class="text-decoration-none">Jobs</a></li>
+      {% if selected_category_obj %}
+      <li class="breadcrumb-item active" aria-current="page">{{ selected_category_obj.name }}</li>
+      {% elif selected_employer_obj %}
+      <li class="breadcrumb-item active" aria-current="page">{{ selected_employer_obj.name }}</li>
+      {% elif selected_locality_obj %}
+      <li class="breadcrumb-item active" aria-current="page">{{ selected_locality_obj.name }}</li>
+      {% elif search_query %}
+      <li class="breadcrumb-item active" aria-current="page">Search: "{{ search_query }}"</li>
+      {% else %}
+      <li class="breadcrumb-item active" aria-current="page">All Vacancies</li>
+      {% endif %}
+    </ol>
+  </nav>
+
+  <!-- Directory Header & Metrics Strip -->
+  <div class="card border-0 bg-primary text-white shadow-sm rounded-4 mb-4 overflow-hidden position-relative" style="background: linear-gradient(135deg, #0d6efd 0%, #0a4299 100%);">
+    <div class="card-body p-4 p-md-5">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <span class="badge bg-white text-primary px-3 py-2 fw-semibold rounded-pill mb-2">
+            <i class="bi bi-briefcase-fill me-1"></i>Lahore Employment Exchange
+          </span>
+          <h1 class="display-6 fw-bold mb-2">
+            Lahore Jobs & Career Vacancies
+          </h1>
+          <p class="lead fs-6 mb-3 text-white-50">
+            Discover verified jobs across IT companies, industrial sectors, healthcare, and education in Lahore. Verified employers, transparent salary ranges, and direct official application endpoints.
+          </p>
+          <div class="d-flex flex-wrap gap-3 text-white small">
+            <div><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>{{ active_jobs_total }}</strong> Active Vacancies</div>
+            <div><i class="bi bi-shield-fill-check text-warning me-1"></i> Verified Employers</div>
+            <div><i class="bi bi-geo-alt-fill text-danger me-1"></i> All Lahore Zones</div>
+          </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-block text-end">
+          <div class="p-3 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-25 text-start">
+            <div class="small fw-semibold text-uppercase tracking-wider text-white-50 mb-1">Portal Guidelines</div>
+            <p class="small mb-0 text-white">
+              Every job is checked for legitimate contact details. No charges are ever requested for applying.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Search & Filters -->
+    <div class="col-lg-4 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 sticky-top" style="top: 80px; z-index: 10;">
+        <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+          <h2 class="h6 fw-bold mb-0 text-dark">
+            <i class="bi bi-funnel-fill text-primary me-2"></i>Filter Opportunities
+          </h2>
+          {% if search_query or selected_category or selected_type or selected_experience or selected_area or selected_employer or status_filter != 'active' or deadline_filter or verified_only %}
+          <a href="{% url 'jobs:list' %}" class="badge bg-danger-subtle text-danger text-decoration-none py-1 px-2" title="Clear all filters">
+            <i class="bi bi-x-circle me-1"></i>Reset
+          </a>
+          {% endif %}
+        </div>
+
+        <form method="get" action="{% url 'jobs:list' %}" id="job-filter-form">
+          <!-- Keyword Search -->
+          <div class="mb-3">
+            <label for="search-input" class="form-label small fw-semibold text-secondary">Keywords</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+              <input type="text" name="q" id="search-input" class="form-control" placeholder="Title, employer, skills..." value="{{ search_query }}">
+              {% if search_query %}
+              <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('search-input').value=''; this.form.submit();">
+                <i class="bi bi-x"></i>
+              </button>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Deadline Status Filter -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Vacancy Status</label>
+            <div class="d-flex flex-column gap-1">
+              <div class="form-check form-check-sm">
+                <input class="form-check-input" type="radio" name="status" id="status-active" value="active" {% if status_filter == 'active' or not status_filter %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label small" for="status-active">
+                  Active Vacancies <span class="badge bg-light text-secondary ms-1">({{ active_jobs_total }})</span>
+                </label>
+              </div>
+              <div class="form-check form-check-sm">
+                <input class="form-check-input" type="radio" name="status" id="status-expired" value="expired" {% if status_filter == 'expired' %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label small text-muted" for="status-expired">
+                  Expired Postings <span class="badge bg-light text-secondary ms-1">({{ expired_jobs_total }})</span>
+                </label>
+              </div>
+              <div class="form-check form-check-sm">
+                <input class="form-check-input" type="radio" name="status" id="status-all" value="all" {% if status_filter == 'all' %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label small" for="status-all">
+                  Show All (Active & Closed)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deadline Urgency -->
+          <div class="mb-3">
+            <label for="deadline-select" class="form-label small fw-semibold text-secondary">Deadline Urgency</label>
+            <select name="deadline" id="deadline-select" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">Any Deadline</option>
+              <option value="closing_soon" {% if deadline_filter == 'closing_soon' %}selected{% endif %}>Closing in 7 Days</option>
+              <option value="this_month" {% if deadline_filter == 'this_month' %}selected{% endif %}>Closing this Month (30 Days)</option>
+            </select>
+          </div>
+
+          <!-- Job Category -->
+          <div class="mb-3">
+            <label for="category-select" class="form-label small fw-semibold text-secondary">Category</label>
+            <select name="category" id="category-select" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+              <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>
+                {{ cat.name }} ({{ cat.active_jobs_count }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Employment Type -->
+          <div class="mb-3">
+            <label for="type-select" class="form-label small fw-semibold text-secondary">Employment Type</label>
+            <select name="type" id="type-select" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All Types</option>
+              {% for code, label in employment_types %}
+              <option value="{{ code }}" {% if selected_type == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Experience Level -->
+          <div class="mb-3">
+            <label for="exp-select" class="form-label small fw-semibold text-secondary">Experience Level</label>
+            <select name="experience" id="exp-select" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All Experience Levels</option>
+              {% for code, label in experience_levels %}
+              <option value="{{ code }}" {% if selected_experience == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Locality / Zone -->
+          <div class="mb-3">
+            <label for="area-select" class="form-label small fw-semibold text-secondary">Lahore Locality</label>
+            <select name="area" id="area-select" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All Localities</option>
+              {% for loc in localities %}
+              <option value="{{ loc.slug }}" {% if selected_area == loc.slug %}selected{% endif %}>
+                {{ loc.name }} ({{ loc.zone.name }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Verified Only -->
+          <div class="mb-3 form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="verified_only" value="1" id="verified-only" {% if verified_only %}checked{% endif %} onchange="this.form.submit()">
+            <label class="form-check-label small fw-semibold text-dark" for="verified-only">
+              Verified Postings Only
+            </label>
+          </div>
+
+          <!-- Sort -->
+          <div class="mb-3">
+            <label for="sort-select" class="form-label small fw-semibold text-secondary">Sort By</label>
+            <select name="sort" id="sort-select" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="default" {% if sort_by == 'default' %}selected{% endif %}>Recommended</option>
+              <option value="deadline" {% if sort_by == 'deadline' %}selected{% endif %}>Deadline (Urgent First)</option>
+              <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newly Posted</option>
+              <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>Highest Salary</option>
+              <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title (A-Z)</option>
+            </select>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-sm fw-semibold">
+              <i class="bi bi-funnel me-1"></i>Apply Filters
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: Results & Listings -->
+    <div class="col-lg-8 col-xl-9">
+      <!-- Active Filters Strip -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pb-3 mb-3 border-bottom">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <span class="text-muted small">Showing <strong>{{ total_results }}</strong> job{{ total_results|pluralize }}</span>
+          {% if selected_category_obj %}
+          <span class="badge bg-light text-dark border">
+            Category: {{ selected_category_obj.name }}
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'category' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">×</a>
+          </span>
+          {% endif %}
+          {% if selected_type %}
+          <span class="badge bg-light text-dark border">
+            Type: {{ selected_type|title }}
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'type' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">×</a>
+          </span>
+          {% endif %}
+          {% if selected_experience %}
+          <span class="badge bg-light text-dark border">
+            Exp: {{ selected_experience|title }}
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'experience' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">×</a>
+          </span>
+          {% endif %}
+          {% if selected_locality_obj %}
+          <span class="badge bg-light text-dark border">
+            Area: {{ selected_locality_obj.name }}
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'area' and k != 'locality' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">×</a>
+          </span>
+          {% endif %}
+          {% if search_query %}
+          <span class="badge bg-light text-dark border">
+            Query: "{{ search_query }}"
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'q' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">×</a>
+          </span>
+          {% endif %}
+          {% if status_filter == 'expired' %}
+          <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+            Expired Only
+          </span>
+          {% endif %}
+        </div>
+        <div class="small text-muted">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages|default:1 }}
+        </div>
+      </div>
+
+      <!-- Job Cards List -->
+      {% if jobs %}
+      <div class="row g-3">
+        {% for job in jobs %}
+        <div class="col-12">
+          <div class="card shadow-sm border border-light-subtle rounded-3 p-3 position-relative hover-shadow" style="transition: all 0.2s ease;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+              <!-- Left Content -->
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                  <span class="badge bg-primary-subtle text-primary fw-semibold" style="font-size: 0.75rem;">
+                    <i class="bi bi-tag-fill me-1"></i>{{ job.category.name }}
+                  </span>
+                  {% if job.is_featured %}
+                  <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.72rem;">
+                    <i class="bi bi-star-fill me-1"></i>Featured
+                  </span>
+                  {% endif %}
+                  {% if job.is_expired %}
+                  <span class="badge bg-danger text-white fw-bold" style="font-size: 0.72rem;">
+                    <i class="bi bi-clock-history me-1"></i>Expired
+                  </span>
+                  {% elif job.days_remaining <= 3 %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold" style="font-size: 0.72rem;">
+                    <i class="bi bi-fire me-1"></i>Closing Soon ({{ job.days_remaining }}d left)
+                  </span>
+                  {% endif %}
+                </div>
+
+                <h3 class="h5 fw-bold mb-1">
+                  <a href="{{ job.get_absolute_url }}" class="text-decoration-none text-dark hover-primary" aria-label="View {{ job.title }}">
+                    {{ job.title }}
+                  </a>
+                </h3>
+
+                <div class="text-muted small fw-medium mb-2 d-flex align-items-center gap-2 flex-wrap">
+                  <span><i class="bi bi-building me-1 text-secondary"></i><strong>{{ job.employer.name }}</strong></span>
+                  {% if job.is_verified %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">
+                    <i class="bi bi-patch-check-fill me-1"></i>Verified Employer
+                  </span>
+                  {% endif %}
+                  <span><i class="bi bi-geo-alt me-1 text-danger"></i>{{ job.locality.name }} ({{ job.locality.zone.name }})</span>
+                </div>
+
+                <!-- Badges Strip -->
+                <div class="d-flex flex-wrap gap-2 my-2" style="font-size: 0.8rem;">
+                  <span class="badge bg-light text-dark border">
+                    <i class="bi bi-briefcase me-1 text-info"></i>{{ job.get_employment_type_display }}
+                  </span>
+                  <span class="badge bg-light text-dark border">
+                    <i class="bi bi-person-badge me-1 text-secondary"></i>{{ job.get_experience_level_display }}
+                  </span>
+                  <span class="badge bg-success-subtle text-success fw-bold border border-success-subtle">
+                    <i class="bi bi-cash-stack me-1"></i>{{ job.salary_display }}
+                  </span>
+                </div>
+
+                <p class="text-muted small mb-0 mt-2">
+                  {{ job.description|truncatechars:180 }}
+                </p>
+              </div>
+
+              <!-- Right Actions -->
+              <div class="d-flex flex-column align-items-md-end justify-content-between align-self-stretch text-md-end pt-2 pt-md-0 border-top border-md-0">
+                <div class="mb-2">
+                  <div class="small text-muted">Application Deadline</div>
+                  <strong class="{% if job.is_expired %}text-danger{% elif job.days_remaining <= 3 %}text-danger{% else %}text-dark{% endif %}">
+                    {{ job.deadline|date:"d M Y" }}
+                  </strong>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <a href="{{ job.get_absolute_url }}" class="btn btn-sm btn-outline-primary fw-semibold" aria-label="View details for {{ job.title }}">
+                    Details <i class="bi bi-arrow-right ms-1"></i>
+                  </a>
+                  {% if not job.is_expired %}
+                  <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary fw-semibold" aria-label="Apply directly for {{ job.title }}">
+                    Apply <i class="bi bi-box-arrow-up-right ms-1"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <nav aria-label="Jobs directory pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ extra_query_string }}" aria-label="Previous">
+              <span aria-hidden="true">&laquo; Previous</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{{ extra_query_string }}">{{ num }}</a>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ extra_query_string }}" aria-label="Next">
+              <span aria-hidden="true">Next &raquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <!-- Empty State -->
+      <div class="card border-0 shadow-sm rounded-4 text-center p-5">
+        <div class="py-4">
+          <i class="bi bi-briefcase text-muted" style="font-size: 3.5rem;"></i>
+          <h3 class="h5 fw-bold text-dark mt-3">No Vacancies Found</h3>
+          <p class="text-muted small mb-4 mx-auto" style="max-width: 420px;">
+            No active jobs match your current filter criteria. Try clearing some filters or searching for different keywords.
+          </p>
+          <a href="{% url 'jobs:list' %}" class="btn btn-outline-primary btn-sm fw-semibold">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset All Filters
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
