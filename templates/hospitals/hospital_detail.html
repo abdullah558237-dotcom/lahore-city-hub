@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block extra_head %}
+<!-- Structured Data: Schema.org Hospital -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Hospital",
+  "name": "{{ hospital.title|escapejs }}",
+  "image": "{% if hospital.primary_image %}{{ hospital.primary_image.url }}{% endif %}",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "{{ hospital.address|escapejs }}",
+    "addressLocality": "{{ hospital.locality.name|escapejs }}",
+    "addressRegion": "Punjab",
+    "addressCountry": "PK"
+  }{% if hospital.phone_number %},
+  "telephone": "{{ hospital.phone_number }}"{% endif %}{% if hospital.website %},
+  "url": "{{ hospital.website }}"{% endif %}{% if hospital.latitude and hospital.longitude %},
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": {{ hospital.latitude }},
+    "longitude": {{ hospital.longitude }}
+  }{% endif %},
+  "medicalSpecialty": [{% for s in hospital.specialties.all %}"{{ s.name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+  "availableService": [
+    {% if hospital.is_24_7_emergency %}"24/7 Emergency Care",{% endif %}
+    {% if hospital.has_trauma_center %}"Trauma Center",{% endif %}
+    {% if hospital.has_blood_bank %}"Blood Bank",{% endif %}
+    {% if hospital.has_24_7_pharmacy %}"24/7 Pharmacy"{% endif %}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'hospitals:list' %}" class="text-decoration-none">Healthcare</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'hospitals:list' %}?type={{ hospital.hospital_type }}" class="text-decoration-none">{{ hospital.get_hospital_type_display }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ hospital.title }}</li>
+    </ol>
+  </nav>
+
+  <!-- Emergency Notice Banner -->
+  {% if hospital.has_verified_emergency %}
+  <div class="alert alert-danger border-danger d-flex align-items-center mb-4 rounded-3 shadow-sm" role="alert">
+    <i class="bi bi-heart-pulse-fill fs-2 text-danger me-3"></i>
+    <div class="flex-grow-1">
+      <div class="fw-bold">Verified 24/7 Emergency Medical Care Facility</div>
+      <div class="small">
+        This facility maintains verified round-the-clock emergency admission and resuscitation facilities.
+        {% if hospital.ambulance_direct_phone %}
+        Direct Ambulance Helpline: <strong><a href="tel:{{ hospital.ambulance_direct_phone }}" class="alert-link text-decoration-underline">{{ hospital.ambulance_direct_phone }}</a></strong>
+        {% endif %}
+      </div>
+    </div>
+    {% if hospital.ambulance_direct_phone %}
+    <a href="tel:{{ hospital.ambulance_direct_phone }}" class="btn btn-danger btn-sm fw-bold px-3 ms-2">
+      <i class="bi bi-telephone-fill me-1"></i>Emergency Call
+    </a>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="alert alert-warning border-warning d-flex align-items-center mb-4 rounded-3 shadow-sm py-2 px-3" role="alert">
+    <i class="bi bi-info-circle-fill fs-4 text-warning me-2"></i>
+    <div class="small">
+      This facility is cataloged for outpatient or specialized clinical consultations. For life-threatening trauma or emergency resuscitation, dial <strong>Rescue 1122</strong> or proceed to a tertiary hospital with verified 24/7 emergency care.
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Hero Header -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-4">
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <span class="badge bg-primary-subtle text-primary fw-semibold" style="font-size: 0.8rem;">
+            {{ hospital.get_hospital_type_display }}
+          </span>
+          {% if hospital.has_verified_emergency %}
+          <span class="badge bg-danger text-white fw-bold" style="font-size: 0.8rem;">
+            <i class="bi bi-heart-pulse-fill me-1"></i>24/7 Emergency
+          </span>
+          {% endif %}
+          {% if hospital.has_trauma_center %}
+          <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold" style="font-size: 0.8rem;">
+            <i class="bi bi-shield-plus me-1"></i>Trauma Center
+          </span>
+          {% endif %}
+          {% include 'components/_verification_badge.html' with is_verified=hospital.is_verified %}
+        </div>
+
+        <h1 class="h3 fw-bold text-dark mb-1">
+          {{ hospital.title }}
+          {% if hospital.title_ur %}
+          <span class="font-urdu text-primary fs-4 ms-2" dir="rtl">{{ hospital.title_ur }}</span>
+          {% endif %}
+        </h1>
+
+        <div class="d-flex align-items-center gap-3 text-muted small flex-wrap mt-2">
+          <span><i class="bi bi-geo-alt me-1 text-danger"></i>{{ hospital.address }}, {{ hospital.locality.name }} ({{ hospital.locality.zone.name }})</span>
+          <span><i class="bi bi-eye me-1 text-secondary"></i>{{ hospital.view_count }} views</span>
+          {% if hospital.last_verified_date %}
+          <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Verified on {{ hospital.last_verified_date|date:"d M Y" }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="d-flex flex-wrap gap-2 align-self-md-center">
+        {% if hospital.ambulance_direct_phone %}
+        <a href="tel:{{ hospital.ambulance_direct_phone }}" class="btn btn-danger fw-bold btn-sm">
+          <i class="bi bi-telephone-fill me-1"></i>Ambulance
+        </a>
+        {% endif %}
+        {% if hospital.phone_number %}
+        <a href="tel:{{ hospital.phone_number }}" class="btn btn-outline-primary fw-semibold btn-sm">
+          <i class="bi bi-telephone me-1"></i>OPD Desk
+        </a>
+        {% endif %}
+        {% if hospital.google_maps_url %}
+        <a href="{{ hospital.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary fw-semibold btn-sm">
+          <i class="bi bi-geo-alt-fill me-1"></i>Directions
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Infrastructure Metrics Strip -->
+    <div class="row g-2 pt-3 mt-3 border-top">
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Inpatient Capacity</div>
+          <strong class="text-dark">
+            <i class="bi bi-hospital me-1 text-primary"></i>
+            {% if hospital.bed_capacity %}{{ hospital.bed_capacity }} Beds{% else %}Consultation Unit{% endif %}
+          </strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Trauma Unit</div>
+          <strong class="{% if hospital.has_trauma_center %}text-danger{% else %}text-muted{% endif %}">
+            <i class="bi {% if hospital.has_trauma_center %}bi-shield-plus text-danger{% else %}bi-x-circle text-muted{% endif %} me-1"></i>
+            {% if hospital.has_trauma_center %}Level-1 Trauma{% else %}Standard Care{% endif %}
+          </strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Blood Bank</div>
+          <strong class="{% if hospital.has_blood_bank %}text-danger{% else %}text-muted{% endif %}">
+            <i class="bi {% if hospital.has_blood_bank %}bi-droplet-fill text-danger{% else %}bi-x-circle text-muted{% endif %} me-1"></i>
+            {% if hospital.has_blood_bank %}On-Site Bank{% else %}Off-Site Coordination{% endif %}
+          </strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">24/7 Pharmacy</div>
+          <strong class="{% if hospital.has_24_7_pharmacy %}text-success{% else %}text-muted{% endif %}">
+            <i class="bi {% if hospital.has_24_7_pharmacy %}bi-capsule text-success{% else %}bi-x-circle text-muted{% endif %} me-1"></i>
+            {% if hospital.has_24_7_pharmacy %}24 Hours Open{% else %}Standard Hours{% endif %}
+          </strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Content Column -->
+    <div class="col-lg-8">
+      <!-- Primary Banner Image if available -->
+      {% if hospital.primary_image %}
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <img src="{{ hospital.primary_image.url }}" alt="{{ hospital.title }}" class="w-100 object-fit-cover" style="max-height: 400px;">
+      </div>
+      {% endif %}
+
+      <!-- Facility Overview -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-info-circle text-primary me-2"></i>About {{ hospital.title }}
+        </h2>
+        <div class="text-secondary lh-lg mb-0" style="white-space: pre-line;">
+          {{ hospital.description }}
+        </div>
+      </div>
+
+      <!-- Clinical Specialties & Departments -->
+      {% if hospital.specialties.all %}
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-file-medical text-primary me-2"></i>Medical Specialties & Clinical Services
+        </h2>
+        <div class="row g-3">
+          {% for spec in hospital.specialties.all %}
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 border bg-light-subtle h-100">
+              <div class="fw-bold text-dark mb-1">
+                <i class="bi bi-check2-circle text-success me-1"></i>{{ spec.name }}
+              </div>
+              {% if spec.description %}
+              <div class="small text-muted">{{ spec.description }}</div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Emergency Operational Protocol -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-shield-check text-primary me-2"></i>Emergency Operational Instructions
+        </h2>
+        {% if hospital.has_verified_emergency %}
+          <p class="small text-muted mb-3">
+            Emergency department accepts triage walk-ins and ambulance arrivals 24 hours a day, 7 days a week.
+          </p>
+          {% if hospital.emergency_notes %}
+          <div class="p-3 bg-light rounded-3 mb-3 small">
+            <strong>Verified Directives:</strong> {{ hospital.emergency_notes }}
+          </div>
+          {% endif %}
+        {% else %}
+          <p class="small text-muted mb-0">
+            This healthcare facility operates primarily as an outpatient consultation or planned diagnostic clinic. For immediate resuscitation or critical surgical trauma, contact Rescue 1122.
+          </p>
+        {% endif %}
+      </div>
+
+      <!-- Health Registry Source & Non-Fabrication Disclaimer -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h3 class="h6 fw-bold text-dark mb-2">
+          <i class="bi bi-shield-lock text-success me-2"></i>Civic Governance & Audit Disclosure
+        </h3>
+        <p class="small text-muted mb-2">
+          Information on this listing is audited against government health registries and official facility disclosures. No patient medical records or confidential health data are ever requested or stored on this platform.
+        </p>
+        {% if hospital.source_url %}
+        <div class="small mb-2">
+          <strong>Official Health Registry / Source:</strong>
+          <a href="{{ hospital.source_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+            {{ hospital.source_url }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+        </div>
+        {% endif %}
+        {% if hospital.last_verified_date %}
+        <div class="small text-muted">
+          Last verified on <strong>{{ hospital.last_verified_date|date:"d M Y" }}</strong>.
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Visitor Reviews -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+          <h2 class="h5 fw-bold text-dark mb-0">
+            <i class="bi bi-chat-quote-fill text-primary me-2"></i>Patient & Visitor Feedback ({{ reviews.count }})
+          </h2>
+        </div>
+        {% if reviews %}
+          <div class="d-flex flex-column gap-3">
+            {% for rev in reviews %}
+            <div class="p-3 rounded-3 bg-light">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong>{{ rev.user.get_full_name|default:rev.user.username }}</strong>
+                <span class="text-warning">
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= rev.rating %}★{% else %}☆{% endif %}
+                  {% endfor %}
+                </span>
+              </div>
+              <p class="small text-muted mb-1">{{ rev.comment }}</p>
+              <div class="small text-secondary" style="font-size: 0.72rem;">Audited feedback submitted on {{ rev.created_at|date:"d M Y" }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-3 text-muted small">
+            <i class="bi bi-chat-left-dots fs-3 d-block mb-1 text-secondary opacity-50"></i>
+            No visitor reviews published yet for this medical facility.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sidebar Column -->
+    <div class="col-lg-4">
+      <!-- Emergency & Contact Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 sticky-top" style="top: 80px; z-index: 10;">
+        <h3 class="h6 fw-bold text-dark mb-3">Facility Contacts & Location</h3>
+
+        {% if hospital.ambulance_direct_phone %}
+        <div class="p-3 bg-danger-subtle border border-danger-subtle rounded-3 mb-3">
+          <div class="small text-danger fw-bold">Ambulance Direct Helpline</div>
+          <a href="tel:{{ hospital.ambulance_direct_phone }}" class="h5 fw-bold text-danger text-decoration-none d-block mb-0">
+            <i class="bi bi-telephone-fill me-1"></i>{{ hospital.ambulance_direct_phone }}
+          </a>
+        </div>
+        {% endif %}
+
+        {% if hospital.emergency_phone %}
+        <div class="mb-3">
+          <div class="small text-muted">Emergency Ward Desk</div>
+          <a href="tel:{{ hospital.emergency_phone }}" class="fw-bold text-dark text-decoration-none">
+            <i class="bi bi-telephone-inbound-fill me-1 text-danger"></i>{{ hospital.emergency_phone }}
+          </a>
+        </div>
+        {% endif %}
+
+        {% if hospital.phone_number %}
+        <div class="mb-3">
+          <div class="small text-muted">Main Reception / OPD</div>
+          <a href="tel:{{ hospital.phone_number }}" class="fw-bold text-dark text-decoration-none">
+            <i class="bi bi-telephone me-1 text-primary"></i>{{ hospital.phone_number }}
+          </a>
+        </div>
+        {% endif %}
+
+        {% if hospital.website %}
+        <div class="mb-3">
+          <div class="small text-muted">Official Portal</div>
+          <a href="{{ hospital.website }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none small text-truncate d-block">
+            <i class="bi bi-globe me-1 text-info"></i>{{ hospital.website }}
+          </a>
+        </div>
+        {% endif %}
+
+        <div class="mb-3 pt-2 border-top">
+          <div class="small text-muted">Street Address</div>
+          <strong class="text-dark">{{ hospital.address }}</strong>
+          <div class="small text-secondary">{{ hospital.locality.name }} ({{ hospital.locality.zone.name }}), Lahore</div>
+          {% if hospital.landmark %}
+          <div class="small text-muted mt-1"><i class="bi bi-compass me-1"></i>Landmark: {{ hospital.landmark }}</div>
+          {% endif %}
+        </div>
+
+        <div class="d-grid gap-2 pt-2 border-top">
+          {% if hospital.google_maps_url %}
+          <a href="{{ hospital.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary fw-semibold btn-sm">
+            <i class="bi bi-geo-alt-fill me-1"></i>Open in Google Maps
+          </a>
+          {% endif %}
+          {% if hospital.ambulance_direct_phone %}
+          <a href="tel:{{ hospital.ambulance_direct_phone }}" class="btn btn-danger fw-semibold btn-sm">
+            <i class="bi bi-telephone-fill me-1"></i>Call Ambulance
+          </a>
+          {% elif hospital.phone_number %}
+          <a href="tel:{{ hospital.phone_number }}" class="btn btn-outline-primary fw-semibold btn-sm">
+            <i class="bi bi-telephone me-1"></i>Call Reception
+          </a>
+          {% endif %}
+        </div>
+
+        <hr>
+
+        <h4 class="small fw-bold text-uppercase text-muted mb-2">Hospital Specs</h4>
+        <div class="small d-flex flex-column gap-2 text-muted">
+          <div><i class="bi bi-building me-1 text-primary"></i> Classification: <strong>{{ hospital.get_hospital_type_display }}</strong></div>
+          <div><i class="bi bi-shield-check me-1 text-success"></i> Status: <strong>{{ hospital.get_verification_status_display }}</strong></div>
+          {% if hospital.last_verified_date %}
+          <div><i class="bi bi-calendar-check me-1 text-secondary"></i> Last Audited: <strong>{{ hospital.last_verified_date|date:"d M Y" }}</strong></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Healthcare Facilities -->
+  {% if related_facilities %}
+  <div class="pt-4 mt-4 border-top">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 fw-bold text-dark mb-0">
+        <i class="bi bi-hospital me-2 text-primary"></i>Nearby Healthcare Facilities in Lahore
+      </h2>
+      <a href="{% url 'hospitals:list' %}" class="small text-decoration-none fw-semibold">
+        Explore All Facilities <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% for item in related_facilities %}
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border border-light-subtle rounded-3 p-3">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-primary-subtle text-primary" style="font-size: 0.72rem;">
+              {{ item.get_hospital_type_display }}
+            </span>
+            {% if item.has_verified_emergency %}
+            <span class="badge bg-danger text-white" style="font-size: 0.68rem;">24/7 ER</span>
+            {% endif %}
+          </div>
+          <h3 class="h6 fw-bold mb-1">
+            <a href="{{ item.get_absolute_url }}" class="text-decoration-none text-dark">
+              {{ item.title }}
+            </a>
+          </h3>
+          <div class="small text-muted mb-2">
+            <i class="bi bi-geo-alt me-1 text-danger"></i>{{ item.locality.name }}
+          </div>
+          <p class="small text-muted mb-3">
+            {{ item.summary|truncatechars:85 }}
+          </p>
+          <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+            <span class="small text-muted">{{ item.specialties.first.name|default:"General Medicine" }}</span>
+            <a href="{{ item.get_absolute_url }}" class="btn btn-xs btn-outline-primary py-0 px-2 fw-semibold">
+              View
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
