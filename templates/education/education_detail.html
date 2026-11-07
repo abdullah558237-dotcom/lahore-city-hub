@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block extra_head %}
+<!-- Structured Data: Schema.org EducationalOrganization -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "{{ institution.title|escapejs }}",
+  "image": "{% if institution.primary_image %}{{ institution.primary_image.url }}{% endif %}",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "{{ institution.address|escapejs }}",
+    "addressLocality": "{{ institution.locality.name|escapejs }}",
+    "addressRegion": "Punjab",
+    "addressCountry": "PK"
+  }{% if institution.phone_number %},
+  "telephone": "{{ institution.phone_number }}"{% endif %}{% if institution.website %},
+  "url": "{{ institution.website }}"{% endif %}{% if institution.latitude and institution.longitude %},
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": {{ institution.latitude }},
+    "longitude": {{ institution.longitude }}
+  }{% endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'education:list' %}" class="text-decoration-none">Education</a></li>
+      <li class="breadcrumb-item"><a href="{{ institution.education_type.get_absolute_url }}" class="text-decoration-none">{{ institution.education_type.name }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ institution.title }}</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Header -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-4">
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <a href="{{ institution.education_type.get_absolute_url }}" class="badge bg-success-subtle text-success fw-semibold text-decoration-none" style="font-size: 0.8rem;">
+            <i class="bi bi-mortarboard me-1"></i>{{ institution.education_type.name }}
+          </a>
+          {% if institution.established_year %}
+          <span class="badge bg-light text-dark border fw-bold" style="font-size: 0.8rem;">
+            Estd. {{ institution.established_year }}
+          </span>
+          {% endif %}
+          <span class="badge bg-light text-secondary border" style="font-size: 0.8rem;">
+            {{ institution.get_gender_policy_display }}
+          </span>
+          {% if institution.is_featured %}
+          <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.8rem;">
+            <i class="bi bi-star-fill me-1"></i>Featured
+          </span>
+          {% endif %}
+          {% include 'components/_verification_badge.html' with is_verified=institution.is_verified %}
+        </div>
+
+        <h1 class="h3 fw-bold text-dark mb-1">
+          {{ institution.title }}
+          {% if institution.title_ur %}
+          <span class="font-urdu text-success fs-4 ms-2" dir="rtl">{{ institution.title_ur }}</span>
+          {% endif %}
+        </h1>
+
+        <div class="d-flex align-items-center gap-3 text-muted small flex-wrap mt-2">
+          <span><i class="bi bi-geo-alt me-1 text-danger"></i>{{ institution.address }}, {{ institution.locality.name }}</span>
+          <span><i class="bi bi-eye me-1 text-secondary"></i>{{ institution.view_count }} views</span>
+          {% if institution.last_verified_date %}
+          <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Verified on {{ institution.last_verified_date|date:"d M Y" }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="d-flex flex-wrap gap-2 align-self-md-center">
+        {% if institution.admission_url %}
+        <a href="{{ institution.admission_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-success fw-bold btn-sm">
+          <i class="bi bi-box-arrow-up-right me-1"></i>Admissions Portal
+        </a>
+        {% endif %}
+        {% if institution.website %}
+        <a href="{{ institution.website }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success fw-semibold btn-sm">
+          <i class="bi bi-globe me-1"></i>Official Website
+        </a>
+        {% endif %}
+        {% if institution.google_maps_url %}
+        <a href="{{ institution.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary fw-semibold btn-sm">
+          <i class="bi bi-geo-alt-fill me-1"></i>Campus Directions
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick Credentials Strip -->
+    <div class="row g-2 pt-3 mt-3 border-top">
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Category</div>
+          <strong class="text-dark"><i class="bi bi-building me-1 text-success"></i>{{ institution.education_type.name }}</strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Establishment</div>
+          <strong class="text-dark"><i class="bi bi-calendar-event me-1 text-primary"></i>{% if institution.established_year %}Year {{ institution.established_year }}{% else %}Recognized{% endif %}</strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Student Body</div>
+          <strong class="text-dark"><i class="bi bi-people-fill me-1 text-info"></i>{{ institution.get_gender_policy_display }}</strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Accreditations</div>
+          <strong class="text-dark">
+            {% for b in institution.accreditations.all %}
+              <span class="badge bg-light text-primary border">{{ b.abbreviation }}</span>
+            {% empty %}
+              <span class="text-muted small">Government Affiliated</span>
+            {% endfor %}
+          </strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Content Column -->
+    <div class="col-lg-8">
+      <!-- Primary Banner Image if available -->
+      {% if institution.primary_image %}
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <img src="{{ institution.primary_image.url }}" alt="{{ institution.title }}" class="w-100 object-fit-cover" style="max-height: 420px;">
+      </div>
+      {% endif %}
+
+      <!-- Overview -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-info-circle text-success me-2"></i>About {{ institution.title }}
+        </h2>
+        <div class="text-secondary lh-lg mb-0" style="white-space: pre-line;">
+          {{ institution.description }}
+        </div>
+      </div>
+
+      <!-- Academic Programs & Degrees -->
+      {% if institution.programs_offered %}
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-journal-text text-success me-2"></i>Academic Programs & Recognized Degrees
+        </h2>
+        <div class="text-secondary lh-lg mb-0" style="white-space: pre-line;">
+          {{ institution.programs_offered }}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Admissions Information & Criteria -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-light-subtle border-success-subtle">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-box-arrow-in-right text-success me-2"></i>Admissions Criteria & Schedule
+        </h2>
+        {% if institution.admission_info %}
+        <div class="text-secondary mb-3 lh-lg" style="white-space: pre-line;">
+          {{ institution.admission_info }}
+        </div>
+        {% endif %}
+
+        {% if institution.admission_cycles %}
+        <div class="mb-3">
+          <span class="badge bg-success text-white py-1 px-2 me-1">Admission Cycles:</span>
+          <span class="text-dark fw-medium">{{ institution.admission_cycles }}</span>
+        </div>
+        {% endif %}
+
+        <div class="d-flex flex-wrap gap-2">
+          {% if institution.admission_url %}
+          <a href="{{ institution.admission_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-success fw-semibold btn-sm">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Official Online Admission Portal
+          </a>
+          {% endif %}
+          {% if institution.prospectus_url %}
+          <a href="{{ institution.prospectus_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success fw-semibold btn-sm">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Download Official Prospectus
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Accreditation & Academic Governance -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h3 class="h6 fw-bold text-dark mb-2">
+          <i class="bi bi-patch-check text-primary me-2"></i>Accreditation & Registry Transparency
+        </h3>
+        <p class="small text-muted mb-2">
+          Candidates and parents are encouraged to cross-reference degree recognition with respective regulatory authorities (HEC, PEC, PMDC, BISE). Lahore City Hub never charges admission fees or acts as an unauthorized intermediary.
+        </p>
+        {% if institution.source_url %}
+        <div class="small mb-2">
+          <strong>Official Authority Source:</strong>
+          <a href="{{ institution.source_url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+            {{ institution.source_url }} <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+        </div>
+        {% endif %}
+        {% if institution.last_verified_date %}
+        <div class="small text-muted">
+          Last verified by editorial audit on <strong>{{ institution.last_verified_date|date:"d M Y" }}</strong>.
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Visitor Reviews -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+          <h2 class="h5 fw-bold text-dark mb-0">
+            <i class="bi bi-chat-quote-fill text-success me-2"></i>Student & Visitor Reviews ({{ reviews.count }})
+          </h2>
+        </div>
+        {% if reviews %}
+          <div class="d-flex flex-column gap-3">
+            {% for rev in reviews %}
+            <div class="p-3 rounded-3 bg-light">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong>{{ rev.user.get_full_name|default:rev.user.username }}</strong>
+                <span class="text-warning">
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= rev.rating %}★{% else %}☆{% endif %}
+                  {% endfor %}
+                </span>
+              </div>
+              <p class="small text-muted mb-1">{{ rev.comment }}</p>
+              <div class="small text-secondary" style="font-size: 0.72rem;">Reviewed on {{ rev.created_at|date:"d M Y" }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-3 text-muted small">
+            <i class="bi bi-chat-left-dots fs-3 d-block mb-1 text-secondary opacity-50"></i>
+            No reviews published yet for {{ institution.title }}.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sidebar Column -->
+    <div class="col-lg-4">
+      <!-- Admissions & Contact Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 sticky-top" style="top: 80px; z-index: 10;">
+        <h3 class="h6 fw-bold text-dark mb-3">Campus Admissions & Location</h3>
+
+        {% if institution.admission_url %}
+        <div class="d-grid mb-3">
+          <a href="{{ institution.admission_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-success fw-bold py-2 shadow-sm">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Apply on Official Portal
+          </a>
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+          <div class="small text-muted">Campus Address</div>
+          <strong class="text-dark">{{ institution.address }}</strong>
+          <div class="small text-secondary">{{ institution.locality.name }} ({{ institution.locality.zone.name }}), Lahore</div>
+          {% if institution.landmark %}
+          <div class="small text-muted mt-1"><i class="bi bi-compass me-1"></i>Landmark: {{ institution.landmark }}</div>
+          {% endif %}
+        </div>
+
+        {% if institution.phone_number %}
+        <div class="mb-3">
+          <div class="small text-muted">Admissions / Registrar Office</div>
+          <a href="tel:{{ institution.phone_number }}" class="fw-bold text-success text-decoration-none fs-6">
+            <i class="bi bi-telephone-fill me-1"></i>{{ institution.phone_number }}
+          </a>
+        </div>
+        {% endif %}
+
+        {% if institution.email %}
+        <div class="mb-3">
+          <div class="small text-muted">Official Email</div>
+          <a href="mailto:{{ institution.email }}" class="text-decoration-none small text-truncate d-block">
+            <i class="bi bi-envelope me-1"></i>{{ institution.email }}
+          </a>
+        </div>
+        {% endif %}
+
+        {% if institution.website %}
+        <div class="mb-3">
+          <div class="small text-muted">Official University / School Portal</div>
+          <a href="{{ institution.website }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none small text-truncate d-block">
+            <i class="bi bi-globe me-1 text-info"></i>{{ institution.website }}
+          </a>
+        </div>
+        {% endif %}
+
+        <div class="d-grid gap-2 pt-2 border-top">
+          {% if institution.google_maps_url %}
+          <a href="{{ institution.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary fw-semibold btn-sm">
+            <i class="bi bi-geo-alt-fill me-1"></i>Open Campus Map
+          </a>
+          {% endif %}
+          {% if institution.phone_number %}
+          <a href="tel:{{ institution.phone_number }}" class="btn btn-outline-success fw-semibold btn-sm">
+            <i class="bi bi-telephone me-1"></i>Call Admissions Desk
+          </a>
+          {% endif %}
+        </div>
+
+        <hr>
+
+        <h4 class="small fw-bold text-uppercase text-muted mb-2">Institutional Details</h4>
+        <div class="small d-flex flex-column gap-2 text-muted">
+          <div><i class="bi bi-mortarboard me-1 text-success"></i> Category: <strong>{{ institution.education_type.name }}</strong></div>
+          <div><i class="bi bi-shield-check me-1 text-primary"></i> Verification: <strong>{{ institution.get_verification_status_display }}</strong></div>
+          {% if institution.last_verified_date %}
+          <div><i class="bi bi-calendar-check me-1 text-secondary"></i> Audited Date: <strong>{{ institution.last_verified_date|date:"d M Y" }}</strong></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Educational Institutions -->
+  {% if related_institutions %}
+  <div class="pt-4 mt-4 border-top">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 fw-bold text-dark mb-0">
+        <i class="bi bi-mortarboard me-2 text-success"></i>Similar Educational Institutes in Lahore
+      </h2>
+      <a href="{% url 'education:list' %}" class="small text-decoration-none fw-semibold text-success">
+        Explore All Institutes <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% for item in related_institutions %}
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border border-light-subtle rounded-3 p-3">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-success-subtle text-success" style="font-size: 0.72rem;">
+              {{ item.education_type.name }}
+            </span>
+            {% if item.established_year %}
+            <span class="badge bg-light text-secondary border" style="font-size: 0.68rem;">Estd. {{ item.established_year }}</span>
+            {% endif %}
+          </div>
+          <h3 class="h6 fw-bold mb-1">
+            <a href="{{ item.get_absolute_url }}" class="text-decoration-none text-dark">
+              {{ item.title }}
+            </a>
+          </h3>
+          <div class="small text-muted mb-2">
+            <i class="bi bi-geo-alt me-1 text-danger"></i>{{ item.locality.name }}
+          </div>
+          <p class="small text-muted mb-3">
+            {{ item.summary|truncatechars:85 }}
+          </p>
+          <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+            <span class="small text-muted">{{ item.get_gender_policy_display }}</span>
+            <a href="{{ item.get_absolute_url }}" class="btn btn-xs btn-outline-success py-0 px-2 fw-semibold">
+              View
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
