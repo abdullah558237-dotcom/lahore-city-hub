@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block extra_head %}
+<!-- Structured Data: Schema.org TransitRoute -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BusTrip",
+  "name": "{{ route.route_name|escapejs }}",
+  "busName": "{{ route.route_code|escapejs }}",
+  "departureBusStop": {
+    "@type": "BusStop",
+    "name": "{{ route.origin_station|escapejs }}"
+  },
+  "arrivalBusStop": {
+    "@type": "BusStop",
+    "name": "{{ route.destination_station|escapejs }}"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "{{ route.operator|escapejs }}"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'transport:overview' %}" class="text-decoration-none">Transit Hub</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'transport:route_list' %}" class="text-decoration-none">Routes</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ route.route_code }}</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Header -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white" style="border-left: 6px solid {% if 'Orange' in route.route_name %}#fd7e14{% elif 'Metrobus' in route.route_name %}#198754{% else %}#0d6efd{% endif %} !important;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <span class="badge bg-dark font-monospace" style="font-size: 0.8rem;">{{ route.route_code }}</span>
+          <span class="badge bg-light text-secondary border" style="font-size: 0.8rem;">
+            <i class="bi {{ route.mode.icon_class|default:'bi-train-front' }} me-1"></i>{{ route.mode.name }}
+          </span>
+          <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.8rem;">
+            <i class="bi bi-check-circle-fill me-1"></i>Operational
+          </span>
+        </div>
+
+        <h1 class="h3 fw-bold text-dark mb-1">
+          {{ route.route_name }}
+        </h1>
+
+        <p class="text-muted small mb-3" style="max-width: 750px;">
+          {{ route.description }}
+        </p>
+
+        <!-- Stats Chips -->
+        <div class="d-flex flex-wrap gap-2 text-muted small">
+          <span class="badge bg-light text-dark border p-2">
+            <i class="bi bi-signpost me-1 text-primary"></i>Terminals: <strong>{{ route.origin_station }} &harr; {{ route.destination_station }}</strong>
+          </span>
+          <span class="badge bg-light text-dark border p-2">
+            <i class="bi bi-geo-alt me-1 text-danger"></i><strong>{{ route.total_stations }} Stations</strong> ({{ route.total_distance_km }} km)
+          </span>
+          <span class="badge bg-light text-dark border p-2">
+            <i class="bi bi-clock me-1 text-warning"></i><strong>{{ route.operating_schedule }}</strong>
+          </span>
+          <span class="badge bg-light text-dark border p-2">
+            <i class="bi bi-speedometer2 me-1 text-info"></i>Frequency: <strong>{{ route.frequency }}</strong>
+          </span>
+        </div>
+      </div>
+
+      <!-- Action / Helpline button -->
+      <div class="d-flex flex-column gap-2 align-self-start align-self-md-center">
+        {% if route.source_url %}
+        <a href="{{ route.source_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-dark btn-sm fw-semibold">
+          <i class="bi bi-box-arrow-up-right me-1"></i>Official Schedule
+        </a>
+        {% endif %}
+        <a href="tel:042111222627" class="btn btn-warning btn-sm fw-bold text-dark">
+          <i class="bi bi-telephone-fill me-1"></i>PMA Helpline
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Station Sequence Column -->
+    <div class="col-lg-8">
+      <!-- Fares & Ticketing Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <h2 class="h6 fw-bold text-dark text-uppercase tracking-wider mb-3">
+          <i class="bi bi-cash-stack text-success me-2"></i>Official Fare Structure & Ticketing
+        </h2>
+        <div class="p-3 bg-light rounded-3 mb-2 small" style="line-height: 1.7;">
+          {{ route.fare_info }}
+        </div>
+        <div class="small text-muted d-flex align-items-center gap-1">
+          <i class="bi bi-info-circle text-primary"></i>
+          <span>Payable through RFID single-journey tokens or Punjab Masstransit reloadable smart cards.</span>
+        </div>
+      </div>
+
+      <!-- Complete Stations Timeline List -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+          <div>
+            <h2 class="h6 fw-bold text-dark text-uppercase tracking-wider mb-0">
+              <i class="bi bi-list-ol text-warning me-2"></i>Station Stops (In Sequence)
+            </h2>
+            <div class="small text-muted">All {{ stations.count }} stations from {{ route.origin_station }} to {{ route.destination_station }}</div>
+          </div>
+          <span class="badge bg-dark font-monospace">{{ stations.count }} Total Stops</span>
+        </div>
+
+        <div class="timeline-container">
+          <div class="list-group list-group-flush">
+            {% for st in stations %}
+            <div class="list-group-item px-0 py-3 d-flex align-items-start gap-3 border-bottom">
+              <!-- Stop Number Circle -->
+              <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0" style="width: 38px; height: 38px; font-size: 0.85rem; background-color: {% if st.is_terminal %}#dc3545{% elif st.is_interchange %}#fd7e14{% elif st.is_underground %}#6f42c1{% else %}#198754{% endif %};">
+                {{ st.station_number }}
+              </div>
+
+              <!-- Station Details -->
+              <div class="flex-grow-1">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 mb-1">
+                  <div>
+                    <h3 class="h6 fw-bold mb-0">
+                      <a href="{{ st.get_absolute_url }}" class="text-decoration-none text-dark hover-success">
+                        {{ st.station_name }}
+                      </a>
+                    </h3>
+                    {% if st.urdu_name %}
+                    <span class="small text-muted" dir="rtl" style="font-family: 'Noto Nastaliq Urdu', serif; font-size: 0.85rem;">{{ st.urdu_name }}</span>
+                    {% endif %}
+                  </div>
+
+                  <!-- Badges Strip -->
+                  <div class="d-flex gap-1 flex-wrap">
+                    {% if st.is_terminal %}
+                    <span class="badge bg-danger text-white fw-bold" style="font-size: 0.7rem;">Terminal</span>
+                    {% endif %}
+                    {% if st.is_interchange %}
+                    <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.7rem;">
+                      <i class="bi bi-arrow-left-right me-1"></i>Interchange
+                    </span>
+                    {% endif %}
+                    {% if st.is_underground %}
+                    <span class="badge bg-purple text-white fw-bold" style="font-size: 0.7rem; background-color: #6f42c1;">
+                      <i class="bi bi-arrow-down-square me-1"></i>Underground
+                    </span>
+                    {% endif %}
+                    {% if st.has_wheelchair_access %}
+                    <span class="badge bg-light text-secondary border" title="Wheelchair Accessible" style="font-size: 0.7rem;">
+                      <i class="bi bi-universal-access"></i>
+                    </span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                {% if st.interchange_details %}
+                <div class="small text-warning-emphasis bg-warning-subtle p-2 rounded-2 mb-2" style="font-size: 0.78rem;">
+                  <i class="bi bi-shuffle me-1"></i><strong>Transfer Option:</strong> {{ st.interchange_details }}
+                </div>
+                {% endif %}
+
+                {% if st.nearby_landmarks %}
+                <div class="small text-secondary" style="font-size: 0.8rem;">
+                  <i class="bi bi-building me-1 text-muted"></i><strong>Landmarks & Areas:</strong> {{ st.nearby_landmarks }}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar Column -->
+    <div class="col-lg-4">
+      <!-- Route Metadata & Authority Provenance -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white sticky-top" style="top: 80px; z-index: 10;">
+        <h2 class="h6 fw-bold text-dark text-uppercase tracking-wider mb-3 pb-2 border-bottom">
+          <i class="bi bi-info-circle-fill text-primary me-2"></i>Line Specifications
+        </h2>
+
+        <ul class="list-unstyled mb-4 d-flex flex-column gap-3 small">
+          <li class="d-flex justify-content-between border-bottom pb-2">
+            <span class="text-muted">Route Code:</span>
+            <strong class="font-monospace text-dark">{{ route.route_code }}</strong>
+          </li>
+          <li class="d-flex justify-content-between border-bottom pb-2">
+            <span class="text-muted">Governing Authority:</span>
+            <span class="text-dark fw-semibold text-end" style="max-width: 180px;">{{ route.operator }}</span>
+          </li>
+          <li class="d-flex justify-content-between border-bottom pb-2">
+            <span class="text-muted">Total Track Length:</span>
+            <strong class="text-dark">{{ route.total_distance_km }} km</strong>
+          </li>
+          <li class="d-flex justify-content-between border-bottom pb-2">
+            <span class="text-muted">Total Station Stops:</span>
+            <strong class="text-dark">{{ route.total_stations }} Stations</strong>
+          </li>
+          <li class="d-flex justify-content-between border-bottom pb-2">
+            <span class="text-muted">Interchanges:</span>
+            <strong class="text-warning-emphasis">{{ interchanges_count }} Transfer Nodes</strong>
+          </li>
+          <li class="d-flex justify-content-between border-bottom pb-2">
+            <span class="text-muted">Last Audit Date:</span>
+            <span class="text-dark">{{ route.last_updated_date|date:"F Y"|default:"Verified 2026" }}</span>
+          </li>
+        </ul>
+
+        {% if route.source_url %}
+        <div class="p-3 bg-light rounded-3 mb-3 text-center">
+          <div class="small fw-bold text-dark mb-1">Official Regulatory Source</div>
+          <p class="small text-muted mb-2" style="font-size: 0.75rem;">
+            Verified against Punjab Masstransit Authority official publications.
+          </p>
+          <a href="{{ route.source_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-outline-dark fw-semibold w-100" style="font-size: 0.75rem;">
+            <i class="bi bi-box-arrow-up-right me-1"></i>View Authority Source
+          </a>
+        </div>
+        {% endif %}
+
+        <!-- Route-Related Travel Advice -->
+        {% if guides %}
+        <div class="mt-3">
+          <div class="small fw-bold text-dark text-uppercase tracking-wider mb-2">Commuter Advice for this Route:</div>
+          <div class="list-group list-group-flush">
+            {% for g in guides %}
+            <a href="{{ g.get_absolute_url }}" class="list-group-item list-group-item-action px-0 py-2 small d-flex align-items-center gap-2">
+              <i class="bi {{ g.icon_class|default:'bi-info-circle' }} text-primary"></i>
+              <span class="text-truncate">{{ g.title }}</span>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

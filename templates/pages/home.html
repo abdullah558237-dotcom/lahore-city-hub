@@ -441,7 +441,7 @@
             <li><i class="bi bi-clock me-1 text-success" aria-hidden="true"></i> <strong>Hours:</strong> 06:00 AM – 10:00 PM Daily</li>
             <li><i class="bi bi-cash me-1 text-success" aria-hidden="true"></i> <strong>Fare:</strong> PKR 20 – 40 (Distance Based)</li>
           </ul>
-          <a href="{% url 'core:category_list' category_slug='places' %}?locality=walled-city" class="btn btn-sm btn-outline-dark mt-auto" aria-label="View Orange Line Station Map and Guide">
+          <a href="{% url 'transport:route_detail' slug='orange-line-metro-train' %}" class="btn btn-sm btn-outline-dark mt-auto" aria-label="View Orange Line Station Map and Guide">
             View Station Map & Guide <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
           </a>
         </div>
@@ -466,7 +466,7 @@
             <li><i class="bi bi-clock me-1 text-success" aria-hidden="true"></i> <strong>Hours:</strong> 06:00 AM – 10:30 PM Daily</li>
             <li><i class="bi bi-cash me-1 text-success" aria-hidden="true"></i> <strong>Fare:</strong> Flat PKR 30 via Metro Token / Card</li>
           </ul>
-          <a href="{% url 'core:category_list' category_slug='places' %}?locality=walled-city" class="btn btn-sm btn-outline-dark mt-auto" aria-label="View Lahore Metrobus Corridors">
+          <a href="{% url 'transport:route_detail' slug='lahore-metrobus-green-line' %}" class="btn btn-sm btn-outline-dark mt-auto" aria-label="View Lahore Metrobus Corridors">
             View Corridors <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
           </a>
         </div>

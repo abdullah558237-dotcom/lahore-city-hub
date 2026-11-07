@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'transport:overview' %}" class="text-decoration-none">Transit Hub</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Travel Advice & Guides</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Header -->
+  <div class="card border-0 text-white shadow-sm rounded-4 mb-4 overflow-hidden position-relative" style="background: linear-gradient(135deg, #1b2838 0%, #0d1b2a 100%);">
+    <div class="card-body p-4 p-md-5">
+      <span class="badge bg-warning text-dark px-3 py-2 fw-semibold rounded-pill mb-2">
+        <i class="bi bi-journal-text me-1"></i>Passenger Knowledge Base
+      </span>
+      <h1 class="display-6 fw-bold mb-2">Lahore Transit Guides & Commuter Advice</h1>
+      <p class="lead fs-6 mb-0 text-white-50" style="max-width: 680px;">
+        Everything you need to know about purchasing Smart Cards, transferring between corridors, passenger rules, ladies compartments, and wheelchair accessibility in Lahore.
+      </p>
+    </div>
+  </div>
+
+  <!-- Search & Category Filters Strip -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 mb-4 bg-white">
+    <form method="get" action="{% url 'transport:guide_list' %}">
+      <div class="row g-2 mb-3">
+        <div class="col-12 col-md-9">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" name="q" class="form-control border-start-0" placeholder="Search guides (e.g. smart card, interchange, women, luggage)..." value="{{ search_query }}">
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <button type="submit" class="btn btn-dark w-100 fw-semibold">
+            <i class="bi bi-search me-1"></i>Search Guides
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="d-flex flex-wrap gap-1">
+        <a href="{% url 'transport:guide_list' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="btn btn-xs rounded-pill {% if not selected_category %}btn-dark{% else %}btn-outline-secondary{% endif %}" style="font-size: 0.78rem;">
+          All Categories ({{ total_results }})
+        </a>
+        {% for cat_code, cat_name in category_choices %}
+        <a href="?category={{ cat_code }}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-xs rounded-pill {% if selected_category == cat_code %}btn-dark{% else %}btn-outline-secondary{% endif %}" style="font-size: 0.78rem;">
+          {{ cat_name }}
+        </a>
+        {% endfor %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Guides Grid -->
+  {% if guides %}
+  <div class="row g-4 mb-4">
+    {% for guide in guides %}
+    <div class="col-12 col-md-6 col-lg-4 d-flex">
+      <div class="card h-100 border-0 shadow-sm rounded-4 p-4 bg-white d-flex flex-column w-100 hover-shadow" style="transition: all 0.2s ease;">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="rounded-3 p-3 bg-light text-dark" style="font-size: 1.5rem;">
+            <i class="bi {{ guide.icon_class|default:'bi-info-circle' }} text-primary"></i>
+          </div>
+          <span class="badge bg-light text-secondary border" style="font-size: 0.72rem;">
+            {{ guide.get_category_display }}
+          </span>
+        </div>
+
+        <h2 class="h6 fw-bold mb-2 text-dark">
+          <a href="{{ guide.get_absolute_url }}" class="text-decoration-none text-dark hover-success">
+            {{ guide.title }}
+          </a>
+        </h2>
+
+        <p class="small text-secondary mb-3 flex-grow-1" style="line-height: 1.6;">
+          {{ guide.summary }}
+        </p>
+
+        {% if guide.route %}
+        <div class="small text-muted mb-3" style="font-size: 0.75rem;">
+          <i class="bi bi-train-front me-1"></i>Applies to: <strong>{{ guide.route.route_name }}</strong>
+        </div>
+        {% endif %}
+
+        <div class="mt-auto pt-2 border-top">
+          <a href="{{ guide.get_absolute_url }}" class="btn btn-sm btn-outline-dark w-100 fw-semibold">
+            Read Advice & Instructions <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
+    <i class="bi bi-journal-text text-muted mb-3" style="font-size: 2.5rem;"></i>
+    <h3 class="h6 fw-bold text-dark mb-1">No Travel Guides Found</h3>
+    <p class="text-secondary small mb-3">No guides matched your current category or search criteria.</p>
+    <a href="{% url 'transport:guide_list' %}" class="btn btn-outline-dark btn-sm fw-semibold">
+      Reset Filters
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

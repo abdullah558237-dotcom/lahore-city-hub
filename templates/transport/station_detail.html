@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'transport:overview' %}" class="text-decoration-none">Transit Hub</a></li>
+      <li class="breadcrumb-item"><a href="{{ station.route.get_absolute_url }}" class="text-decoration-none">{{ station.route.route_code }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ station.station_name }}</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Card -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <span class="badge bg-dark font-monospace" style="font-size: 0.8rem;">Stop #{{ station.station_number }}</span>
+          <a href="{{ station.route.get_absolute_url }}" class="badge bg-light text-dark border text-decoration-none" style="font-size: 0.8rem;">
+            <i class="bi bi-train-front me-1"></i>{{ station.route.route_name }}
+          </a>
+          {% if station.is_terminal %}
+          <span class="badge bg-danger text-white fw-bold">Terminal Station</span>
+          {% endif %}
+          {% if station.is_interchange %}
+          <span class="badge bg-warning text-dark fw-bold">
+            <i class="bi bi-arrow-left-right me-1"></i>Interchange Hub
+          </span>
+          {% endif %}
+          {% if station.is_underground %}
+          <span class="badge text-white fw-bold" style="background-color: #6f42c1;">
+            <i class="bi bi-arrow-down-square me-1"></i>Underground
+          </span>
+          {% endif %}
+        </div>
+
+        <h1 class="h3 fw-bold text-dark mb-1">
+          {{ station.station_name }} Station
+        </h1>
+        {% if station.urdu_name %}
+        <div class="text-muted fs-4 mb-2" dir="rtl" style="font-family: 'Noto Nastaliq Urdu', serif;">
+          {{ station.urdu_name }}
+        </div>
+        {% endif %}
+
+        <div class="small text-muted">
+          <i class="bi bi-clock me-1 text-warning"></i>Line Hours: {{ station.route.operating_schedule }} &bull; Frequency: {{ station.route.frequency }}
+        </div>
+      </div>
+
+      <!-- Station Navigation: Prev / Next -->
+      <div class="d-flex gap-2">
+        {% if prev_station %}
+        <a href="{{ prev_station.get_absolute_url }}" class="btn btn-outline-dark btn-sm fw-semibold" title="Previous Stop: {{ prev_station.station_name }}">
+          &larr; Stop #{{ prev_station.station_number }} ({{ prev_station.station_name }})
+        </a>
+        {% endif %}
+        {% if next_station %}
+        <a href="{{ next_station.get_absolute_url }}" class="btn btn-dark btn-sm fw-semibold" title="Next Stop: {{ next_station.station_name }}">
+          Stop #{{ next_station.station_number }} ({{ next_station.station_name }}) &rarr;
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Station Info Column -->
+    <div class="col-lg-8">
+      <!-- Interchange Information (if applicable) -->
+      {% if station.is_interchange and station.interchange_details %}
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-warning-subtle text-dark border-warning">
+        <h2 class="h6 fw-bold mb-2">
+          <i class="bi bi-arrow-left-right text-warning me-2"></i>Interchange & Transfer Information
+        </h2>
+        <p class="small mb-0" style="line-height: 1.7;">
+          {{ station.interchange_details }}
+        </p>
+      </div>
+      {% endif %}
+
+      <!-- Nearby Landmarks & Destination Points -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <h2 class="h6 fw-bold text-dark text-uppercase tracking-wider mb-3">
+          <i class="bi bi-building text-primary me-2"></i>Nearby Landmarks & Neighborhoods
+        </h2>
+        <p class="text-secondary mb-0" style="line-height: 1.7;">
+          {{ station.nearby_landmarks|default:"Direct passenger connection within central Lahore." }}
+        </p>
+      </div>
+
+      <!-- Accessibility Amenities -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <h2 class="h6 fw-bold text-dark text-uppercase tracking-wider mb-3">
+          <i class="bi bi-universal-access text-success me-2"></i>Station Amenities & Accessibility
+        </h2>
+        <div class="row g-3">
+          <div class="col-6 col-md-4">
+            <div class="p-3 bg-light rounded-3 text-center">
+              <i class="bi bi-universal-access fs-4 text-success mb-1 d-block"></i>
+              <div class="small fw-bold">Wheelchair Access</div>
+              <div class="text-muted small">Elevator & Ramps</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="p-3 bg-light rounded-3 text-center">
+              <i class="bi bi-shield-check fs-4 text-primary mb-1 d-block"></i>
+              <div class="small fw-bold">CCTV Security</div>
+              <div class="text-muted small">24/7 Monitored</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="p-3 bg-light rounded-3 text-center">
+              <i class="bi bi-ticket-perforated fs-4 text-warning mb-1 d-block"></i>
+              <div class="small fw-bold">Automated TVM</div>
+              <div class="text-muted small">Token & Card Vending</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar Column -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white sticky-top" style="top: 80px; z-index: 10;">
+        <h2 class="h6 fw-bold text-dark text-uppercase tracking-wider mb-3 pb-2 border-bottom">
+          Line Information
+        </h2>
+
+        <div class="mb-3">
+          <div class="small text-muted">Corridor:</div>
+          <strong class="text-dark">{{ station.route.route_name }}</strong>
+        </div>
+
+        <div class="mb-3">
+          <div class="small text-muted">Stop Sequence:</div>
+          <strong class="text-dark">Stop #{{ station.station_number }} of {{ station.route.total_stations }}</strong>
+        </div>
+
+        <div class="mb-4">
+          <div class="small text-muted">Fares:</div>
+          <span class="small text-secondary">{{ station.route.fare_info }}</span>
+        </div>
+
+        <a href="{{ station.route.get_absolute_url }}" class="btn btn-outline-dark btn-sm w-100 fw-semibold mb-2">
+          View Complete Route Sequence &rarr;
+        </a>
+        <a href="{% url 'transport:station_list' %}" class="btn btn-light btn-sm w-100 border">
+          All Stations Directory
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'transport:overview' %}" class="text-decoration-none">Transit Hub</a></li>
+      {% if selected_mode %}
+      <li class="breadcrumb-item active" aria-current="page">{{ selected_mode.name }}</li>
+      {% elif search_query %}
+      <li class="breadcrumb-item active" aria-current="page">Search: "{{ search_query }}"</li>
+      {% else %}
+      <li class="breadcrumb-item active" aria-current="page">All Routes</li>
+      {% endif %}
+    </ol>
+  </nav>
+
+  <!-- Hero Header -->
+  <div class="card border-0 text-white shadow-sm rounded-4 mb-4 overflow-hidden position-relative" style="background: linear-gradient(135deg, #1b2838 0%, #0d1b2a 100%);">
+    <div class="card-body p-4 p-md-5">
+      <span class="badge bg-warning text-dark px-3 py-2 fw-semibold rounded-pill mb-2">
+        <i class="bi bi-diagram-3-fill me-1"></i>Official Corridors
+      </span>
+      <h1 class="display-6 fw-bold mb-2">Lahore Public Transit Routes & Corridors</h1>
+      <p class="lead fs-6 mb-0 text-white-50" style="max-width: 650px;">
+        Browse Pakistan's premier mass transit corridors: the Orange Line Metro Train, Green Line Metrobus, and suburban Speedo feeder lines.
+      </p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Filter Sidebar Column -->
+    <div class="col-lg-4 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 sticky-top" style="top: 80px; z-index: 10;">
+        <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+          <h2 class="h6 fw-bold mb-0 text-dark">
+            <i class="bi bi-funnel-fill text-warning me-2"></i>Filter Routes
+          </h2>
+          {% if search_query or selected_mode_slug %}
+          <a href="{% url 'transport:route_list' %}" class="badge bg-danger-subtle text-danger text-decoration-none py-1 px-2" title="Reset all filters">
+            <i class="bi bi-x-circle me-1"></i>Reset
+          </a>
+          {% endif %}
+        </div>
+
+        <form method="get" action="{% url 'transport:route_list' %}">
+          <!-- Keyword Search -->
+          <div class="mb-3">
+            <label for="search-input" class="form-label small fw-semibold text-secondary">Search Route Name or Terminal</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+              <input type="text" name="q" id="search-input" class="form-control" placeholder="Orange, Ali Town, Shahdara..." value="{{ search_query }}">
+            </div>
+          </div>
+
+          <!-- Mode Filter -->
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Transit Mode</label>
+            <div class="d-flex flex-column gap-1">
+              <a href="?{% for k, v in request.GET.items %}{% if k != 'mode' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="btn btn-sm text-start {% if not selected_mode_slug %}btn-dark{% else %}btn-outline-light text-dark{% endif %}" style="font-size: 0.8rem;">
+                All Modes ({{ total_results }})
+              </a>
+              {% for m in modes %}
+              <a href="?mode={{ m.slug }}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm text-start {% if selected_mode_slug == m.slug %}btn-dark{% else %}btn-outline-light text-dark{% endif %}" style="font-size: 0.8rem;">
+                <i class="bi {{ m.icon_class }} me-1"></i>{{ m.name }} ({{ m.active_routes_count }})
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Sort Preserve -->
+          {% if sort_by %}
+          <input type="hidden" name="sort" value="{{ sort_by }}">
+          {% endif %}
+
+          <button type="submit" class="btn btn-sm btn-dark w-100 fw-semibold">
+            <i class="bi bi-filter me-1"></i>Apply Filters
+          </button>
+        </form>
+
+        <div class="mt-4 pt-3 border-top">
+          <div class="p-3 bg-light rounded-3 text-center">
+            <div class="small fw-bold text-dark mb-1">Looking for a specific stop?</div>
+            <p class="small text-muted mb-2" style="font-size: 0.78rem;">
+              Search through all 50+ individual transit stations across Lahore.
+            </p>
+            <a href="{% url 'transport:station_list' %}" class="btn btn-xs btn-outline-dark fw-semibold" style="font-size: 0.75rem;">
+              <i class="bi bi-geo-alt-fill me-1 text-danger"></i>Station Directory
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Routes Column -->
+    <div class="col-lg-8 col-xl-9">
+      <!-- Controls Strip -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge bg-dark text-white px-2 py-1 font-monospace" style="font-size: 0.8rem;">
+            {{ total_results }} Transit Corridors
+          </span>
+
+          {% if selected_mode %}
+          <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+            Mode: {{ selected_mode.name }}
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'mode' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">&times;</a>
+          </span>
+          {% endif %}
+
+          {% if search_query %}
+          <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+            Query: "{{ search_query }}"
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'q' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">&times;</a>
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- Sort Select -->
+        <div class="d-flex align-items-center gap-2">
+          <label for="sort-select" class="small text-muted fw-semibold mb-0 text-nowrap">Sort:</label>
+          <select id="sort-select" class="form-select form-select-sm" style="width: auto;" onchange="location = this.value;">
+            <option value="?{% if pagination_querystring %}{{ pagination_querystring }}&{% endif %}sort=code" {% if sort_by == 'code' %}selected{% endif %}>Route Code</option>
+            <option value="?{% if pagination_querystring %}{{ pagination_querystring }}&{% endif %}sort=name" {% if sort_by == 'name' %}selected{% endif %}>Route Name (A-Z)</option>
+            <option value="?{% if pagination_querystring %}{{ pagination_querystring }}&{% endif %}sort=stations" {% if sort_by == 'stations' %}selected{% endif %}>Most Stations</option>
+            <option value="?{% if pagination_querystring %}{{ pagination_querystring }}&{% endif %}sort=distance" {% if sort_by == 'distance' %}selected{% endif %}>Longest Distance</option>
+          </select>
+        </div>
+      </div>
+
+      {% if routes %}
+      <div class="row g-4">
+        {% for route in routes %}
+        <div class="col-12 col-md-6 d-flex">
+          <div class="card w-100 shadow-sm border-0 rounded-4 p-4 bg-white d-flex flex-column hover-shadow" style="transition: all 0.2s ease; border-left: 5px solid {% if 'Orange' in route.route_name %}#fd7e14{% elif 'Metrobus' in route.route_name %}#198754{% else %}#0d6efd{% endif %} !important;">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge bg-dark font-monospace" style="font-size: 0.75rem;">{{ route.route_code }}</span>
+              <span class="badge bg-light text-secondary border" style="font-size: 0.72rem;">{{ route.mode.name }}</span>
+            </div>
+
+            <h3 class="h6 fw-bold mb-1">
+              <a href="{{ route.get_absolute_url }}" class="text-decoration-none text-dark hover-success">
+                {{ route.route_name }}
+              </a>
+            </h3>
+
+            <p class="text-muted small mb-3 flex-grow-1" style="line-height: 1.6;">
+              {{ route.description|truncatechars:125 }}
+            </p>
+
+            <div class="bg-light p-3 rounded-3 mb-3 small d-flex flex-column gap-1">
+              <div class="d-flex justify-content-between">
+                <span class="text-muted"><i class="bi bi-signpost me-1"></i>Terminals:</span>
+                <strong>{{ route.origin_station }} &harr; {{ route.destination_station }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-muted"><i class="bi bi-geo-alt me-1 text-danger"></i>Stops:</span>
+                <span>{{ route.total_stations }} Stations ({{ route.total_distance_km }} km)</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-muted"><i class="bi bi-clock me-1 text-warning"></i>Schedule:</span>
+                <span>{{ route.operating_schedule }}</span>
+              </div>
+            </div>
+
+            <div class="mt-auto pt-2 d-flex gap-2">
+              <a href="{{ route.get_absolute_url }}" class="btn btn-sm btn-outline-dark w-100 fw-semibold">
+                Explore Stations & Fares <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+              {% if route.source_url %}
+              <a href="{{ route.source_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary" title="Official Authority Website">
+                <i class="bi bi-box-arrow-up-right"></i>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <nav aria-label="Route pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">&laquo; Previous</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link bg-dark border-dark">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link text-dark" href="?page={{ num }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">Next &raquo;</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
+        <i class="bi bi-train-front text-muted mb-3" style="font-size: 3rem;"></i>
+        <h3 class="h5 fw-bold text-dark mb-2">No Matching Transit Routes</h3>
+        <p class="text-secondary small mb-3">No public transit lines matched your query.</p>
+        <a href="{% url 'transport:route_list' %}" class="btn btn-outline-dark btn-sm fw-semibold">
+          Reset Filter
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

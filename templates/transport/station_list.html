@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'transport:overview' %}" class="text-decoration-none">Transit Hub</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Stations Directory</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Header -->
+  <div class="card border-0 text-white shadow-sm rounded-4 mb-4 overflow-hidden position-relative" style="background: linear-gradient(135deg, #1b2838 0%, #0d1b2a 100%);">
+    <div class="card-body p-4 p-md-5">
+      <span class="badge bg-warning text-dark px-3 py-2 fw-semibold rounded-pill mb-2">
+        <i class="bi bi-geo-alt-fill me-1"></i>Station Directory
+      </span>
+      <h1 class="display-6 fw-bold mb-2">Lahore Transit Stations & Stops</h1>
+      <p class="lead fs-6 mb-0 text-white-50" style="max-width: 650px;">
+        Find stop numbers, transfer interchanges, accessibility features, and nearby bazaar landmarks across Lahore's mass transit lines.
+      </p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Filter Sidebar Column -->
+    <div class="col-lg-4 col-xl-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 sticky-top" style="top: 80px; z-index: 10;">
+        <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+          <h2 class="h6 fw-bold mb-0 text-dark">
+            <i class="bi bi-funnel-fill text-warning me-2"></i>Filter Stations
+          </h2>
+          {% if search_query or selected_route_slug or interchange_only or underground_only %}
+          <a href="{% url 'transport:station_list' %}" class="badge bg-danger-subtle text-danger text-decoration-none py-1 px-2" title="Reset all filters">
+            <i class="bi bi-x-circle me-1"></i>Reset
+          </a>
+          {% endif %}
+        </div>
+
+        <form method="get" action="{% url 'transport:station_list' %}">
+          <!-- Keyword Search -->
+          <div class="mb-3">
+            <label for="search-input" class="form-label small fw-semibold text-secondary">Search Station or Landmark</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+              <input type="text" name="q" id="search-input" class="form-control" placeholder="Anarkali, Kalma, Data Darbar..." value="{{ search_query }}">
+            </div>
+          </div>
+
+          <!-- Transit Route Filter -->
+          <div class="mb-3">
+            <label for="route-select" class="form-label small fw-semibold text-secondary">Transit Line</label>
+            <select name="route" id="route-select" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All Lines</option>
+              {% for r in routes %}
+              <option value="{{ r.slug }}" {% if selected_route_slug == r.slug %}selected{% endif %}>
+                {{ r.route_code }} - {{ r.route_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Interchange Only Filter -->
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" name="interchange" value="1" id="interchangeSwitch" {% if interchange_only %}checked{% endif %} onchange="this.form.submit()">
+            <label class="form-check-label small fw-semibold text-dark" for="interchangeSwitch">
+              Interchange Stations Only
+            </label>
+          </div>
+
+          <!-- Underground Only Filter -->
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" name="underground" value="1" id="undergroundSwitch" {% if underground_only %}checked{% endif %} onchange="this.form.submit()">
+            <label class="form-check-label small fw-semibold text-dark" for="undergroundSwitch">
+              Underground Stations Only
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-sm btn-dark w-100 fw-semibold">
+            <i class="bi bi-filter me-1"></i>Apply Filters
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Main Stations Column -->
+    <div class="col-lg-8 col-xl-9">
+      <!-- Controls Strip -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge bg-dark text-white px-2 py-1 font-monospace" style="font-size: 0.8rem;">
+            {{ total_results }} Stations Listed
+          </span>
+
+          {% if selected_route %}
+          <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+            Line: {{ selected_route.route_code }}
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'route' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">&times;</a>
+          </span>
+          {% endif %}
+
+          {% if interchange_only %}
+          <span class="badge bg-info-subtle text-info border border-info-subtle">
+            Interchanges Only
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'interchange' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">&times;</a>
+          </span>
+          {% endif %}
+
+          {% if search_query %}
+          <span class="badge bg-secondary-subtle text-secondary border">
+            Query: "{{ search_query }}"
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'q' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="text-danger ms-1 text-decoration-none">&times;</a>
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if stations %}
+      <div class="row g-3">
+        {% for st in stations %}
+        <div class="col-12 col-md-6">
+          <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white d-flex flex-column hover-shadow" style="transition: all 0.2s ease;">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="badge bg-dark font-monospace mb-1" style="font-size: 0.72rem;">Stop #{{ st.station_number }}</span>
+                <h3 class="h6 fw-bold mb-0">
+                  <a href="{{ st.get_absolute_url }}" class="text-decoration-none text-dark hover-success">
+                    {{ st.station_name }}
+                  </a>
+                </h3>
+                {% if st.urdu_name %}
+                <div class="small text-muted" dir="rtl" style="font-family: 'Noto Nastaliq Urdu', serif; font-size: 0.85rem;">{{ st.urdu_name }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Indicators -->
+              <div class="d-flex gap-1 flex-wrap justify-content-end">
+                {% if st.is_terminal %}
+                <span class="badge bg-danger text-white fw-bold" style="font-size: 0.68rem;">Terminal</span>
+                {% endif %}
+                {% if st.is_interchange %}
+                <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.68rem;">Interchange</span>
+                {% endif %}
+                {% if st.is_underground %}
+                <span class="badge text-white fw-bold" style="font-size: 0.68rem; background-color: #6f42c1;">Underground</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="small text-muted mb-2">
+              <i class="bi bi-diagram-2 me-1"></i>{{ st.route.route_name }}
+            </div>
+
+            {% if st.nearby_landmarks %}
+            <p class="small text-secondary mb-3 flex-grow-1" style="font-size: 0.8rem;">
+              <i class="bi bi-geo-alt me-1 text-danger"></i>{{ st.nearby_landmarks }}
+            </p>
+            {% endif %}
+
+            <div class="mt-auto pt-2 border-top">
+              <a href="{{ st.get_absolute_url }}" class="btn btn-xs btn-outline-dark w-100 fw-semibold" style="font-size: 0.75rem;">
+                Station Profile & Transfers <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <nav aria-label="Station pagination" class="mt-4">
+        <ul class="pagination pagination-sm justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">&laquo;</a></li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link bg-dark border-dark">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link text-dark" href="?page={{ num }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">&raquo;</a></li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
+        <i class="bi bi-geo-alt text-muted mb-3" style="font-size: 2.5rem;"></i>
+        <h3 class="h6 fw-bold text-dark mb-1">No Stations Found</h3>
+        <p class="text-secondary small mb-3">No transit stations matched your filter criteria.</p>
+        <a href="{% url 'transport:station_list' %}" class="btn btn-outline-dark btn-sm fw-semibold">
+          Reset Filter
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

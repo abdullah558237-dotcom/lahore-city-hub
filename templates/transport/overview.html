@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Public Transit Guide</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Banner -->
+  <div class="card border-0 text-white shadow-sm rounded-4 mb-4 overflow-hidden position-relative" style="background: linear-gradient(135deg, #1b2838 0%, #0d1b2a 100%);">
+    <div class="card-body p-4 p-md-5">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <span class="badge bg-warning text-dark px-3 py-2 fw-semibold rounded-pill mb-2">
+            <i class="bi bi-train-front me-1"></i>PMA Official Transit Network
+          </span>
+          <h1 class="display-6 fw-bold mb-2">
+            Lahore Public Transit: Orange Line, Metrobus & Route Guides
+          </h1>
+          <p class="lead fs-6 mb-3 text-white-50">
+            Navigate Lahore's modern rapid transit system. Real-time verified timetables, distance-based fares, station interchange directions, and smart card ticketing guides.
+          </p>
+          <div class="d-flex flex-wrap gap-3 text-white small">
+            <div><i class="bi bi-geo-alt-fill text-danger me-1"></i> <strong>53+</strong> Rapid Transit Stations</div>
+            <div><i class="bi bi-clock-fill text-warning me-1"></i> 06:00 AM – 10:30 PM Daily</div>
+            <div><i class="bi bi-credit-card-2-front text-success me-1"></i> Cashless Smart Card & RFID Tokens</div>
+          </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-block text-end">
+          <div class="p-3 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-25 text-start">
+            <div class="small fw-semibold text-uppercase tracking-wider text-warning mb-1">Transit Assistance</div>
+            <p class="small mb-2 text-white">
+              Punjab Masstransit Authority Official Helpline for routes, timings, and lost property:
+            </p>
+            <a href="tel:042111222627" class="btn btn-sm btn-warning fw-bold text-dark w-100">
+              <i class="bi bi-telephone-fill me-1"></i>042-111-222-627
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transit Quick Search -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 mb-4 bg-white">
+    <form method="get" action="{% url 'transport:overview' %}">
+      <div class="row g-2 align-items-center">
+        <div class="col-12 col-md-9">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" name="q" class="form-control border-start-0" placeholder="Search by station name (e.g. Anarkali, Kalma Chowk, Railway Station) or route..." value="{{ search_query }}">
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <button type="submit" class="btn btn-dark w-100 fw-semibold">
+            <i class="bi bi-search me-1"></i>Search Transit
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Search Results if query submitted -->
+    {% if search_results %}
+    <div class="mt-4 pt-3 border-top">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h6 fw-bold mb-0">Search Results for "{{ search_query }}"</h2>
+        <a href="{% url 'transport:overview' %}" class="small text-danger text-decoration-none">Clear Search</a>
+      </div>
+
+      {% if search_results.stations %}
+      <div class="mb-3">
+        <span class="small text-muted text-uppercase fw-bold">Matching Stations:</span>
+        <div class="list-group mt-1">
+          {% for st in search_results.stations %}
+          <a href="{{ st.get_absolute_url }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2">
+            <div>
+              <strong>{{ st.station_name }}</strong> {% if st.urdu_name %}<span class="text-muted ms-1" dir="rtl">({{ st.urdu_name }})</span>{% endif %}
+              <div class="small text-muted">{{ st.route.route_name }} (Stop #{{ st.station_number }})</div>
+            </div>
+            <span class="badge bg-dark rounded-pill">View Station &rarr;</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if not search_results.stations and not search_results.routes %}
+      <p class="small text-muted mb-0">No matching stations or routes found for "{{ search_query }}". Try searching for "Anarkali", "Shahdara", or "Train".</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Section 1: Major Transit Lines -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1 mb-1">
+        RAPID TRANSIT CORRIDORS
+      </span>
+      <h2 class="h4 fw-bold text-dark mb-0">Lahore Public Transit Network</h2>
+    </div>
+    <a href="{% url 'transport:route_list' %}" class="btn btn-outline-dark btn-sm fw-semibold">
+      All Transit Lines <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="row g-4 mb-5">
+    {% for route in routes %}
+    <div class="col-12 col-md-4 d-flex">
+      <div class="card h-100 shadow-sm border-0 rounded-4 p-4 bg-white d-flex flex-column w-100 hover-shadow" style="transition: all 0.2s ease; border-top: 5px solid {% if 'Orange' in route.route_name %}#fd7e14{% elif 'Metrobus' in route.route_name %}#198754{% else %}#0d6efd{% endif %} !important;">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-3 p-3 {% if 'Orange' in route.route_name %}bg-warning-subtle text-dark{% elif 'Metrobus' in route.route_name %}bg-success-subtle text-success{% else %}bg-primary-subtle text-primary{% endif %} me-3" style="font-size: 1.8rem;">
+            <i class="bi {{ route.mode.icon_class|default:'bi-train-front' }}"></i>
+          </div>
+          <div>
+            <span class="badge bg-dark font-monospace mb-1" style="font-size: 0.72rem;">{{ route.route_code }}</span>
+            <h3 class="h6 fw-bold mb-0 text-dark">{{ route.route_name }}</h3>
+          </div>
+        </div>
+
+        <p class="text-secondary small mb-3 flex-grow-1" style="line-height: 1.6;">
+          {{ route.description|truncatechars:120 }}
+        </p>
+
+        <ul class="list-unstyled small text-muted mb-4 d-flex flex-column gap-2 border-top pt-3">
+          <li class="d-flex justify-content-between">
+            <span><i class="bi bi-signpost me-1 text-primary"></i>Terminals:</span>
+            <strong class="text-dark">{{ route.origin_station }} &harr; {{ route.destination_station }}</strong>
+          </li>
+          <li class="d-flex justify-content-between">
+            <span><i class="bi bi-geo-alt me-1 text-danger"></i>Stations:</span>
+            <strong class="text-dark">{{ route.total_stations }} Stops ({{ route.total_distance_km }} km)</strong>
+          </li>
+          <li class="d-flex justify-content-between">
+            <span><i class="bi bi-clock me-1 text-warning"></i>Hours:</span>
+            <strong class="text-dark">{{ route.operating_schedule }}</strong>
+          </li>
+          <li class="d-flex justify-content-between">
+            <span><i class="bi bi-cash-stack me-1 text-success"></i>Fares:</span>
+            <span class="text-dark text-truncate" style="max-width: 170px;" title="{{ route.fare_info }}">{{ route.fare_info|truncatechars:35 }}</span>
+          </li>
+        </ul>
+
+        <div class="mt-auto">
+          <a href="{{ route.get_absolute_url }}" class="btn btn-sm btn-outline-dark w-100 fw-semibold">
+            View Route Guide & Stations <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Section 2: Important Stations & Key Interchanges -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <span class="badge bg-warning-subtle text-dark border border-warning-subtle fw-semibold px-2 py-1 mb-1">
+        TRANSFER NODES
+      </span>
+      <h2 class="h4 fw-bold text-dark mb-0">Key Stations & Interchanges</h2>
+    </div>
+    <a href="{% url 'transport:station_list' %}" class="btn btn-outline-dark btn-sm fw-semibold">
+      All {{ interchanges.count|default:"50" }}+ Stations <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="row g-3 mb-5">
+    {% for station in interchanges|slice:":6" %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h3 class="h6 fw-bold mb-0 text-dark">
+              <a href="{{ station.get_absolute_url }}" class="text-decoration-none text-dark hover-success">
+                {{ station.station_name }}
+              </a>
+            </h3>
+            {% if station.urdu_name %}
+            <span class="small text-muted" dir="rtl" style="font-size: 0.8rem;">{{ station.urdu_name }}</span>
+            {% endif %}
+          </div>
+          <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.7rem;">
+            <i class="bi bi-arrow-left-right me-1"></i>Interchange
+          </span>
+        </div>
+
+        <div class="small text-muted mb-2">
+          <i class="bi bi-train-front text-secondary me-1"></i>{{ station.route.route_name }} (Stop #{{ station.station_number }})
+        </div>
+
+        <p class="small text-secondary mb-3 flex-grow-1" style="font-size: 0.8rem;">
+          {{ station.nearby_landmarks|default:"Direct passenger transfer point." }}
+        </p>
+
+        <a href="{{ station.get_absolute_url }}" class="btn btn-xs btn-outline-secondary w-100 fw-semibold" style="font-size: 0.75rem;">
+          Station Details & Landmarks <i class="bi bi-chevron-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Section 3: Essential Travel Advice & Guides -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold px-2 py-1 mb-1">
+        COMMUTER MANUAL
+      </span>
+      <h2 class="h4 fw-bold text-dark mb-0">Public Transit Guides & Travel Advice</h2>
+    </div>
+    <a href="{% url 'transport:guide_list' %}" class="btn btn-outline-dark btn-sm fw-semibold">
+      View All Guides <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="row g-4 mb-5">
+    {% for guide in featured_guides %}
+    <div class="col-12 col-md-6 col-lg-3 d-flex">
+      <div class="card h-100 border-0 shadow-sm rounded-4 p-4 bg-white d-flex flex-column w-100 hover-shadow" style="transition: all 0.2s ease;">
+        <div class="mb-3">
+          <div class="rounded-3 p-3 bg-light text-dark d-inline-block" style="font-size: 1.5rem;">
+            <i class="bi {{ guide.icon_class|default:'bi-info-circle' }} text-primary"></i>
+          </div>
+        </div>
+
+        <span class="badge bg-light text-secondary border mb-2 w-fit" style="font-size: 0.72rem; width: fit-content;">
+          {{ guide.get_category_display }}
+        </span>
+
+        <h3 class="h6 fw-bold mb-2 text-dark">
+          <a href="{{ guide.get_absolute_url }}" class="text-decoration-none text-dark hover-success">
+            {{ guide.title }}
+          </a>
+        </h3>
+
+        <p class="small text-secondary mb-3 flex-grow-1" style="line-height: 1.6;">
+          {{ guide.summary|truncatechars:95 }}
+        </p>
+
+        <div class="mt-auto pt-2 border-top">
+          <a href="{{ guide.get_absolute_url }}" class="btn btn-sm btn-outline-dark w-100 fw-semibold">
+            Read Guide <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Source Attribution & Governance Notice -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-light text-dark mb-4">
+    <div class="row align-items-center">
+      <div class="col-12 col-md-8">
+        <h3 class="h6 fw-bold mb-1">
+          <i class="bi bi-shield-check text-success me-2"></i>Official Provenance & Verification
+        </h3>
+        <p class="small text-secondary mb-0">
+          All routes, fares, and operating schedules are verified against official Punjab Masstransit Authority (PMA) regulatory filings. No fares or schedules are invented. Last audit conducted November 2026.
+        </p>
+      </div>
+      <div class="col-12 col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="https://pma.punjab.gov.pk" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-dark fw-semibold">
+          <i class="bi bi-box-arrow-up-right me-1"></i>Visit PMA Official Portal
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
