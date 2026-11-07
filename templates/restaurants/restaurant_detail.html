@@ -1,0 +1,409 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block extra_head %}
+<!-- Structured Data: Schema.org Restaurant -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "{{ restaurant.title|escapejs }}",
+  "image": "{% if restaurant.primary_image %}{{ restaurant.primary_image.url }}{% endif %}",
+  "servesCuisine": [{% for c in restaurant.cuisines.all %}"{{ c.name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+  "priceRange": "{{ restaurant.price_tier }}",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "{{ restaurant.address|escapejs }}",
+    "addressLocality": "{{ restaurant.locality.name|escapejs }}",
+    "addressRegion": "Punjab",
+    "addressCountry": "PK"
+  }{% if restaurant.phone_number %},
+  "telephone": "{{ restaurant.phone_number }}"{% endif %}{% if restaurant.website %},
+  "url": "{{ restaurant.website }}"{% endif %}{% if restaurant.latitude and restaurant.longitude %},
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": {{ restaurant.latitude }},
+    "longitude": {{ restaurant.longitude }}
+  }{% endif %}{% if restaurant.opening_time and restaurant.closing_time %},
+  "openingHours": "{{ restaurant.opening_time|time:'H:i' }}-{{ restaurant.closing_time|time:'H:i' }}"{% endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'restaurants:list' %}" class="text-decoration-none">Restaurants</a></li>
+      {% with first_cuisine=restaurant.cuisines.first %}
+        {% if first_cuisine %}
+        <li class="breadcrumb-item"><a href="{{ first_cuisine.get_absolute_url }}" class="text-decoration-none">{{ first_cuisine.name }}</a></li>
+        {% endif %}
+      {% endwith %}
+      <li class="breadcrumb-item active" aria-current="page">{{ restaurant.title }}</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Header -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          {% for c in restaurant.cuisines.all %}
+          <a href="{{ c.get_absolute_url }}" class="badge bg-danger-subtle text-danger fw-semibold text-decoration-none" style="font-size: 0.8rem;">
+            <i class="bi bi-tag-fill me-1"></i>{{ c.name }}
+          </a>
+          {% endfor %}
+          <span class="badge bg-dark text-white fw-bold" style="font-size: 0.8rem;">
+            {{ restaurant.price_tier_display }}
+          </span>
+          {% if restaurant.is_featured %}
+          <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.8rem;">
+            <i class="bi bi-star-fill me-1"></i>Featured
+          </span>
+          {% endif %}
+          {% include 'components/_verification_badge.html' with is_verified=restaurant.is_verified %}
+        </div>
+
+        <h1 class="h3 fw-bold text-dark mb-1">
+          {{ restaurant.title }}
+          {% if restaurant.title_ur %}
+          <span class="font-urdu text-danger fs-4 ms-2" dir="rtl">{{ restaurant.title_ur }}</span>
+          {% endif %}
+        </h1>
+
+        <div class="d-flex align-items-center gap-3 text-muted small flex-wrap mt-2">
+          <span><i class="bi bi-geo-alt me-1 text-danger"></i>{{ restaurant.address }}, {{ restaurant.locality.name }}</span>
+          <span><i class="bi bi-eye me-1 text-secondary"></i>{{ restaurant.view_count }} views</span>
+          {% if restaurant.has_verified_hours %}
+          <span class="text-success fw-medium">
+            <i class="bi bi-clock-fill me-1"></i>Open: {{ restaurant.formatted_hours }}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="d-flex flex-wrap gap-2 align-self-md-center">
+        {% if restaurant.phone_number %}
+        <a href="tel:{{ restaurant.phone_number }}" class="btn btn-outline-danger fw-semibold btn-sm">
+          <i class="bi bi-telephone-fill me-1"></i>Call
+        </a>
+        {% endif %}
+        {% if restaurant.whatsapp_number %}
+        <a href="https://wa.me/{{ restaurant.whatsapp_number }}" target="_blank" rel="noopener noreferrer" class="btn btn-success fw-semibold btn-sm">
+          <i class="bi bi-whatsapp me-1"></i>WhatsApp
+        </a>
+        {% endif %}
+        {% if restaurant.google_maps_url %}
+        <a href="{{ restaurant.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary fw-semibold btn-sm">
+          <i class="bi bi-geo-alt-fill me-1"></i>Directions
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick Features Strip -->
+    <div class="row g-2 pt-3 mt-3 border-top">
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Family Hall</div>
+          <strong class="{% if restaurant.has_family_hall %}text-success{% else %}text-muted{% endif %}">
+            <i class="bi {% if restaurant.has_family_hall %}bi-check-circle-fill text-success{% else %}bi-x-circle text-muted{% endif %} me-1"></i>
+            {% if restaurant.has_family_hall %}Available{% else %}No{% endif %}
+          </strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Home Delivery</div>
+          <strong class="{% if restaurant.provides_delivery %}text-success{% else %}text-muted{% endif %}">
+            <i class="bi {% if restaurant.provides_delivery %}bi-bicycle text-success{% else %}bi-x-circle text-muted{% endif %} me-1"></i>
+            {% if restaurant.provides_delivery %}Available{% else %}Dine-in Only{% endif %}
+          </strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Takeaway</div>
+          <strong class="{% if restaurant.provides_takeaway %}text-success{% else %}text-muted{% endif %}">
+            <i class="bi {% if restaurant.provides_takeaway %}bi-bag-check-fill text-success{% else %}bi-x-circle text-muted{% endif %} me-1"></i>
+            {% if restaurant.provides_takeaway %}Available{% else %}No{% endif %}
+          </strong>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 rounded-3 bg-light text-center">
+          <div class="text-muted small">Seating Capacity</div>
+          <strong class="text-dark">
+            <i class="bi bi-people-fill text-primary me-1"></i>
+            {% if restaurant.seating_capacity %}{{ restaurant.seating_capacity }} Guests{% else %}Not Stated{% endif %}
+          </strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Content Column -->
+    <div class="col-lg-8">
+      <!-- Primary Banner Image -->
+      {% if restaurant.primary_image %}
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <img src="{{ restaurant.primary_image.url }}" alt="{{ restaurant.title }}" class="w-100 object-fit-cover" style="max-height: 420px;">
+      </div>
+      {% endif %}
+
+      <!-- Overview & Description -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-info-circle text-danger me-2"></i>About {{ restaurant.title }}
+        </h2>
+        <div class="text-secondary lh-lg mb-0" style="white-space: pre-line;">
+          {{ restaurant.description }}
+        </div>
+      </div>
+
+      <!-- Menu Highlights -->
+      {% if restaurant.menu_highlights.all %}
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-journal-text text-danger me-2"></i>Menu Highlights & Signature Dishes</span>
+          <span class="badge bg-danger-subtle text-danger fs-6 fw-normal">Confirmed Pricing</span>
+        </h2>
+        <div class="row g-3">
+          {% for item in restaurant.menu_highlights.all %}
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 border bg-light-subtle h-100 d-flex flex-column justify-content-between">
+              <div>
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                  <h3 class="h6 fw-bold mb-0 text-dark">{{ item.item_name }}</h3>
+                  {% if item.is_signature %}
+                  <span class="badge bg-warning text-dark fw-bold ms-1" style="font-size: 0.68rem;">Signature</span>
+                  {% endif %}
+                </div>
+                {% if item.description %}
+                <p class="small text-muted mb-2">{{ item.description }}</p>
+                {% endif %}
+              </div>
+              <div class="pt-2 border-top mt-2 text-end">
+                {% if item.price_pkr %}
+                <strong class="text-danger">PKR {{ item.price_pkr|floatformat:0 }}</strong>
+                {% else %}
+                <span class="small text-muted">Seasonal price</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Operational Timings & Ramadan Schedule -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-clock-history text-danger me-2"></i>Operational Hours & Logistics
+        </h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3">
+              <div class="text-muted small">Standard Daily Timings</div>
+              <strong class="text-dark fs-6">
+                {% if restaurant.has_verified_hours %}
+                  {{ restaurant.formatted_hours }}
+                {% else %}
+                  Timings verified upon direct inquiry
+                {% endif %}
+              </strong>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3">
+              <div class="text-muted small">Weekly Closed Days</div>
+              <strong class="text-dark fs-6">
+                {% if restaurant.closed_on_days %}
+                  {{ restaurant.closed_on_days }}
+                {% else %}
+                  Open 7 Days a Week
+                {% endif %}
+              </strong>
+            </div>
+          </div>
+          {% if restaurant.ramadan_timings %}
+          <div class="col-12">
+            <div class="p-3 bg-warning-subtle text-dark border border-warning rounded-3">
+              <div class="fw-semibold small"><i class="bi bi-moon-stars-fill text-warning me-1"></i>Special Ramadan Timings:</div>
+              <div class="small">{{ restaurant.ramadan_timings }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Photo Gallery -->
+      {% if restaurant.gallery_images.all %}
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h2 class="h5 fw-bold text-dark mb-3 pb-2 border-bottom">
+          <i class="bi bi-images text-danger me-2"></i>Photo Gallery
+        </h2>
+        <div class="row g-3">
+          {% for photo in restaurant.gallery_images.all %}
+          <div class="col-6 col-md-4">
+            <div class="rounded-3 overflow-hidden shadow-sm" style="height: 180px;">
+              <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:restaurant.title }}" class="w-100 h-100 object-fit-cover" loading="lazy">
+            </div>
+            {% if photo.caption %}
+            <div class="small text-muted mt-1 text-truncate">{{ photo.caption }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Visitor Reviews -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+          <h2 class="h5 fw-bold text-dark mb-0">
+            <i class="bi bi-chat-quote-fill text-danger me-2"></i>Visitor Feedback & Reviews ({{ reviews.count }})
+          </h2>
+        </div>
+        {% if reviews %}
+          <div class="d-flex flex-column gap-3">
+            {% for rev in reviews %}
+            <div class="p-3 rounded-3 bg-light">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong>{{ rev.user.get_full_name|default:rev.user.username }}</strong>
+                <span class="text-warning">
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= rev.rating %}★{% else %}☆{% endif %}
+                  {% endfor %}
+                </span>
+              </div>
+              <p class="small text-muted mb-1">{{ rev.comment }}</p>
+              <div class="small text-secondary" style="font-size: 0.72rem;">Reviewed on {{ rev.created_at|date:"d M Y" }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-3 text-muted small">
+            <i class="bi bi-chat-left-dots fs-3 d-block mb-1 text-secondary opacity-50"></i>
+            No reviews published yet for {{ restaurant.title }}.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sidebar Column -->
+    <div class="col-lg-4">
+      <!-- Contact & Directions Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 sticky-top" style="top: 80px; z-index: 10;">
+        <h3 class="h6 fw-bold text-dark mb-3">Location & Inquiries</h3>
+
+        <div class="mb-3">
+          <div class="small text-muted">Address</div>
+          <strong class="text-dark">{{ restaurant.address }}</strong>
+          <div class="small text-secondary">{{ restaurant.locality.name }} ({{ restaurant.locality.zone.name }}), Lahore</div>
+          {% if restaurant.landmark %}
+          <div class="small text-muted mt-1"><i class="bi bi-compass me-1"></i>Near {{ restaurant.landmark }}</div>
+          {% endif %}
+        </div>
+
+        {% if restaurant.phone_number %}
+        <div class="mb-3">
+          <div class="small text-muted">Direct Phone</div>
+          <a href="tel:{{ restaurant.phone_number }}" class="fw-bold text-danger text-decoration-none fs-6">
+            <i class="bi bi-telephone-fill me-1"></i>{{ restaurant.phone_number }}
+          </a>
+        </div>
+        {% endif %}
+
+        {% if restaurant.website %}
+        <div class="mb-3">
+          <div class="small text-muted">Official Website</div>
+          <a href="{{ restaurant.website }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none small text-truncate d-block">
+            <i class="bi bi-globe me-1 text-info"></i>{{ restaurant.website }}
+          </a>
+        </div>
+        {% endif %}
+
+        <div class="d-grid gap-2 pt-2 border-top">
+          {% if restaurant.google_maps_url %}
+          <a href="{{ restaurant.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary fw-semibold btn-sm">
+            <i class="bi bi-geo-alt-fill me-1"></i>Open in Google Maps
+          </a>
+          {% endif %}
+          {% if restaurant.phone_number %}
+          <a href="tel:{{ restaurant.phone_number }}" class="btn btn-outline-danger fw-semibold btn-sm">
+            <i class="bi bi-telephone-fill me-1"></i>Call Restaurant
+          </a>
+          {% endif %}
+        </div>
+
+        <hr>
+
+        <!-- Quick Summary Facts -->
+        <h4 class="small fw-bold text-uppercase text-muted mb-2">Dining Details</h4>
+        <div class="small d-flex flex-column gap-2 text-muted">
+          <div><i class="bi bi-cash me-1 text-success"></i> Price Tier: <strong>{{ restaurant.price_tier_display }}</strong></div>
+          <div><i class="bi bi-shield-check me-1 text-primary"></i> Verification: <strong>{{ restaurant.get_verification_status_display }}</strong></div>
+          <div><i class="bi bi-calendar-event me-1 text-secondary"></i> Updated: <strong>{{ restaurant.updated_at|date:"d M Y" }}</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Restaurants -->
+  {% if related_restaurants %}
+  <div class="pt-4 mt-4 border-top">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 fw-bold text-dark mb-0">
+        <i class="bi bi-egg-fried me-2 text-danger"></i>Similar Dining Options in Lahore
+      </h2>
+      <a href="{% url 'restaurants:list' %}" class="small text-decoration-none fw-semibold text-danger">
+        Explore All Restaurants <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% for item in related_restaurants %}
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border border-light-subtle rounded-3 p-3">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-danger-subtle text-danger" style="font-size: 0.72rem;">
+              {{ item.cuisines.first.name|default:"Lahori Food" }}
+            </span>
+            <span class="badge bg-light text-dark border">{{ item.price_tier }}</span>
+          </div>
+          <h3 class="h6 fw-bold mb-1">
+            <a href="{{ item.get_absolute_url }}" class="text-decoration-none text-dark">
+              {{ item.title }}
+            </a>
+          </h3>
+          <div class="small text-muted mb-2">
+            <i class="bi bi-geo-alt me-1 text-danger"></i>{{ item.locality.name }}
+          </div>
+          <p class="small text-muted mb-3">
+            {{ item.summary|truncatechars:85 }}
+          </p>
+          <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+            <span class="small text-muted">{{ item.formatted_hours }}</span>
+            <a href="{{ item.get_absolute_url }}" class="btn btn-xs btn-outline-danger py-0 px-2 fw-semibold">
+              View
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
