@@ -92,6 +92,11 @@
 
         <!-- Right Side User & Business Actions -->
         <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+          {% if request.user.is_staff %}
+          <a href="{% url 'admin:index' %}" class="btn btn-sm btn-danger text-white fw-bold shadow-sm" title="Platform Master Control">
+            <i class="bi bi-shield-lock-fill me-1"></i>Admin Control
+          </a>
+          {% endif %}
           <a href="{% url 'core:business_submission' %}" class="btn btn-sm btn-lch-outline">
             <i class="bi bi-plus-circle me-1"></i>List Business
           </a>
@@ -143,9 +148,26 @@
               </li>
               {% endif %}
               {% if request.user.is_staff %}
+              <li><hr class="dropdown-divider my-2"></li>
+              <li><h6 class="dropdown-header text-uppercase text-danger small fw-bold"><i class="bi bi-shield-lock me-1"></i>Master Admin Controls</h6></li>
               <li>
-                <a class="dropdown-item py-2 rounded-2 small" href="{% url 'admin:index' %}">
-                  <i class="bi bi-shield-lock me-2 text-danger"></i>Platform Admin
+                <a class="dropdown-item py-2 rounded-2 small fw-semibold" href="{% url 'admin:index' %}">
+                  <i class="bi bi-speedometer me-2 text-danger"></i>Full Django Admin
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item py-2 rounded-2 small" href="/admin/businesses/businesspromotionrequest/">
+                  <i class="bi bi-rocket-takeoff me-2 text-warning"></i>Promotion & Sponsor Requests
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item py-2 rounded-2 small" href="/admin/businesses/business/?is_active__exact=0">
+                  <i class="bi bi-hourglass-split me-2 text-info"></i>Pending Business Approvals
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item py-2 rounded-2 small" href="/admin/businesses/businessclaim/">
+                  <i class="bi bi-patch-check me-2 text-primary"></i>Ownership Claims Desk
                 </a>
               </li>
               {% endif %}

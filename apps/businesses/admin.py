@@ -76,9 +76,11 @@ class BusinessAdmin(admin.ModelAdmin):
     actions = [
         'approve_and_publish',
         'unpublish',
+        'set_as_featured_spotlight_30',
+        'set_as_verified_pro',
+        'demote_to_standard',
+        'extend_spotlight_30',
         'mark_as_verified',
-        'mark_as_featured',
-        'unmark_featured',
     ]
 
     fieldsets = (
@@ -152,17 +154,55 @@ class BusinessAdmin(admin.ModelAdmin):
             self.message_user(request, f"{count} business listing(s) marked as Verified.")
     mark_as_verified.short_description = "Mark selected businesses as Verified"
 
-    def mark_as_featured(self, request, queryset):
-        count = queryset.update(is_featured=True)
+    def set_as_featured_spotlight_30(self, request, queryset):
+        now = timezone.now()
+        count = 0
+        for biz in queryset:
+            biz.is_featured = True
+            biz.promotion_tier = Business.PROMOTION_TIER_FEATURED
+            biz.featured_until = now + timedelta(days=30)
+            biz.promotion_notes = f"Activated by Admin on {now.strftime('%Y-%m-%d')} for 30 days."
+            biz.save()
+            count += 1
         if request:
-            self.message_user(request, f"{count} business listing(s) marked as Featured.")
-    mark_as_featured.short_description = "Mark selected as Featured"
+            self.message_user(request, f"{count} business(es) set to Featured Spotlight (30 Days active).")
+    set_as_featured_spotlight_30.short_description = "⭐ Set to Featured Spotlight (30 Days)"
 
-    def unmark_featured(self, request, queryset):
-        count = queryset.update(is_featured=False)
+    def set_as_verified_pro(self, request, queryset):
+        now = timezone.now()
+        user = request.user if request and hasattr(request, 'user') and request.user.is_authenticated else None
+        count = queryset.update(
+            promotion_tier=Business.PROMOTION_TIER_VERIFIED_PRO,
+            verification_status='verified',
+            last_verified_at=now,
+            verified_by=user,
+            is_featured=False
+        )
         if request:
-            self.message_user(request, f"{count} business listing(s) removed from Featured.")
-    unmark_featured.short_description = "Remove from Featured"
+            self.message_user(request, f"{count} business(es) set to Verified Professional tier.")
+    set_as_verified_pro.short_description = "🛡️ Set to Verified Professional tier"
+
+    def demote_to_standard(self, request, queryset):
+        count = queryset.update(
+            promotion_tier=Business.PROMOTION_TIER_STANDARD,
+            is_featured=False,
+            featured_until=None
+        )
+        if request:
+            self.message_user(request, f"{count} business(es) returned to Standard Organic (Free).")
+    demote_to_standard.short_description = "⬇️ Demote to Standard Organic (Remove Promotion)"
+
+    def extend_spotlight_30(self, request, queryset):
+        now = timezone.now()
+        count = 0
+        for biz in queryset.filter(is_featured=True):
+            base_date = biz.featured_until if biz.featured_until and biz.featured_until > now else now
+            biz.featured_until = base_date + timedelta(days=30)
+            biz.save()
+            count += 1
+        if request:
+            self.message_user(request, f"{count} active spotlight(s) extended by 30 days.")
+    extend_spotlight_30.short_description = "➕ Extend Active Spotlight by 30 Days"
 
 
 @admin.register(BusinessEditRequest)
