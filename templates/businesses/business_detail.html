@@ -66,9 +66,9 @@
           <a href="{{ business.category.get_absolute_url }}" class="badge bg-warning-subtle text-dark fw-semibold text-decoration-none" style="font-size: 0.8rem;">
             <i class="bi {{ business.category.icon_class|default:'bi-shop' }} me-1"></i>{{ business.category.name }}
           </a>
-          {% if business.is_featured %}
-          <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.8rem;">
-            <i class="bi bi-star-fill me-1"></i>Featured
+          {% if business.is_featured or business.promotion_tier == 'featured_spotlight' %}
+          <span class="badge bg-warning text-dark border border-warning fw-bold px-2 py-1" style="font-size: 0.8rem;">
+            <i class="bi bi-star-fill me-1"></i>Sponsored Partner
           </span>
           {% endif %}
           {% include 'components/_verification_badge.html' with is_verified=business.is_verified last_verified=business.last_verified_at|date:"M Y" show_date=True %}
@@ -92,6 +92,15 @@
           <div><i class="bi bi-clock-fill text-primary me-1"></i>{{ business.operating_hours }}</div>
           {% endif %}
         </div>
+
+        {% if business.is_featured or business.promotion_tier == 'featured_spotlight' %}
+        <div class="alert alert-light border border-warning-subtle shadow-none rounded-3 py-2 px-3 mt-3 mb-0 small text-muted d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle text-warning fs-6"></i>
+          <span>
+            <strong>Sponsored Partner:</strong> This listing is an active sponsored spotlight on Lahore City Hub. Promotional placement enhances visibility within our city guide and does not influence external search engine rankings.
+          </span>
+        </div>
+        {% endif %}
       </div>
 
       <!-- Action Buttons -->

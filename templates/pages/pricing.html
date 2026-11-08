@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'businesses:list' %}" class="text-decoration-none">Local Businesses</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Pricing & Promotion Plans</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Header -->
+  <div class="text-center py-5 px-3 mb-4 rounded-4 bg-dark text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #1b2838 0%, #0b1523 100%);">
+    <div class="position-relative" style="z-index: 2; max-width: 820px; margin: 0 auto;">
+      <span class="badge bg-warning text-dark px-3 py-2 fw-bold rounded-pill mb-3">
+        <i class="bi bi-rocket-takeoff me-1"></i>Lahore Commercial SaaS Directory
+      </span>
+      <h1 class="display-5 fw-bold mb-3">Transparent Promotion & Verification Plans</h1>
+      <p class="lead fs-6 text-white-50 mb-4">
+        Expand your brand across Lahore. Reach verified local shoppers, corporate procurement desks, and tourists across Gulberg, DHA, Johar Town, and the Walled City.
+      </p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{% url 'businesses:dashboard' %}" class="btn btn-warning fw-bold text-dark btn-sm px-4 py-2">
+          <i class="bi bi-speedometer2 me-1"></i>Owner Portal & Dashboard
+        </a>
+        <a href="{% url 'businesses:submit' %}" class="btn btn-outline-light btn-sm px-4 py-2">
+          <i class="bi bi-plus-circle me-1"></i>Submit Free Listing
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mandatory Compliance Disclaimer Alert -->
+  <div class="alert alert-light border shadow-sm rounded-4 p-4 mb-5">
+    <div class="d-flex align-items-start gap-3">
+      <i class="bi bi-shield-exclamation text-warning fs-3 mt-1"></i>
+      <div>
+        <h5 class="h6 fw-bold text-dark mb-1">Search Engine & Transparency Compliance Notice</h5>
+        <p class="small text-secondary mb-0">
+          Lahore City Hub listing promotions and sponsorship badges enhance visibility exclusively within our on-platform directory search, category browsing, and curated recommendations. <strong>Paid directory placement does not guarantee, promise, or influence external Google search engine rankings or third-party web indexing.</strong> In accordance with international consumer protection standards and search engine guidelines, paid promotions are clearly labeled with high-contrast "Sponsored" partner badges.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pricing Cards Matrix -->
+  <div class="row g-4 mb-5 align-items-stretch">
+    <!-- Tier 1: Standard Organic -->
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-0 shadow-sm rounded-4 p-4 bg-white d-flex flex-column">
+        <div class="mb-3">
+          <span class="badge bg-light text-muted border fw-semibold px-2 py-1">Community Listing</span>
+          <h2 class="h4 fw-bold text-dark mt-2 mb-1">Standard Organic</h2>
+          <p class="text-secondary small mb-3">Ideal for newly registered shops and community services.</p>
+          <div class="d-flex align-items-baseline mb-2">
+            <span class="display-6 fw-bold text-dark">0 PKR</span>
+            <span class="text-muted ms-2 small">/ Free forever</span>
+          </div>
+        </div>
+
+        <hr class="my-3 text-muted">
+
+        <ul class="list-unstyled small text-secondary flex-grow-1 mb-4 space-y-2">
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Public directory profile page</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Locality and category indexing</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Contact telephone & physical address</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Customer ratings and reviews</li>
+          <li class="mb-2 text-muted"><i class="bi bi-x-circle text-muted me-2"></i><span class="text-decoration-line-through">SECP / Chamber Verification Badge</span></li>
+          <li class="mb-2 text-muted"><i class="bi bi-x-circle text-muted me-2"></i><span class="text-decoration-line-through">Priority Search & Category Placement</span></li>
+          <li class="mb-2 text-muted"><i class="bi bi-x-circle text-muted me-2"></i><span class="text-decoration-line-through">Homepage Spotlight Feature</span></li>
+        </ul>
+
+        <div>
+          <a href="{% url 'businesses:submit' %}" class="btn btn-outline-dark w-100 fw-semibold btn-sm py-2">
+            Add Free Listing
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier 2: Verified Professional -->
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-2 border-primary shadow-sm rounded-4 p-4 bg-white d-flex flex-column position-relative">
+        <div class="position-absolute top-0 end-0 mt-3 me-3">
+          <span class="badge bg-primary text-white fw-bold px-3 py-1">POPULAR</span>
+        </div>
+        <div class="mb-3">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold px-2 py-1">Trust & Credibility</span>
+          <h2 class="h4 fw-bold text-dark mt-2 mb-1">Verified Pro</h2>
+          <p class="text-secondary small mb-3">For established corporate firms, healthcare clinics, and authorized distributors.</p>
+          <div class="d-flex align-items-baseline mb-2">
+            <span class="display-6 fw-bold text-primary">2,500 PKR</span>
+            <span class="text-muted ms-2 small">/ Month (Billed Annually)</span>
+          </div>
+        </div>
+
+        <hr class="my-3 text-muted">
+
+        <ul class="list-unstyled small text-secondary flex-grow-1 mb-4">
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i><strong>Everything in Standard Organic</strong></li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i><strong>Official Verified Trust Seal</strong> (SECP / Chamber audit)</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Direct WhatsApp Chat & Quick Dial CTA</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Direct website link with SSL verification</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Business hours & photo gallery showcase</li>
+          <li class="mb-2 text-muted"><i class="bi bi-x-circle text-muted me-2"></i><span class="text-decoration-line-through">Guaranteed Top-of-Category Spotlight</span></li>
+        </ul>
+
+        <div>
+          <a href="{% url 'businesses:dashboard' %}" class="btn btn-primary w-100 fw-bold btn-sm py-2">
+            Request Verified Pro
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier 3: Featured Spotlight -->
+    <div class="col-12 col-lg-4">
+      <div class="card h-100 border-2 border-warning shadow rounded-4 p-4 bg-white d-flex flex-column position-relative" style="background: linear-gradient(180deg, #fffdf2 0%, #ffffff 100%);">
+        <div class="position-absolute top-0 end-0 mt-3 me-3">
+          <span class="badge bg-warning text-dark fw-bold px-3 py-1"><i class="bi bi-star-fill me-1"></i>MAX EXPOSURE</span>
+        </div>
+        <div class="mb-3">
+          <span class="badge bg-warning text-dark border border-warning fw-semibold px-2 py-1">Featured Spotlight</span>
+          <h2 class="h4 fw-bold text-dark mt-2 mb-1">Featured Partner</h2>
+          <p class="text-secondary small mb-3">Maximum visibility across Lahore City Hub search & category hubs.</p>
+          <div class="d-flex align-items-baseline mb-2">
+            <span class="display-6 fw-bold text-dark">7,500 PKR</span>
+            <span class="text-muted ms-2 small">/ Month (Billed Quarterly)</span>
+          </div>
+        </div>
+
+        <hr class="my-3 text-muted">
+
+        <ul class="list-unstyled small text-secondary flex-grow-1 mb-4">
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i><strong>Everything in Verified Pro</strong></li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i><strong>Top Listing Placement</strong> in category results</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i><strong>High-Contrast "Sponsored" Badge</strong> on all cards</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i>Featured Homepage Spotlight carousel placement</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i>Gold border distinction in global discovery search</li>
+          <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i>Dedicated partner support desk coordination</li>
+        </ul>
+
+        <div>
+          <a href="{% url 'businesses:dashboard' %}" class="btn btn-warning text-dark fw-bold w-100 btn-sm py-2">
+            Request Featured Spotlight
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frequently Asked Questions -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-5">
+    <h2 class="h4 fw-bold text-dark mb-4 text-center">Frequently Asked Questions</h2>
+    <div class="row g-4">
+      <div class="col-12 col-md-6">
+        <div class="fw-bold text-dark mb-1">How are payments processed?</div>
+        <p class="small text-secondary mb-0">
+          In this phase, all promotion campaigns are coordinated directly by our corporate partnerships desk. No payment details or live credit card charges are collected online. Invoicing is provided through official business channels.
+        </p>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="fw-bold text-dark mb-1">Does paid promotion guarantee Google rankings?</div>
+        <p class="small text-secondary mb-0">
+          No. Directory promotions enhance your visibility exclusively within the Lahore City Hub search and category index. We strictly avoid false ranking claims and comply with Google Search and FTC advertising transparency guidelines.
+        </p>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="fw-bold text-dark mb-1">How do I verify my business ownership?</div>
+        <p class="small text-secondary mb-0">
+          You can submit a claim request via your Owner Dashboard with proof documents such as an SECP registration certificate, Chamber of Commerce membership, utility bill, or official company email.
+        </p>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="fw-bold text-dark mb-1">Why do listings have a "Sponsored" label?</div>
+        <p class="small text-secondary mb-0">
+          Transparency is core to our editorial mission. Clear demarcation of paid promotional spotlights from organic community directory entries protects consumer trust and ensures complete ethical transparency.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Owner CTA Banner -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-light text-center">
+    <div class="py-2">
+      <h3 class="h5 fw-bold text-dark mb-2">Ready to list or upgrade your Lahore business?</h3>
+      <p class="small text-secondary mb-3">
+        Manage your profile, view promotion status, and request spotlight tiers right from your business portal.
+      </p>
+      <a href="{% url 'businesses:dashboard' %}" class="btn btn-dark fw-bold btn-sm px-4 py-2">
+        Go to Owner Dashboard <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -9,6 +9,7 @@ urlpatterns = [
     path('contact/', views.contact_view, name='contact'),
     path('privacy/', views.privacy_view, name='privacy'),
     path('terms/', views.terms_view, name='terms'),
+    path('pricing/', views.pricing_view, name='pricing'),
     
     # Directory & Category Listing
     path('directory/', views.category_list_view, name='directory_index'),

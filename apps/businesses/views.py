@@ -8,13 +8,21 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
 from apps.core.models import Locality
-from .models import Business, BusinessCategory, BusinessEditRequest, BusinessReport, BusinessClaim
+from .models import (
+    Business,
+    BusinessCategory,
+    BusinessEditRequest,
+    BusinessReport,
+    BusinessClaim,
+    BusinessPromotionRequest,
+)
 from .forms import (
     BusinessSubmissionForm,
     BusinessEditForm,
     BusinessEditRequestForm,
     BusinessReportForm,
     BusinessClaimForm,
+    BusinessPromotionRequestForm,
 )
 
 
@@ -252,6 +260,10 @@ def owner_dashboard(request):
         claimant=request.user
     ).select_related('business').order_by('-created_at')
 
+    promotion_requests = BusinessPromotionRequest.objects.filter(
+        requested_by=request.user
+    ).select_related('business').order_by('-created_at')
+
     context = {
         'page_title': 'Owner Dashboard | Lahore City Hub',
         'meta_description': 'Manage your Lahore business listings, submit edit requests, and review verification status.',
@@ -261,8 +273,58 @@ def owner_dashboard(request):
         'pending_count': pending_count,
         'edit_requests': edit_requests,
         'claims': claims,
+        'promotion_requests': promotion_requests,
     }
     return render(request, 'businesses/owner_dashboard.html', context)
+
+
+@login_required(login_url='accounts:login')
+def business_request_promotion(request, slug):
+    """
+    Self-service promotion / tier upgrade request endpoint for business owners.
+    Security guarantees:
+    - Only the listing owner (claimed_by or submitted_by) or staff can request promotion.
+    - Non-owners are denied access (HTTP 403 Forbidden).
+    - Unauthenticated requests are redirected to login (HTTP 302).
+    - No payment details or live financial transactions are processed in this phase.
+    """
+    business = get_object_or_404(Business, slug=slug)
+
+    is_owner = (business.claimed_by == request.user or business.submitted_by == request.user)
+    if not is_owner and not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to manage promotions for this business.")
+
+    if request.method == 'POST':
+        form = BusinessPromotionRequestForm(request.POST)
+        if form.is_valid():
+            promo_req = form.save(commit=False)
+            promo_req.business = business
+            promo_req.requested_by = request.user
+            promo_req.status = 'pending'
+            promo_req.save()
+            messages.success(
+                request,
+                f"Your promotion request for '{business.title}' has been submitted! "
+                "Our business partnerships desk will contact you to coordinate verification and placement."
+            )
+            return redirect('businesses:dashboard')
+        else:
+            messages.error(request, "Please correct the errors in the promotion request form.")
+    else:
+        initial_data = {
+            'contact_email': request.user.email,
+            'contact_phone': business.phone_number or getattr(request.user, 'phone_number', ''),
+            'target_tier': Business.PROMOTION_TIER_FEATURED,
+        }
+        form = BusinessPromotionRequestForm(initial=initial_data)
+
+    context = {
+        'page_title': f"Promote Listing - {business.title} | Lahore City Hub",
+        'meta_description': f"Request sponsored spotlight promotion or verified partner status for {business.title}.",
+        'business': business,
+        'form': form,
+    }
+    return render(request, 'businesses/business_promotion_request.html', context)
 
 
 @login_required(login_url='accounts:login')

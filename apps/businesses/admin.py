@@ -1,6 +1,14 @@
 from django.contrib import admin
 from django.utils import timezone
-from .models import BusinessCategory, Business, BusinessClaim, BusinessEditRequest, BusinessReport
+from datetime import timedelta
+from .models import (
+    BusinessCategory,
+    Business,
+    BusinessClaim,
+    BusinessEditRequest,
+    BusinessReport,
+    BusinessPromotionRequest,
+)
 
 
 @admin.register(BusinessCategory)
@@ -35,6 +43,7 @@ class BusinessAdmin(admin.ModelAdmin):
         'claimed_by',
         'submitted_by',
         'verification_status',
+        'promotion_tier',
         'is_featured',
         'is_active',
         'last_verified_at',
@@ -44,6 +53,7 @@ class BusinessAdmin(admin.ModelAdmin):
     list_filter = (
         'is_active',
         'verification_status',
+        'promotion_tier',
         'is_featured',
         'category',
         'locality__zone',
@@ -88,6 +98,8 @@ class BusinessAdmin(admin.ModelAdmin):
             'fields': (
                 'is_active',
                 'verification_status',
+                'promotion_tier',
+                'promotion_notes',
                 'is_featured',
                 'featured_until',
                 'claimed_by',
@@ -263,3 +275,70 @@ class BusinessClaimAdmin(admin.ModelAdmin):
         if request:
             self.message_user(request, f"{count} claim(s) rejected.")
     reject_claim.short_description = "Reject selected claims"
+
+
+@admin.register(BusinessPromotionRequest)
+class BusinessPromotionRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        'business',
+        'target_tier',
+        'duration_days',
+        'requested_by',
+        'contact_phone',
+        'status',
+        'created_at',
+        'reviewed_by',
+        'reviewed_at',
+    )
+    list_filter = ('status', 'target_tier', 'duration_days', 'created_at')
+    search_fields = (
+        'business__title',
+        'requested_by__email',
+        'contact_phone',
+        'contact_email',
+        'campaign_goals',
+        'admin_notes',
+    )
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at', 'reviewed_at', 'reviewed_by')
+    actions = ['approve_and_activate', 'decline_request']
+
+    def approve_and_activate(self, request, queryset):
+        now = timezone.now()
+        count = 0
+        for promo in queryset.filter(status='pending'):
+            biz = promo.business
+            biz.promotion_tier = promo.target_tier
+            if promo.target_tier == Business.PROMOTION_TIER_FEATURED:
+                biz.is_featured = True
+                biz.featured_until = now + timedelta(days=promo.duration_days)
+            elif promo.target_tier == Business.PROMOTION_TIER_VERIFIED_PRO:
+                if biz.verification_status == 'unverified':
+                    biz.verification_status = 'verified'
+                    biz.last_verified_at = now
+            biz.promotion_notes = f"Activated tier {promo.target_tier} for {promo.duration_days} days on {now.strftime('%Y-%m-%d')}."
+            biz.save()
+
+            promo.status = 'approved'
+            promo.reviewed_by = request.user if request and hasattr(request, 'user') else None
+            promo.reviewed_at = now
+            promo.admin_notes = f"Approved and activated by admin on {now.strftime('%Y-%m-%d %H:%M')}."
+            promo.save()
+            count += 1
+        if request:
+            self.message_user(request, f"{count} promotion request(s) approved and active tier applied to listings.")
+    approve_and_activate.short_description = "Approve & Activate Promotion Campaign"
+
+    def decline_request(self, request, queryset):
+        now = timezone.now()
+        user = request.user if request and hasattr(request, 'user') else None
+        count = queryset.filter(status='pending').update(
+            status='rejected',
+            reviewed_by=user,
+            reviewed_at=now,
+            admin_notes="Declined during editorial review."
+        )
+        if request:
+            self.message_user(request, f"{count} promotion request(s) declined.")
+    decline_request.short_description = "Decline selected promotion requests"
+

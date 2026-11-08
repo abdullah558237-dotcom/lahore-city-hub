@@ -2,7 +2,15 @@ from django import forms
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from apps.core.models import Locality
-from .models import Business, BusinessCategory, BusinessEditRequest, BusinessReport, BusinessClaim, validate_image_extension
+from .models import (
+    Business,
+    BusinessCategory,
+    BusinessEditRequest,
+    BusinessReport,
+    BusinessClaim,
+    BusinessPromotionRequest,
+    validate_image_extension,
+)
 
 
 class BusinessSubmissionForm(forms.ModelForm):
@@ -281,3 +289,44 @@ class BusinessClaimForm(forms.ModelForm):
             'contact_phone': 'Direct Verification Phone *',
             'proof_document': 'Proof Document (Visiting Card, Utility Bill, SECP Certificate)',
         }
+
+
+class BusinessPromotionRequestForm(forms.ModelForm):
+    """
+    Business owner promotion request form for Lahore City Hub sponsorship campaigns.
+    Strictly collects campaign coordination parameters without requesting live payment cards.
+    """
+    class Meta:
+        model = BusinessPromotionRequest
+        fields = ('target_tier', 'duration_days', 'contact_phone', 'contact_email', 'campaign_goals')
+        widgets = {
+            'target_tier': forms.Select(attrs={'class': 'form-select'}),
+            'duration_days': forms.Select(attrs={'class': 'form-select'}),
+            'contact_phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. +92-300-1234567 or 042-35789901'
+            }),
+            'contact_email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'accounts@yourbusiness.pk'
+            }),
+            'campaign_goals': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Tell our team about your campaign objectives, special deals, or preferred launch dates (optional).'
+            }),
+        }
+        labels = {
+            'target_tier': 'Select Promotion Tier *',
+            'duration_days': 'Campaign Duration *',
+            'contact_phone': 'Coordination Phone / WhatsApp *',
+            'contact_email': 'Billing Coordination Email *',
+            'campaign_goals': 'Promotion Campaign Notes (Optional)',
+        }
+
+    def clean_contact_phone(self):
+        phone = self.cleaned_data.get('contact_phone', '').strip()
+        if len(phone) < 8:
+            raise ValidationError('Please enter a valid telephone or WhatsApp contact number.')
+        return phone
+

@@ -40,28 +40,34 @@
 
   <!-- Metric Counters -->
   <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
         <div class="small text-muted fw-semibold mb-1">Total Managed</div>
         <div class="h3 fw-bold text-dark mb-0">{{ total_count }}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
         <div class="small text-muted fw-semibold mb-1">Published & Live</div>
         <div class="h3 fw-bold text-success mb-0">{{ active_count }}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
         <div class="small text-muted fw-semibold mb-1">Pending Audit</div>
         <div class="h3 fw-bold text-warning mb-0">{{ pending_count }}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
         <div class="small text-muted fw-semibold mb-1">Edit Requests</div>
         <div class="h3 fw-bold text-info mb-0">{{ edit_requests.count }}</div>
+      </div>
+    </div>
+    <div class="col-12 col-md">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white text-center">
+        <div class="small text-muted fw-semibold mb-1">Promotions</div>
+        <div class="h3 fw-bold text-warning mb-0">{{ promotion_requests.count }}</div>
       </div>
     </div>
   </div>
@@ -71,6 +77,11 @@
     <li class="nav-item" role="presentation">
       <button class="nav-link active rounded-pill fw-semibold px-3 py-2 small" id="listings-tab" data-bs-toggle="pill" data-bs-target="#listings-panel" type="button" role="tab">
         <i class="bi bi-shop me-1"></i>My Businesses ({{ businesses.count }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold px-3 py-2 small" id="promotions-tab" data-bs-toggle="pill" data-bs-target="#promotions-panel" type="button" role="tab">
+        <i class="bi bi-star-fill text-warning me-1"></i>Promotions ({{ promotion_requests.count }})
       </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -99,6 +110,7 @@
                 <th scope="col" class="py-3">Category</th>
                 <th scope="col" class="py-3">Area</th>
                 <th scope="col" class="py-3">Public Status</th>
+                <th scope="col" class="py-3">Promotion Tier</th>
                 <th scope="col" class="py-3">Audit State</th>
                 <th scope="col" class="py-3 text-end pe-4">Actions</th>
               </tr>
@@ -124,6 +136,26 @@
                   {% endif %}
                 </td>
                 <td>
+                  {% if biz.is_featured or biz.promotion_tier == 'featured_spotlight' %}
+                  <span class="badge bg-warning text-dark border border-warning">
+                    <i class="bi bi-star-fill me-1"></i>Featured Spotlight
+                  </span>
+                  {% if biz.featured_until %}
+                  <div class="small text-muted font-monospace" style="font-size: 0.72rem;">
+                    Active until {{ biz.featured_until|date:"d M Y" }}
+                  </div>
+                  {% endif %}
+                  {% elif biz.promotion_tier == 'verified_pro' %}
+                  <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                    <i class="bi bi-patch-check-fill me-1"></i>Verified Pro
+                  </span>
+                  {% else %}
+                  <span class="badge bg-light text-muted border">
+                    Standard (Free)
+                  </span>
+                  {% endif %}
+                </td>
+                <td>
                   {% if biz.verification_status == 'verified' or biz.verification_status == 'claimed' %}
                   <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                     <i class="bi bi-patch-check-fill me-1"></i>{{ biz.get_verification_status_display }}
@@ -142,6 +174,9 @@
                   <div class="btn-group btn-group-sm">
                     <a href="{{ biz.get_absolute_url }}" class="btn btn-outline-dark" title="View Profile">
                       <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'businesses:request_promotion' slug=biz.slug %}" class="btn btn-outline-warning text-dark" title="Promote / Spotlight">
+                      <i class="bi bi-rocket-takeoff"></i>
                     </a>
                     <a href="{% url 'businesses:edit' slug=biz.slug %}" class="btn btn-outline-primary" title="Edit / Request Changes">
                       <i class="bi bi-pencil"></i>
@@ -265,6 +300,65 @@
         <i class="bi bi-shield-check text-muted mb-3" style="font-size: 2.5rem;"></i>
         <h3 class="h6 fw-bold text-dark mb-1">No Ownership Claims Filed</h3>
         <p class="text-secondary small mb-0">You have not submitted any ownership claims for existing directory listings.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Panel 4: Promotion Requests -->
+    <div class="tab-pane fade" id="promotions-panel" role="tabpanel">
+      {% if promotion_requests %}
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light small text-uppercase tracking-wider">
+              <tr>
+                <th scope="col" class="py-3 ps-4">Business</th>
+                <th scope="col" class="py-3">Requested Tier</th>
+                <th scope="col" class="py-3">Duration</th>
+                <th scope="col" class="py-3">Status</th>
+                <th scope="col" class="py-3">Submitted</th>
+                <th scope="col" class="py-3 pe-4">Desk Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for promo in promotion_requests %}
+              <tr>
+                <td class="ps-4 fw-bold text-dark">{{ promo.business.title }}</td>
+                <td>
+                  {% if promo.target_tier == 'featured_spotlight' %}
+                  <span class="badge bg-warning text-dark border border-warning"><i class="bi bi-star-fill me-1"></i>Featured Spotlight</span>
+                  {% else %}
+                  <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">Verified Pro</span>
+                  {% endif %}
+                </td>
+                <td class="small">{{ promo.get_duration_days_display }}</td>
+                <td>
+                  {% if promo.status == 'approved' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Active</span>
+                  {% elif promo.status == 'rejected' %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Declined</span>
+                  {% else %}
+                  <span class="badge bg-warning-subtle text-dark border border-warning-subtle"><i class="bi bi-hourglass-split me-1"></i>Pending Review</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">{{ promo.created_at|date:"M d, Y" }}</td>
+                <td class="small pe-4 text-muted">{{ promo.admin_notes|default:"Awaiting commercial desk coordination" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+        <i class="bi bi-rocket-takeoff text-muted mb-3" style="font-size: 2.5rem;"></i>
+        <h3 class="h6 fw-bold text-dark mb-1">No Promotion Requests Submitted</h3>
+        <p class="text-secondary small mb-3">Upgrade your listing to Featured Spotlight or Verified Professional to stand out in Lahore.</p>
+        <div>
+          <a href="{% url 'core:pricing' %}" class="btn btn-warning btn-sm fw-bold text-dark me-2">
+            <i class="bi bi-tags me-1"></i>View Promotion Plans
+          </a>
+        </div>
       </div>
       {% endif %}
     </div>

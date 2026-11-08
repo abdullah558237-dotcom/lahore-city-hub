@@ -33,9 +33,31 @@ class BusinessCategory(TimeStampedModel):
 
 
 class Business(ListingBase):
+    PROMOTION_TIER_STANDARD = 'standard'
+    PROMOTION_TIER_VERIFIED_PRO = 'verified_pro'
+    PROMOTION_TIER_FEATURED = 'featured_spotlight'
+
+    PROMOTION_TIER_CHOICES = [
+        (PROMOTION_TIER_STANDARD, 'Standard Organic'),
+        (PROMOTION_TIER_VERIFIED_PRO, 'Verified Professional'),
+        (PROMOTION_TIER_FEATURED, 'Featured Spotlight'),
+    ]
+
     category = models.ForeignKey(BusinessCategory, on_delete=models.PROTECT, related_name='businesses')
     registration_number = models.CharField(max_length=100, blank=True, verbose_name="SECP / Chamber Reg No.")
     operating_hours = models.CharField(max_length=200, blank=True)
+    promotion_tier = models.CharField(
+        max_length=25,
+        choices=PROMOTION_TIER_CHOICES,
+        default=PROMOTION_TIER_STANDARD,
+        db_index=True,
+        verbose_name="Monetization / Promotion Tier"
+    )
+    promotion_notes = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Promotion Notes / Order Ref"
+    )
     claimed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -212,3 +234,82 @@ class BusinessReport(TimeStampedModel):
 
     def __str__(self):
         return f"Report on {self.business.title} ({self.get_reason_display()})"
+
+
+class BusinessPromotionRequest(TimeStampedModel):
+    STATUS_CHOICES = [
+        ('pending', 'Pending Editorial Audit'),
+        ('approved', 'Approved & Activated'),
+        ('rejected', 'Declined'),
+        ('cancelled', 'Cancelled by Owner'),
+    ]
+
+    TIER_CHOICES = [
+        (Business.PROMOTION_TIER_VERIFIED_PRO, 'Verified Professional (Verified Seal + Contact Priority)'),
+        (Business.PROMOTION_TIER_FEATURED, 'Featured Spotlight (Top Placement + Sponsored Badge)'),
+    ]
+
+    DURATION_CHOICES = [
+        (30, '30 Days Spotlight'),
+        (90, '90 Days (Quarterly Partner)'),
+        (180, '180 Days (Half-Yearly Partner)'),
+        (365, '365 Days (Annual Partner)'),
+    ]
+
+    business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name='promotion_requests')
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='business_promotion_requests'
+    )
+    target_tier = models.CharField(
+        max_length=25,
+        choices=TIER_CHOICES,
+        default=Business.PROMOTION_TIER_FEATURED,
+        verbose_name="Requested Promotion Tier"
+    )
+    duration_days = models.PositiveIntegerField(
+        choices=DURATION_CHOICES,
+        default=30,
+        verbose_name="Campaign Duration (Days)"
+    )
+    contact_phone = models.CharField(
+        max_length=35,
+        verbose_name="Contact Phone / WhatsApp"
+    )
+    contact_email = models.EmailField(
+        verbose_name="Official Billing Coordination Email"
+    )
+    campaign_goals = models.TextField(
+        blank=True,
+        verbose_name="Campaign Notes / Objectives",
+        help_text="Provide any specific promotional highlights, target localities, or brand notes."
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        db_index=True
+    )
+    admin_notes = models.TextField(blank=True, verbose_name="Moderator Notes")
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Business Promotion Request"
+        verbose_name_plural = "Business Promotion Requests"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['business', 'status']),
+            models.Index(fields=['requested_by', 'status']),
+        ]
+
+    def __str__(self):
+        return f"Promotion Request for {self.business.title} ({self.get_target_tier_display()}) by {self.requested_by.email}"
+

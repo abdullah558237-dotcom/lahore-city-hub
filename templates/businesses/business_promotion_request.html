@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb py-2 px-3 bg-light rounded-3 small">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'businesses:list' %}" class="text-decoration-none">Local Businesses</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'businesses:dashboard' %}" class="text-decoration-none">Owner Dashboard</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Promote {{ business.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <!-- Main Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <!-- Header -->
+        <div class="mb-4">
+          <span class="badge bg-warning text-dark fw-bold px-3 py-1 mb-2">
+            <i class="bi bi-rocket-takeoff me-1"></i>PROMOTION & SPONSORSHIP DESK
+          </span>
+          <h1 class="h3 fw-bold text-dark mb-1">Promote Your Business Listing</h1>
+          <p class="text-secondary small mb-0">
+            Targeting listing: <strong>{{ business.title }}</strong> ({{ business.locality.name|default:"Lahore" }} &bull; {{ business.category.name }})
+          </p>
+        </div>
+
+        <!-- Compliance & Transparency Notice -->
+        <div class="alert alert-light border shadow-sm rounded-3 p-3 mb-4">
+          <div class="d-flex align-items-start gap-2">
+            <i class="bi bi-shield-check text-success fs-5 mt-1"></i>
+            <div class="small text-secondary">
+              <strong class="text-dark">Editorial Review & Compliance Notice:</strong>
+              No payment card or bank information is requested or processed at this stage. Submitting this request initiates campaign coordination with our Lahore commercial partnerships desk.
+              <div class="mt-1 text-muted fst-italic">
+                * Note: Paid directory promotions enhance visibility strictly within Lahore City Hub directory searches and category browsing. Sponsored placements do not guarantee or influence external Google search engine rankings.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Available Promotion Tiers Comparison Mini-Card -->
+        <div class="row g-3 mb-4">
+          <div class="col-12 col-md-6">
+            <div class="card h-100 border rounded-3 p-3 bg-light">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="badge bg-info text-dark fw-bold">Verified Professional</span>
+                <span class="small text-muted">Tier 1</span>
+              </div>
+              <div class="small fw-semibold text-dark mb-2">SECP / Chamber Trust Seal</div>
+              <ul class="small text-muted ps-3 mb-0">
+                <li>Official Verified Business Seal</li>
+                <li>Priority WhatsApp & Phone Contact</li>
+                <li>Direct website backlink (rel="nofollow")</li>
+                <li>Audit badge displayed on card</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="card h-100 border border-warning rounded-3 p-3 bg-warning-subtle">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="badge bg-warning text-dark fw-bold">Featured Spotlight</span>
+                <span class="small text-dark fw-semibold">Premium</span>
+              </div>
+              <div class="small fw-semibold text-dark mb-2">Top-of-Category & Sponsored Label</div>
+              <ul class="small text-dark ps-3 mb-0">
+                <li>Priority top listing in category & search</li>
+                <li>High-contrast "Sponsored" partner badge</li>
+                <li>Featured Spotlight homepage placement</li>
+                <li>Gold border emphasis in search results</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Request Form -->
+        <form method="post" action="{% url 'businesses:request_promotion' slug=business.slug %}">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger rounded-3 small mb-3">
+            {{ form.non_field_errors }}
+          </div>
+          {% endif %}
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="{{ form.target_tier.id_for_label }}" class="form-label small fw-bold text-dark">
+                {{ form.target_tier.label }}
+              </label>
+              {{ form.target_tier }}
+              {% if form.target_tier.errors %}
+              <div class="text-danger small mt-1">{{ form.target_tier.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="{{ form.duration_days.id_for_label }}" class="form-label small fw-bold text-dark">
+                {{ form.duration_days.label }}
+              </label>
+              {{ form.duration_days }}
+              {% if form.duration_days.errors %}
+              <div class="text-danger small mt-1">{{ form.duration_days.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="{{ form.contact_phone.id_for_label }}" class="form-label small fw-bold text-dark">
+                {{ form.contact_phone.label }}
+              </label>
+              {{ form.contact_phone }}
+              {% if form.contact_phone.errors %}
+              <div class="text-danger small mt-1">{{ form.contact_phone.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text small" style="font-size: 0.76rem;">Pakistani phone or WhatsApp for corporate desk coordination.</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="{{ form.contact_email.id_for_label }}" class="form-label small fw-bold text-dark">
+                {{ form.contact_email.label }}
+              </label>
+              {{ form.contact_email }}
+              {% if form.contact_email.errors %}
+              <div class="text-danger small mt-1">{{ form.contact_email.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text small" style="font-size: 0.76rem;">Official email for documentation & invoicing.</div>
+            </div>
+
+            <div class="col-12">
+              <label for="{{ form.campaign_goals.id_for_label }}" class="form-label small fw-bold text-dark">
+                {{ form.campaign_goals.label }}
+              </label>
+              {{ form.campaign_goals }}
+              {% if form.campaign_goals.errors %}
+              <div class="text-danger small mt-1">{{ form.campaign_goals.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{% url 'businesses:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i>Cancel & Back to Dashboard
+            </a>
+            <button type="submit" class="btn btn-warning text-dark fw-bold btn-sm px-4">
+              <i class="bi bi-send-check me-1"></i>Submit Promotion Request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

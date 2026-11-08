@@ -27,6 +27,7 @@ class StaticViewSitemap(Sitemap):
             'core:contact',
             'core:privacy',
             'core:terms',
+            'core:pricing',
             'core:search',
             'places:list',
             'restaurants:list',

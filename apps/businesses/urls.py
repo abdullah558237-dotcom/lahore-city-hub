@@ -11,5 +11,6 @@ urlpatterns = [
     path('delete/<slug:slug>/', views.business_delete, name='delete'),
     path('report/<slug:slug>/', views.report_listing, name='report'),
     path('claim/<slug:slug>/', views.business_claim, name='claim'),
+    path('promote/<slug:slug>/', views.business_request_promotion, name='request_promotion'),
     path('<slug:slug>/', views.business_detail, name='detail'),
 ]

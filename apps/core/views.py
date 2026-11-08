@@ -783,10 +783,26 @@ def robots_txt_view(request):
         "Disallow: /businesses/edit/",
         "Disallow: /businesses/claim/",
         "Disallow: /businesses/report/",
+        "Disallow: /businesses/promote/",
         "Disallow: /404-preview/",
         "Allow: /",
         "",
         f"Sitemap: {sitemap_url}",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
+
+
+def pricing_view(request):
+    """
+    Public pricing and directory promotion plans comparison page.
+    Explains organic (free) inclusion, Verified Professional, and Featured Spotlight packages.
+    Features explicit Google Search disclaimer that paid placement does not influence external search rankings.
+    """
+    context = {
+        'page_title': 'Promote Your Business & Pricing Plans | Lahore City Hub',
+        'meta_description': 'Explore transparent pricing plans for Lahore local businesses. Get SECP-verified badges, category spotlight placement, and high-visibility promotions.',
+        'canonical_url': request.build_absolute_uri(request.path),
+    }
+    return render(request, 'pages/pricing.html', context)
+
 
