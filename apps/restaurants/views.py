@@ -4,6 +4,7 @@ from django.db.models import Q, F, Count
 from django.contrib.contenttypes.models import ContentType
 
 from apps.core.models import Locality
+from apps.core.services import get_cached_localities
 from apps.reviews.models import Review
 from .models import Restaurant, Cuisine, RestaurantFeature
 
@@ -102,7 +103,7 @@ def restaurant_list(request):
     cuisines = Cuisine.objects.filter(is_active=True).annotate(
         active_restaurants_count=Count('restaurants', filter=Q(restaurants__is_active=True))
     )
-    localities = Locality.objects.all().select_related('zone').order_by('zone__name', 'name')
+    localities = get_cached_localities()
     features = RestaurantFeature.objects.all()
 
     # 10. Featured Spotlight (Top 3)
@@ -181,7 +182,8 @@ def restaurant_detail(request, slug):
     Restaurant.objects.filter(pk=restaurant.pk).update(view_count=F('view_count') + 1)
 
     # Related restaurants: active restaurants in same locality OR sharing any cuisine (excluding self)
-    cuisine_ids = restaurant.cuisines.values_list('id', flat=True)
+    # Use prefetched cuisines in memory rather than triggering an extra SQL query
+    cuisine_ids = [c.id for c in restaurant.cuisines.all()]
     related_restaurants = (
         Restaurant.objects.filter(is_active=True)
         .filter(Q(locality=restaurant.locality) | Q(cuisines__in=cuisine_ids))

@@ -161,6 +161,19 @@ MEDIA_ROOT = str(BASE_DIR / 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# In-Memory Cache for fast query and taxonomy caching (No external infrastructure required)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'lahore-city-hub-cache',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    }
+}
+
 # SQLite schema alteration safety for SQLite 3.26+ table rebuilds
 from django.db.backends.signals import connection_created
 def configure_sqlite_connection(sender, connection, **kwargs):

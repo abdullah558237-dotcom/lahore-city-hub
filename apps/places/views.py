@@ -4,6 +4,7 @@ from django.db.models import Q, F, Count
 from django.contrib.contenttypes.models import ContentType
 
 from apps.core.models import Locality
+from apps.core.services import get_cached_localities
 from apps.reviews.models import Review
 from .models import Place, PlaceCategory
 
@@ -86,7 +87,7 @@ def place_list(request):
     categories = PlaceCategory.objects.filter(is_active=True).annotate(
         active_places_count=Count('places', filter=Q(places__is_active=True))
     )
-    localities = Locality.objects.all().select_related('zone').order_by('zone__name', 'name')
+    localities = get_cached_localities()
 
     # 10. Featured Spotlight (for top callout banner)
     featured_places = Place.objects.filter(is_active=True, is_featured=True).select_related(

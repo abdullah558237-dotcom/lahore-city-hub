@@ -5,6 +5,7 @@ from django.db.models import Q, Count
 from django.utils import timezone
 
 from apps.core.models import Locality
+from apps.core.services import get_cached_localities
 from .models import JobListing, JobCategory, Employer
 
 
@@ -123,17 +124,20 @@ def job_list(request):
         )
     )
 
-    employment_type_counts = {}
-    for code, label in JobListing.EMPLOYMENT_TYPES:
-        count = JobListing.objects.filter(
-            is_active=True,
-            deadline__gte=today,
-            employment_type=code
-        ).count()
-        employment_type_counts[code] = {'label': label, 'count': count}
+    # High-performance single GROUP BY query for all employment types (replaces N+1 loop queries)
+    raw_type_counts = dict(
+        JobListing.objects.filter(is_active=True, deadline__gte=today)
+        .values('employment_type')
+        .annotate(total=Count('id'))
+        .values_list('employment_type', 'total')
+    )
+    employment_type_counts = {
+        code: {'label': label, 'count': raw_type_counts.get(code, 0)}
+        for code, label in JobListing.EMPLOYMENT_TYPES
+    }
 
-    localities = Locality.objects.all().select_related('zone').order_by('zone__name', 'name')
-    active_jobs_total = JobListing.objects.filter(is_active=True, deadline__gte=today).count()
+    localities = get_cached_localities()
+    active_jobs_total = sum(raw_type_counts.values())
     expired_jobs_total = JobListing.objects.filter(is_active=True, deadline__lt=today).count()
 
     # Preserve URL params for pagination

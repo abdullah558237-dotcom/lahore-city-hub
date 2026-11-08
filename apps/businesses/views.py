@@ -8,6 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
 from apps.core.models import Locality
+from apps.core.services import get_cached_localities
 from .models import (
     Business,
     BusinessCategory,
@@ -98,7 +99,7 @@ def business_list(request):
     categories = BusinessCategory.objects.filter(is_active=True).annotate(
         active_count=Count('businesses', filter=Q(businesses__is_active=True))
     )
-    localities = Locality.objects.all().select_related('zone').order_by('zone__name', 'name')
+    localities = get_cached_localities()
 
     # 8. Featured Spotlight
     featured_businesses = Business.objects.filter(

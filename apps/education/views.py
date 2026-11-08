@@ -4,6 +4,7 @@ from django.db.models import Q, F, Count
 from django.contrib.contenttypes.models import ContentType
 
 from apps.core.models import Locality
+from apps.core.services import get_cached_localities
 from apps.reviews.models import Review
 from .models import Institution, EducationType, AccreditationBoard
 
@@ -93,7 +94,7 @@ def education_list(request):
     education_types = EducationType.objects.filter(is_active=True).annotate(
         active_institutions_count=Count('institutions', filter=Q(institutions__is_active=True))
     )
-    localities = Locality.objects.all().select_related('zone').order_by('zone__name', 'name')
+    localities = get_cached_localities()
     accreditations = AccreditationBoard.objects.filter(is_active=True)
 
     # Query string builder for pagination links

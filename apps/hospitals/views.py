@@ -4,6 +4,7 @@ from django.db.models import Q, F, Count
 from django.contrib.contenttypes.models import ContentType
 
 from apps.core.models import Locality
+from apps.core.services import get_cached_localities
 from apps.reviews.models import Review
 from .models import Hospital, MedicalSpecialty
 
@@ -111,7 +112,7 @@ def hospital_list(request):
     specialties = MedicalSpecialty.objects.filter(is_active=True).annotate(
         active_hospitals_count=Count('hospitals', filter=Q(hospitals__is_active=True))
     )
-    localities = Locality.objects.all().select_related('zone').order_by('zone__name', 'name')
+    localities = get_cached_localities()
     verified_emergency_count = Hospital.objects.filter(
         is_active=True, is_24_7_emergency=True, verification_status__in=['verified', 'claimed']
     ).count()

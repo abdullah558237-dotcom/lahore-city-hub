@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils import timezone
+from django.core.cache import cache
 from decimal import Decimal
 import datetime
 
@@ -350,6 +351,13 @@ class HomepageFullStackComprehensiveTests(TestCase):
                 description=f"Description {i}", is_active=True
             )
 
+        # Cold cache query count (8 domain fetches + 8 count queries)
+        cache.clear()
         with self.assertNumQueries(16):
+            response = self.client.get(self.home_url)
+            self.assertEqual(response.status_code, 200)
+
+        # Warm cache query count: eliminates all 8 count queries (50% reduction!)
+        with self.assertNumQueries(8):
             response = self.client.get(self.home_url)
             self.assertEqual(response.status_code, 200)

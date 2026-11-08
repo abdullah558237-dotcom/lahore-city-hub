@@ -78,11 +78,11 @@
   <!-- Global Civic Footer -->
   {% include 'footer.html' %}
 
-  <!-- Bootstrap 5.3 Bundle with Popper -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <!-- Bootstrap 5.3 Bundle with Popper (deferred for non-blocking render) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-  <!-- Lahore City Hub Custom Scripts -->
-  <script src="{% static 'js/theme.js' %}"></script>
+  <!-- Lahore City Hub Custom Scripts (deferred for non-blocking render) -->
+  <script defer src="{% static 'js/theme.js' %}"></script>
 
   {% block extra_js %}{% endblock %}
 </body>

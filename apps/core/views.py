@@ -13,6 +13,7 @@ from apps.businesses.models import Business
 from apps.events.models import Event
 from apps.updates.models import CityUpdate
 from apps.transport.models import TransitRoute
+from .services import get_cached_homepage_counts, get_cached_localities
 
 from .demo_data import (
     DEMO_TOURIST_PLACES,
@@ -101,15 +102,8 @@ def home_view(request):
         .order_by('route_code')[:3]
     )
 
-    # Total counts for badge displays
-    total_places = Place.objects.filter(is_active=True).count()
-    total_jobs = JobListing.objects.filter(is_active=True, deadline__gte=today).count()
-    total_restaurants = Restaurant.objects.filter(is_active=True).count()
-    total_hospitals = Hospital.objects.filter(is_active=True).count()
-    total_education = Institution.objects.filter(is_active=True).count()
-    total_businesses = Business.objects.filter(is_active=True).count()
-    total_events = Event.objects.filter(is_active=True, end_datetime__gte=now).count()
-    total_updates = CityUpdate.objects.filter(is_active=True).count()
+    # Cached total counts for badge displays (5 min TTL)
+    counts = get_cached_homepage_counts(today, now)
 
     context = {
         'page_title': 'Your Complete Guide to Lahore | Lahore City Hub',
@@ -124,16 +118,7 @@ def home_view(request):
         'upcoming_events': upcoming_events,
         'city_updates': city_updates,
         'transit_routes': transit_routes,
-        'counts': {
-            'places': total_places,
-            'jobs': total_jobs,
-            'restaurants': total_restaurants,
-            'hospitals': total_hospitals,
-            'education': total_education,
-            'businesses': total_businesses,
-            'events': total_events,
-            'updates': total_updates,
-        }
+        'counts': counts,
     }
     return render(request, 'pages/home.html', context)
 
@@ -359,157 +344,146 @@ def search_results_view(request):
     }
     active_category = raw_category if raw_category in valid_categories else 'all'
 
-    has_db_records = (
-        Place.objects.filter(is_active=True).exists() or
-        JobListing.objects.filter(is_active=True).exists() or
-        Restaurant.objects.filter(is_active=True).exists() or
-        Hospital.objects.filter(is_active=True).exists() or
-        Institution.objects.filter(is_active=True).exists() or
-        Business.objects.filter(is_active=True).exists() or
-        Event.objects.filter(is_active=True).exists() or
-        CityUpdate.objects.filter(is_active=True).exists()
+    # 1. Places (is_active=True)
+    places_qs = Place.objects.filter(is_active=True).select_related('locality', 'category')
+    if query:
+        places_qs = places_qs.filter(
+            Q(title__icontains=query) |
+            Q(title_ur__icontains=query) |
+            Q(summary__icontains=query) |
+            Q(description__icontains=query) |
+            Q(address__icontains=query) |
+            Q(landmark__icontains=query) |
+            Q(category__name__icontains=query)
+        )
+    if locality:
+        places_qs = places_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
+
+    # 2. Jobs (is_active=True, unexpired)
+    jobs_qs = JobListing.objects.filter(is_active=True, deadline__gte=today).select_related(
+        'employer', 'category', 'locality'
+    )
+    if query:
+        jobs_qs = jobs_qs.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(requirements__icontains=query) |
+            Q(employer__name__icontains=query) |
+            Q(category__name__icontains=query)
+        )
+    if locality:
+        jobs_qs = jobs_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
+
+    # 3. Restaurants (is_active=True)
+    restaurants_qs = Restaurant.objects.filter(is_active=True).select_related('locality').prefetch_related('cuisines')
+    if query:
+        restaurants_qs = restaurants_qs.filter(
+            Q(title__icontains=query) |
+            Q(title_ur__icontains=query) |
+            Q(summary__icontains=query) |
+            Q(description__icontains=query) |
+            Q(address__icontains=query) |
+            Q(landmark__icontains=query) |
+            Q(cuisines__name__icontains=query)
+        ).distinct()
+    if locality:
+        restaurants_qs = restaurants_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
+
+    # 4. Hospitals (is_active=True)
+    hospitals_qs = Hospital.objects.filter(is_active=True).select_related('locality').prefetch_related('specialties')
+    if query:
+        hospitals_qs = hospitals_qs.filter(
+            Q(title__icontains=query) |
+            Q(title_ur__icontains=query) |
+            Q(summary__icontains=query) |
+            Q(description__icontains=query) |
+            Q(address__icontains=query) |
+            Q(landmark__icontains=query) |
+            Q(specialties__name__icontains=query)
+        ).distinct()
+    if locality:
+        hospitals_qs = hospitals_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
+
+    # 5. Education (is_active=True)
+    education_qs = Institution.objects.filter(is_active=True).select_related('education_type', 'locality')
+    if query:
+        education_qs = education_qs.filter(
+            Q(title__icontains=query) |
+            Q(title_ur__icontains=query) |
+            Q(summary__icontains=query) |
+            Q(description__icontains=query) |
+            Q(address__icontains=query) |
+            Q(landmark__icontains=query) |
+            Q(education_type__name__icontains=query)
+        )
+    if locality:
+        education_qs = education_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
+
+    # 6. Businesses (is_active=True; user privacy protected)
+    businesses_qs = Business.objects.filter(is_active=True).select_related('category', 'locality')
+    if query:
+        businesses_qs = businesses_qs.filter(
+            Q(title__icontains=query) |
+            Q(title_ur__icontains=query) |
+            Q(summary__icontains=query) |
+            Q(description__icontains=query) |
+            Q(address__icontains=query) |
+            Q(landmark__icontains=query) |
+            Q(category__name__icontains=query)
+        )
+    if locality:
+        businesses_qs = businesses_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
+
+    # 7. Events (is_active=True)
+    events_qs = Event.objects.filter(is_active=True).select_related('category', 'venue', 'venue__locality')
+    if query:
+        events_qs = events_qs.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(venue__name__icontains=query) |
+            Q(venue__address__icontains=query) |
+            Q(category__name__icontains=query) |
+            Q(organizer_name__icontains=query)
+        )
+    if locality:
+        events_qs = events_qs.filter(
+            Q(venue__locality__slug__iexact=locality) | Q(venue__locality__name__icontains=locality)
+        )
+
+    # 8. City Updates (is_active=True; city-wide, excluded when filtering by specific area)
+    updates_qs = CityUpdate.objects.filter(is_active=True).select_related('category')
+    if query:
+        updates_qs = updates_qs.filter(
+            Q(title__icontains=query) |
+            Q(summary__icontains=query) |
+            Q(content__icontains=query) |
+            Q(category__name__icontains=query) |
+            Q(issuing_authority__icontains=query)
+        )
+    if locality:
+        updates_qs = updates_qs.none()
+
+    places_count = places_qs.count()
+    jobs_count = jobs_qs.count()
+    restaurants_count = restaurants_qs.count()
+    hospitals_count = hospitals_qs.count()
+    education_count = education_qs.count()
+    businesses_count = businesses_qs.count()
+    events_count = events_qs.count()
+    updates_count = updates_qs.count()
+
+    total_hits = (
+        places_count +
+        jobs_count +
+        restaurants_count +
+        hospitals_count +
+        education_count +
+        businesses_count +
+        events_count +
+        updates_count
     )
 
-    if has_db_records:
-        # 1. Places (is_active=True)
-        places_qs = Place.objects.filter(is_active=True).select_related('locality', 'category')
-        if query:
-            places_qs = places_qs.filter(
-                Q(title__icontains=query) |
-                Q(title_ur__icontains=query) |
-                Q(summary__icontains=query) |
-                Q(description__icontains=query) |
-                Q(address__icontains=query) |
-                Q(landmark__icontains=query) |
-                Q(category__name__icontains=query)
-            )
-        if locality:
-            places_qs = places_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
-
-        # 2. Jobs (is_active=True, unexpired)
-        jobs_qs = JobListing.objects.filter(is_active=True, deadline__gte=today).select_related(
-            'employer', 'category', 'locality'
-        )
-        if query:
-            jobs_qs = jobs_qs.filter(
-                Q(title__icontains=query) |
-                Q(description__icontains=query) |
-                Q(requirements__icontains=query) |
-                Q(employer__name__icontains=query) |
-                Q(category__name__icontains=query)
-            )
-        if locality:
-            jobs_qs = jobs_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
-
-        # 3. Restaurants (is_active=True)
-        restaurants_qs = Restaurant.objects.filter(is_active=True).select_related('locality').prefetch_related('cuisines')
-        if query:
-            restaurants_qs = restaurants_qs.filter(
-                Q(title__icontains=query) |
-                Q(title_ur__icontains=query) |
-                Q(summary__icontains=query) |
-                Q(description__icontains=query) |
-                Q(address__icontains=query) |
-                Q(landmark__icontains=query) |
-                Q(cuisines__name__icontains=query)
-            ).distinct()
-        if locality:
-            restaurants_qs = restaurants_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
-
-        # 4. Hospitals (is_active=True)
-        hospitals_qs = Hospital.objects.filter(is_active=True).select_related('locality').prefetch_related('specialties')
-        if query:
-            hospitals_qs = hospitals_qs.filter(
-                Q(title__icontains=query) |
-                Q(title_ur__icontains=query) |
-                Q(summary__icontains=query) |
-                Q(description__icontains=query) |
-                Q(address__icontains=query) |
-                Q(landmark__icontains=query) |
-                Q(specialties__name__icontains=query)
-            ).distinct()
-        if locality:
-            hospitals_qs = hospitals_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
-
-        # 5. Education (is_active=True)
-        education_qs = Institution.objects.filter(is_active=True).select_related('education_type', 'locality')
-        if query:
-            education_qs = education_qs.filter(
-                Q(title__icontains=query) |
-                Q(title_ur__icontains=query) |
-                Q(summary__icontains=query) |
-                Q(description__icontains=query) |
-                Q(address__icontains=query) |
-                Q(landmark__icontains=query) |
-                Q(education_type__name__icontains=query)
-            )
-        if locality:
-            education_qs = education_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
-
-        # 6. Businesses (is_active=True; user privacy protected)
-        businesses_qs = Business.objects.filter(is_active=True).select_related('category', 'locality')
-        if query:
-            businesses_qs = businesses_qs.filter(
-                Q(title__icontains=query) |
-                Q(title_ur__icontains=query) |
-                Q(summary__icontains=query) |
-                Q(description__icontains=query) |
-                Q(address__icontains=query) |
-                Q(landmark__icontains=query) |
-                Q(category__name__icontains=query)
-            )
-        if locality:
-            businesses_qs = businesses_qs.filter(Q(locality__slug__iexact=locality) | Q(locality__name__icontains=locality))
-
-        # 7. Events (is_active=True)
-        events_qs = Event.objects.filter(is_active=True).select_related('category', 'venue', 'venue__locality')
-        if query:
-            events_qs = events_qs.filter(
-                Q(title__icontains=query) |
-                Q(description__icontains=query) |
-                Q(venue__name__icontains=query) |
-                Q(venue__address__icontains=query) |
-                Q(category__name__icontains=query) |
-                Q(organizer_name__icontains=query)
-            )
-        if locality:
-            events_qs = events_qs.filter(
-                Q(venue__locality__slug__iexact=locality) | Q(venue__locality__name__icontains=locality)
-            )
-
-        # 8. City Updates (is_active=True; city-wide, excluded when filtering by specific area)
-        updates_qs = CityUpdate.objects.filter(is_active=True).select_related('category')
-        if query:
-            updates_qs = updates_qs.filter(
-                Q(title__icontains=query) |
-                Q(summary__icontains=query) |
-                Q(content__icontains=query) |
-                Q(category__name__icontains=query) |
-                Q(issuing_authority__icontains=query)
-            )
-        if locality:
-            updates_qs = updates_qs.none()
-
-        places_count = places_qs.count()
-        jobs_count = jobs_qs.count()
-        restaurants_count = restaurants_qs.count()
-        hospitals_count = hospitals_qs.count()
-        education_count = education_qs.count()
-        businesses_count = businesses_qs.count()
-        events_count = events_qs.count()
-        updates_count = updates_qs.count()
-
-        total_hits = (
-            places_count +
-            jobs_count +
-            restaurants_count +
-            hospitals_count +
-            education_count +
-            businesses_count +
-            events_count +
-            updates_count
-        )
-
+    if total_hits > 0 or Place.objects.filter(is_active=True).exists():
         category_qs_map = {
             'places': (places_qs, 'place'),
             'jobs': (jobs_qs, 'job'),
@@ -529,28 +503,28 @@ def search_results_view(request):
                 items_to_paginate.append(item)
         else:
             combined_items = []
-            for p in places_qs:
+            for p in places_qs[:25]:
                 p.item_type = 'place'
                 combined_items.append(p)
-            for r in restaurants_qs:
+            for r in restaurants_qs[:25]:
                 r.item_type = 'restaurant'
                 combined_items.append(r)
-            for h in hospitals_qs:
+            for h in hospitals_qs[:25]:
                 h.item_type = 'hospital'
                 combined_items.append(h)
-            for e in education_qs:
+            for e in education_qs[:25]:
                 e.item_type = 'education'
                 combined_items.append(e)
-            for j in jobs_qs:
+            for j in jobs_qs[:25]:
                 j.item_type = 'job'
                 combined_items.append(j)
-            for b in businesses_qs:
+            for b in businesses_qs[:25]:
                 b.item_type = 'business'
                 combined_items.append(b)
-            for ev in events_qs:
+            for ev in events_qs[:25]:
                 ev.item_type = 'event'
                 combined_items.append(ev)
-            for u in updates_qs:
+            for u in updates_qs[:25]:
                 u.item_type = 'update'
                 combined_items.append(u)
 
@@ -570,7 +544,6 @@ def search_results_view(request):
         demo_businesses = []
         demo_events = []
         demo_updates = []
-
     else:
         # Fallback for unseeded test database environments
         def matches(item):
@@ -677,14 +650,14 @@ def search_results_view(request):
         'paginator': paginator,
         'is_paginated': is_paginated,
         'pagination_querystring': pagination_querystring,
-        'matched_places': places_qs if has_db_records else demo_places,
-        'matched_restaurants': restaurants_qs if has_db_records else demo_restaurants,
-        'matched_hospitals': hospitals_qs if has_db_records else demo_hospitals,
-        'matched_education': education_qs if has_db_records else demo_education,
-        'matched_jobs': jobs_qs if has_db_records else demo_jobs,
-        'matched_businesses': businesses_qs if has_db_records else demo_businesses,
-        'matched_events': events_qs if has_db_records else demo_events,
-        'matched_updates': updates_qs if has_db_records else demo_updates,
+        'matched_places': places_qs if places_qs else demo_places,
+        'matched_restaurants': restaurants_qs if restaurants_qs else demo_restaurants,
+        'matched_hospitals': hospitals_qs if hospitals_qs else demo_hospitals,
+        'matched_education': education_qs if education_qs else demo_education,
+        'matched_jobs': jobs_qs if jobs_qs else demo_jobs,
+        'matched_businesses': businesses_qs if businesses_qs else demo_businesses,
+        'matched_events': events_qs if events_qs else demo_events,
+        'matched_updates': updates_qs if updates_qs else demo_updates,
     }
     return render(request, 'pages/search_results.html', context)
 
