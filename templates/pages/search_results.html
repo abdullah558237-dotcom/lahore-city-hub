@@ -8,7 +8,7 @@
   <!-- Search Header Bar -->
   <div class="bg-white p-4 rounded-4 shadow-sm border border-light-subtle mb-4">
     <div class="row align-items-center">
-      <div class="col-12 col-lg-7">
+      <div class="col-12 col-lg-5">
         <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold mb-2">
           GLOBAL DISCOVERY RESULTS
         </span>
@@ -17,156 +17,203 @@
           {% if locality %}<span class="text-muted fw-normal">in {{ locality|title }}</span>{% endif %}
         </h1>
         <p class="text-secondary small mb-0">
-          Found <strong>{{ total_hits }}</strong> verified matches across all Lahore City Hub directories.
+          Found <strong>{{ total_hits }}</strong> verified match{{ total_hits|pluralize:"es" }} across Lahore City Hub.
         </p>
       </div>
-      <div class="col-12 col-lg-5 mt-3 mt-lg-0">
+      <div class="col-12 col-lg-7 mt-3 mt-lg-0">
         <!-- In-page Query Refinement Form -->
-        <form action="{% url 'core:search' %}" method="get" class="d-flex gap-2">
-          <input type="text" name="q" value="{{ query }}" class="form-control form-control-sm" placeholder="Refine search term..." aria-label="Search term">
-          <select name="locality" class="form-select form-select-sm" style="max-width: 170px;">
-            <option value="">All Localities</option>
-            {% for loc in GLOBAL_LOCALITIES %}
-              <option value="{{ loc.slug }}" {% if locality == loc.slug %}selected{% endif %}>{{ loc.name }}</option>
-            {% endfor %}
-          </select>
-          <button class="btn btn-sm btn-lch-primary px-3" type="submit">
-            <i class="bi bi-search"></i>
-          </button>
+        <form action="{% url 'core:search' %}" method="get" class="row g-2 align-items-center" role="search" aria-label="Refine search">
+          <div class="col-12 col-sm-4">
+            <input type="text"
+                   name="q"
+                   value="{{ query }}"
+                   class="form-control form-control-sm"
+                   placeholder="Search keywords..."
+                   aria-label="Search term">
+          </div>
+          <div class="col-6 col-sm-3">
+            <select name="category" class="form-select form-select-sm" aria-label="Filter by category">
+              <option value="all" {% if active_category == 'all' %}selected{% endif %}>All Categories</option>
+              <option value="places" {% if active_category == 'places' %}selected{% endif %}>Places</option>
+              <option value="restaurants" {% if active_category == 'restaurants' %}selected{% endif %}>Dining</option>
+              <option value="hospitals" {% if active_category == 'hospitals' %}selected{% endif %}>Hospitals</option>
+              <option value="education" {% if active_category == 'education' %}selected{% endif %}>Education</option>
+              <option value="jobs" {% if active_category == 'jobs' %}selected{% endif %}>Jobs</option>
+              <option value="businesses" {% if active_category == 'businesses' %}selected{% endif %}>Businesses</option>
+              <option value="events" {% if active_category == 'events' %}selected{% endif %}>Events</option>
+              <option value="updates" {% if active_category == 'updates' %}selected{% endif %}>City Updates</option>
+            </select>
+          </div>
+          <div class="col-6 col-sm-3">
+            <select name="locality" class="form-select form-select-sm" aria-label="Filter by locality">
+              <option value="">All Localities</option>
+              {% for loc in GLOBAL_LOCALITIES %}
+                <option value="{{ loc.slug }}" {% if locality == loc.slug %}selected{% endif %}>{{ loc.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12 col-sm-2">
+            <button class="btn btn-sm btn-lch-primary w-100 fw-semibold" type="submit">
+              <i class="bi bi-search me-1"></i>Search
+            </button>
+          </div>
         </form>
       </div>
     </div>
   </div>
 
   {% if total_hits > 0 %}
-    <!-- Category Tabs Navigation -->
+    <!-- Category Filter Tabs Navigation -->
     <ul class="nav nav-pills mb-4 gap-2 flex-wrap" id="searchResultsTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active rounded-pill px-3 py-1 btn-sm fw-semibold" id="all-tab" data-bs-toggle="pill" data-bs-target="#tab-all" type="button" role="tab">
-          All Hits <span class="badge bg-white text-dark ms-1">{{ total_hits }}</span>
-        </button>
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold {% if active_category == 'all' %}active bg-success text-white{% else %}bg-light text-dark{% endif %}"
+           href="?q={{ query }}&locality={{ locality }}&category=all">
+          All Hits <span class="badge {% if active_category == 'all' %}bg-white text-dark{% else %}bg-secondary text-white{% endif %} ms-1">{{ total_hits }}</span>
+        </a>
       </li>
-      {% if matched_places %}
-      <li class="nav-item" role="presentation">
-        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="places-tab" data-bs-toggle="pill" data-bs-target="#tab-places" type="button" role="tab">
-          Places <span class="badge bg-light text-muted ms-1">{{ matched_places|length }}</span>
-        </button>
-      </li>
-      {% endif %}
-      {% if matched_restaurants %}
-      <li class="nav-item" role="presentation">
-        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="restaurants-tab" data-bs-toggle="pill" data-bs-target="#tab-restaurants" type="button" role="tab">
-          Dining <span class="badge bg-light text-muted ms-1">{{ matched_restaurants|length }}</span>
-        </button>
+      {% if places_count > 0 or active_category == 'places' %}
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold {% if active_category == 'places' %}active bg-success text-white{% else %}bg-light text-dark{% endif %}"
+           href="?q={{ query }}&locality={{ locality }}&category=places">
+          Places <span class="badge {% if active_category == 'places' %}bg-white text-dark{% else %}bg-secondary text-white{% endif %} ms-1">{{ places_count }}</span>
+        </a>
       </li>
       {% endif %}
-      {% if matched_hospitals %}
-      <li class="nav-item" role="presentation">
-        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="hospitals-tab" data-bs-toggle="pill" data-bs-target="#tab-hospitals" type="button" role="tab">
-          Hospitals <span class="badge bg-light text-muted ms-1">{{ matched_hospitals|length }}</span>
-        </button>
+      {% if restaurants_count > 0 or active_category == 'restaurants' %}
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold {% if active_category == 'restaurants' %}active bg-success text-white{% else %}bg-light text-dark{% endif %}"
+           href="?q={{ query }}&locality={{ locality }}&category=restaurants">
+          Dining <span class="badge {% if active_category == 'restaurants' %}bg-white text-dark{% else %}bg-secondary text-white{% endif %} ms-1">{{ restaurants_count }}</span>
+        </a>
       </li>
       {% endif %}
-      {% if matched_jobs %}
-      <li class="nav-item" role="presentation">
-        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="jobs-tab" data-bs-toggle="pill" data-bs-target="#tab-jobs" type="button" role="tab">
-          Jobs <span class="badge bg-light text-muted ms-1">{{ matched_jobs|length }}</span>
-        </button>
+      {% if hospitals_count > 0 or active_category == 'hospitals' %}
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold {% if active_category == 'hospitals' %}active bg-success text-white{% else %}bg-light text-dark{% endif %}"
+           href="?q={{ query }}&locality={{ locality }}&category=hospitals">
+          Hospitals <span class="badge {% if active_category == 'hospitals' %}bg-white text-dark{% else %}bg-secondary text-white{% endif %} ms-1">{{ hospitals_count }}</span>
+        </a>
       </li>
       {% endif %}
-      {% if matched_education %}
-      <li class="nav-item" role="presentation">
-        <button class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold" id="education-tab" data-bs-toggle="pill" data-bs-target="#tab-education" type="button" role="tab">
-          Colleges & Unis <span class="badge bg-light text-muted ms-1">{{ matched_education|length }}</span>
-        </button>
+      {% if education_count > 0 or active_category == 'education' %}
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold {% if active_category == 'education' %}active bg-success text-white{% else %}bg-light text-dark{% endif %}"
+           href="?q={{ query }}&locality={{ locality }}&category=education">
+          Education <span class="badge {% if active_category == 'education' %}bg-white text-dark{% else %}bg-secondary text-white{% endif %} ms-1">{{ education_count }}</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if jobs_count > 0 or active_category == 'jobs' %}
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold {% if active_category == 'jobs' %}active bg-success text-white{% else %}bg-light text-dark{% endif %}"
+           href="?q={{ query }}&locality={{ locality }}&category=jobs">
+          Jobs <span class="badge {% if active_category == 'jobs' %}bg-white text-dark{% else %}bg-secondary text-white{% endif %} ms-1">{{ jobs_count }}</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if businesses_count > 0 or active_category == 'businesses' %}
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold {% if active_category == 'businesses' %}active bg-success text-white{% else %}bg-light text-dark{% endif %}"
+           href="?q={{ query }}&locality={{ locality }}&category=businesses">
+          Businesses <span class="badge {% if active_category == 'businesses' %}bg-white text-dark{% else %}bg-secondary text-white{% endif %} ms-1">{{ businesses_count }}</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if events_count > 0 or active_category == 'events' %}
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold {% if active_category == 'events' %}active bg-success text-white{% else %}bg-light text-dark{% endif %}"
+           href="?q={{ query }}&locality={{ locality }}&category=events">
+          Events <span class="badge {% if active_category == 'events' %}bg-white text-dark{% else %}bg-secondary text-white{% endif %} ms-1">{{ events_count }}</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if updates_count > 0 or active_category == 'updates' %}
+      <li class="nav-item">
+        <a class="nav-link rounded-pill px-3 py-1 btn-sm fw-semibold {% if active_category == 'updates' %}active bg-success text-white{% else %}bg-light text-dark{% endif %}"
+           href="?q={{ query }}&locality={{ locality }}&category=updates">
+          City Updates <span class="badge {% if active_category == 'updates' %}bg-white text-dark{% else %}bg-secondary text-white{% endif %} ms-1">{{ updates_count }}</span>
+        </a>
       </li>
       {% endif %}
     </ul>
 
-    <!-- Tab Panes -->
-    <div class="tab-content" id="searchResultsContent">
-      <!-- ALL RESULTS PANE -->
-      <div class="tab-pane fade show active" id="tab-all" role="tabpanel">
-        <div class="row g-4">
-          {% for item in matched_places %}
-            {% include 'components/_listing_card.html' with item=item %}
-          {% endfor %}
-          {% for item in matched_restaurants %}
-            {% include 'components/_listing_card.html' with item=item %}
-          {% endfor %}
-          {% for item in matched_hospitals %}
-            {% include 'components/_listing_card.html' with item=item %}
-          {% endfor %}
-          {% for job in matched_jobs %}
-            {% include 'components/_job_card.html' with job=job %}
-          {% endfor %}
-          {% for item in matched_education %}
-            {% include 'components/_listing_card.html' with item=item %}
-          {% endfor %}
-          {% for item in matched_businesses %}
-            {% include 'components/_listing_card.html' with item=item %}
-          {% endfor %}
-        </div>
-      </div>
-
-      <!-- PLACES ONLY PANE -->
-      {% if matched_places %}
-      <div class="tab-pane fade" id="tab-places" role="tabpanel">
-        <div class="row g-4">
-          {% for item in matched_places %}
-            {% include 'components/_listing_card.html' with item=item %}
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-
-      <!-- RESTAURANTS ONLY PANE -->
-      {% if matched_restaurants %}
-      <div class="tab-pane fade" id="tab-restaurants" role="tabpanel">
-        <div class="row g-4">
-          {% for item in matched_restaurants %}
-            {% include 'components/_listing_card.html' with item=item %}
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-
-      <!-- HOSPITALS ONLY PANE -->
-      {% if matched_hospitals %}
-      <div class="tab-pane fade" id="tab-hospitals" role="tabpanel">
-        <div class="row g-4">
-          {% for item in matched_hospitals %}
-            {% include 'components/_listing_card.html' with item=item %}
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-
-      <!-- JOBS ONLY PANE -->
-      {% if matched_jobs %}
-      <div class="tab-pane fade" id="tab-jobs" role="tabpanel">
-        <div class="row g-3">
-          {% for job in matched_jobs %}
-            {% include 'components/_job_card.html' with job=job %}
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-
-      <!-- EDUCATION ONLY PANE -->
-      {% if matched_education %}
-      <div class="tab-pane fade" id="tab-education" role="tabpanel">
-        <div class="row g-4">
-          {% for item in matched_education %}
-            {% include 'components/_listing_card.html' with item=item %}
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
+    <!-- Results Grid -->
+    <div class="row g-4">
+      {% for item in page_obj %}
+        {% if item.item_type == 'job' %}
+          {% include 'components/_job_card.html' with job=item %}
+        {% elif item.item_type == 'event' %}
+          {% include 'components/_event_card.html' with event=item %}
+        {% elif item.item_type == 'update' %}
+          {% include 'components/_update_card.html' with update=item %}
+        {% else %}
+          {% include 'components/_listing_card.html' with item=item %}
+        {% endif %}
+      {% endfor %}
     </div>
+
+    <!-- Pagination Controls -->
+    {% if is_paginated %}
+    <nav aria-label="Search results pagination" class="mt-5">
+      <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link text-success" href="?page={{ page_obj.previous_page_number }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">&laquo; Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+          <li class="page-item active"><span class="page-link bg-success border-success text-white">{{ num }}</span></li>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <li class="page-item">
+            <a class="page-link text-dark" href="?page={{ num }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">{{ num }}</a>
+          </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link text-success" href="?page={{ page_obj.next_page_number }}{% if pagination_querystring %}&{{ pagination_querystring }}{% endif %}">Next &raquo;</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+        {% endif %}
+      </ul>
+      <p class="text-center text-muted small mt-2">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </p>
+    </nav>
+    {% endif %}
+
   {% else %}
-    <!-- Empty State -->
-    {% include 'components/_empty_state.html' with title="No results found for '"|add:query|add:"'" message="Check your spelling, try broader keywords such as 'food', 'hospital', or remove specific locality constraints." reset_url="?" %}
+    <!-- Clear No-Results State -->
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
+      <div class="mb-3">
+        <i class="bi bi-search text-muted" style="font-size: 3.5rem;"></i>
+      </div>
+      <h2 class="h4 fw-bold text-dark mb-2">No results found{% if query %} for '<span class="text-success">{{ query }}</span>'{% endif %}</h2>
+      <p class="text-secondary mx-auto mb-4" style="max-width: 520px;">
+        {% if query %}
+          We could not find any active verified listings matching "<strong>{{ query }}</strong>"
+          {% if active_category != 'all' %}in <strong>{{ active_category|title }}</strong>{% endif %}
+          {% if locality %}around <strong>{{ locality|title }}</strong>{% endif %}.
+        {% else %}
+          No active verified listings matched your current filter criteria.
+        {% endif %}
+        Try checking your spelling, using broader search keywords (such as "hospital", "food", "tech"), or clearing the locality filter.
+      </p>
+      <div class="d-flex justify-content-center gap-2">
+        <a href="{% url 'core:search' %}" class="btn btn-outline-success btn-sm px-3 fw-semibold">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset All Filters
+        </a>
+        <a href="{% url 'core:home' %}" class="btn btn-success btn-sm px-3 fw-semibold">
+          <i class="bi bi-house-door me-1"></i>Back to Home
+        </a>
+      </div>
+    </div>
   {% endif %}
 </div>
 {% endblock %}

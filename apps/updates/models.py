@@ -52,6 +52,12 @@ class CityUpdate(TimeStampedModel, SEOModel):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        if self.official_source_url:
+            return self.official_source_url
+        from django.urls import reverse
+        return reverse('updates:list')
+
     @property
     def severity_label(self):
         return self.get_severity_display()
