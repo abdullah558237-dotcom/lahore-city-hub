@@ -5,18 +5,35 @@ from .models import EventCategory, EventVenue, Event
 
 @admin.register(EventCategory)
 class EventCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'icon_class', 'is_active', 'created_at')
+    list_display = ('name', 'slug', 'icon_class', 'is_active', 'events_count', 'created_at')
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at')
+    actions = ['make_active', 'make_inactive']
+
+    def events_count(self, obj):
+        return obj.events.count()
+    events_count.short_description = 'Events'
+
+    def make_active(self, request, queryset):
+        queryset.update(is_active=True)
+    make_active.short_description = "Mark selected categories as Active"
+
+    def make_inactive(self, request, queryset):
+        queryset.update(is_active=False)
+    make_inactive.short_description = "Mark selected categories as Inactive"
 
 
 @admin.register(EventVenue)
 class EventVenueAdmin(admin.ModelAdmin):
-    list_display = ('name', 'locality', 'capacity', 'address')
-    list_filter = ('locality',)
+    list_display = ('name', 'locality', 'capacity', 'address', 'created_at')
+    list_filter = ('locality__zone', 'locality', 'created_at')
     search_fields = ('name', 'address', 'locality__name')
     prepopulated_fields = {'slug': ('name',)}
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at')
 
 
 @admin.register(Event)
@@ -28,8 +45,10 @@ class EventAdmin(admin.ModelAdmin):
         'start_datetime',
         'end_datetime',
         'ticket_policy',
+        'verification_status',
         'is_featured',
         'is_active',
+        'last_verified_at',
     )
     list_filter = (
         'is_active',
@@ -38,6 +57,7 @@ class EventAdmin(admin.ModelAdmin):
         'ticket_policy',
         'start_datetime',
         'verification_status',
+        'venue__locality',
     )
     search_fields = (
         'title',
@@ -45,9 +65,12 @@ class EventAdmin(admin.ModelAdmin):
         'organizer_name',
         'venue__name',
         'venue__address',
+        'source_url',
+        'ticket_or_registration_url',
     )
+    date_hierarchy = 'start_datetime'
     prepopulated_fields = {'slug': ('title',)}
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at', 'last_verified_at', 'verified_by')
     actions = [
         'publish_events',
         'unpublish_events',
@@ -85,6 +108,12 @@ class EventAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+    def has_delete_permission(self, request, obj=None):
+        """Only administrators can delete calendar events."""
+        if request.user.is_superuser or getattr(request.user, 'role', '') == 'admin':
+            return True
+        return False
 
     def publish_events(self, request, queryset):
         count = queryset.update(is_active=True)

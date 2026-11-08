@@ -6,23 +6,36 @@ from .models import JobCategory, Employer, JobListing
 
 @admin.register(JobCategory)
 class JobCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'icon_class', 'is_active', 'jobs_count')
-    list_filter = ('is_active',)
+    list_display = ('name', 'slug', 'icon_class', 'is_active', 'jobs_count', 'created_at')
+    list_filter = ('is_active', 'created_at')
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at')
+    actions = ['make_active', 'make_inactive']
 
     def jobs_count(self, obj):
         return obj.jobs.count()
     jobs_count.short_description = 'Total Jobs'
 
+    def make_active(self, request, queryset):
+        queryset.update(is_active=True)
+    make_active.short_description = "Mark selected categories as Active"
+
+    def make_inactive(self, request, queryset):
+        queryset.update(is_active=False)
+    make_inactive.short_description = "Mark selected categories as Inactive"
+
 
 @admin.register(Employer)
 class EmployerAdmin(admin.ModelAdmin):
     list_display = ('name', 'locality', 'website', 'is_verified', 'jobs_count', 'created_at')
-    list_filter = ('is_verified', 'locality__zone', 'locality')
+    list_filter = ('is_verified', 'locality__zone', 'locality', 'created_at')
     search_fields = ('name', 'address', 'website')
     prepopulated_fields = {'slug': ('name',)}
-    actions = ['mark_as_verified']
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at')
+    actions = ['mark_as_verified', 'unmark_verified']
 
     def jobs_count(self, obj):
         return obj.jobs.count()
@@ -33,6 +46,12 @@ class EmployerAdmin(admin.ModelAdmin):
         if request:
             self.message_user(request, f"{updated} employer(s) successfully marked as verified.")
     mark_as_verified.short_description = "Mark selected employers as Verified"
+
+    def unmark_verified(self, request, queryset):
+        updated = queryset.update(is_verified=False)
+        if request:
+            self.message_user(request, f"{updated} employer(s) unmarked from verified.")
+    unmark_verified.short_description = "Remove verified status from selected employers"
 
 
 @admin.register(JobListing)
@@ -48,7 +67,7 @@ class JobListingAdmin(admin.ModelAdmin):
         'verification_status',
         'is_featured',
         'is_active',
-        'created_at'
+        'created_at',
     )
     list_filter = (
         'is_active',
@@ -57,22 +76,29 @@ class JobListingAdmin(admin.ModelAdmin):
         'employment_type',
         'experience_level',
         'category',
-        'locality__zone'
+        'locality__zone',
+        'created_at',
+        'deadline',
     )
     search_fields = (
         'title',
         'employer__name',
         'description',
         'requirements',
-        'qualifications'
+        'qualifications',
+        'source_url',
     )
+    date_hierarchy = 'created_at'
     prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ('created_at', 'updated_at')
     actions = [
         'mark_verified',
         'mark_flagged',
         'publish_jobs',
         'unpublish_jobs',
-        'extend_deadline_30_days'
+        'mark_as_featured',
+        'unmark_featured',
+        'extend_deadline_30_days',
     ]
 
     fieldsets = (
@@ -121,6 +147,12 @@ class JobListingAdmin(admin.ModelAdmin):
         return f"Active ({days}d left)"
     deadline_status.short_description = 'Deadline Status'
 
+    def has_delete_permission(self, request, obj=None):
+        """Only administrators can delete employment vacancies."""
+        if request.user.is_superuser or getattr(request.user, 'role', '') == 'admin':
+            return True
+        return False
+
     def mark_verified(self, request, queryset):
         updated = queryset.update(verification_status='verified')
         if request:
@@ -137,13 +169,25 @@ class JobListingAdmin(admin.ModelAdmin):
         updated = queryset.update(is_active=True)
         if request:
             self.message_user(request, f"{updated} job(s) published.")
-    publish_jobs.short_description = "Publish selected jobs"
+    publish_jobs.short_description = "Publish selected jobs (Set Active)"
 
     def unpublish_jobs(self, request, queryset):
         updated = queryset.update(is_active=False)
         if request:
             self.message_user(request, f"{updated} job(s) unpublished.")
-    unpublish_jobs.short_description = "Unpublish selected jobs"
+    unpublish_jobs.short_description = "Unpublish selected jobs (Hide from public)"
+
+    def mark_as_featured(self, request, queryset):
+        updated = queryset.update(is_featured=True)
+        if request:
+            self.message_user(request, f"{updated} job(s) marked as featured.")
+    mark_as_featured.short_description = "Mark selected jobs as Featured"
+
+    def unmark_featured(self, request, queryset):
+        updated = queryset.update(is_featured=False)
+        if request:
+            self.message_user(request, f"{updated} job(s) removed from featured.")
+    unmark_featured.short_description = "Remove from Featured Spotlight"
 
     def extend_deadline_30_days(self, request, queryset):
         count = 0

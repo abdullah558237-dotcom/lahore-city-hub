@@ -12,14 +12,25 @@ class PlaceGalleryImageInline(admin.TabularInline):
 
 @admin.register(PlaceCategory)
 class PlaceCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'icon_class', 'is_active', 'places_count')
-    list_filter = ('is_active',)
+    list_display = ('name', 'slug', 'icon_class', 'is_active', 'places_count', 'created_at')
+    list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at')
+    actions = ['make_active', 'make_inactive']
 
     def places_count(self, obj):
         return obj.places.count()
     places_count.short_description = 'Places'
+
+    def make_active(self, request, queryset):
+        queryset.update(is_active=True)
+    make_active.short_description = "Mark selected categories as Active"
+
+    def make_inactive(self, request, queryset):
+        queryset.update(is_active=False)
+    make_inactive.short_description = "Mark selected categories as Inactive"
 
 
 @admin.register(Place)
@@ -31,8 +42,9 @@ class PlaceAdmin(admin.ModelAdmin):
         'verification_status',
         'is_featured',
         'is_active',
+        'last_verified_at',
         'view_count',
-        'created_at'
+        'created_at',
     )
     list_filter = (
         'is_active',
@@ -40,7 +52,9 @@ class PlaceAdmin(admin.ModelAdmin):
         'verification_status',
         'category',
         'locality__zone',
-        'wheelchair_accessible'
+        'locality',
+        'wheelchair_accessible',
+        'created_at',
     )
     search_fields = (
         'title',
@@ -49,10 +63,12 @@ class PlaceAdmin(admin.ModelAdmin):
         'description',
         'address',
         'architectural_era',
-        'landmark'
+        'landmark',
+        'source_url',
     )
+    date_hierarchy = 'created_at'
     prepopulated_fields = {'slug': ('title',)}
-    autocomplete_fields = ()
+    readonly_fields = ('created_at', 'updated_at', 'last_verified_at', 'verified_by', 'view_count')
     inlines = [PlaceGalleryImageInline]
     actions = ['make_verified', 'make_featured', 'unfeature', 'publish', 'unpublish']
 
@@ -95,7 +111,7 @@ class PlaceAdmin(admin.ModelAdmin):
         ('Media & Imagery', {
             'fields': ('primary_image',)
         }),
-        ('Editorial Verification', {
+        ('Editorial Verification & Provenance', {
             'fields': (
                 'verification_status',
                 'verified_by',
@@ -107,16 +123,22 @@ class PlaceAdmin(admin.ModelAdmin):
         ('Publishing Controls', {
             'fields': ('is_active', 'is_featured', 'featured_until')
         }),
-        ('SEO Metadata', {
-            'fields': ('meta_title', 'meta_description', 'canonical_url', 'og_image'),
-            'classes': ('collapse',)
+        ('Traffic & SEO Metadata', {
+            'fields': ('view_count', 'meta_title', 'meta_description', 'canonical_url', 'og_image'),
+            'classes': ('collapse',),
         }),
     )
+
+    def has_delete_permission(self, request, obj=None):
+        """Only administrators can delete verified heritage & tourist listings."""
+        if request.user.is_superuser or getattr(request.user, 'role', '') == 'admin':
+            return True
+        return False
 
     def make_verified(self, request, queryset):
         rows = queryset.update(
             verification_status='verified',
-            verified_by=request.user,
+            verified_by=request.user if request.user.is_authenticated else None,
             last_verified_at=timezone.now()
         )
         self.message_user(request, f"{rows} place(s) marked as officially verified.")
@@ -135,7 +157,7 @@ class PlaceAdmin(admin.ModelAdmin):
     def publish(self, request, queryset):
         rows = queryset.update(is_active=True)
         self.message_user(request, f"{rows} place(s) published.")
-    publish.short_description = "Publish selected places"
+    publish.short_description = "Publish selected places (Set Active)"
 
     def unpublish(self, request, queryset):
         rows = queryset.update(is_active=False)

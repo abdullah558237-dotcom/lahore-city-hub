@@ -3,6 +3,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Custom Admin Site Branding
+admin.site.site_header = "Lahore City Hub Administration"
+admin.site.site_title = "Lahore City Hub Editorial Portal"
+admin.site.index_title = "Verified Content & City Directory Management"
+
 urlpatterns = [
     # Admin Interface
     path('admin/', admin.site.urls),

@@ -16,6 +16,17 @@ class TransitModeAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'slug', 'description')
     prepopulated_fields = {'slug': ('name',)}
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at')
+    actions = ['make_active', 'make_inactive']
+
+    def make_active(self, request, queryset):
+        queryset.update(is_active=True)
+    make_active.short_description = "Mark selected transit modes as Active"
+
+    def make_inactive(self, request, queryset):
+        queryset.update(is_active=False)
+    make_inactive.short_description = "Mark selected transit modes as Inactive"
 
 
 @admin.register(TransitRoute)
@@ -32,10 +43,13 @@ class TransitRouteAdmin(admin.ModelAdmin):
         'is_featured',
         'is_active',
         'last_updated_date',
+        'created_at',
     )
-    list_filter = ('mode', 'is_active', 'is_featured')
-    search_fields = ('route_name', 'route_code', 'origin_station', 'destination_station', 'operator')
+    list_filter = ('mode', 'is_active', 'is_featured', 'created_at')
+    search_fields = ('route_name', 'route_code', 'origin_station', 'destination_station', 'operator', 'source_url')
+    date_hierarchy = 'created_at'
     prepopulated_fields = {'slug': ('route_code', 'route_name')}
+    readonly_fields = ('created_at', 'updated_at')
     inlines = [TransitStationInline]
     actions = ['make_active', 'make_inactive', 'mark_as_featured', 'unmark_featured']
 
@@ -52,7 +66,17 @@ class TransitRouteAdmin(admin.ModelAdmin):
         ('Provenance & Governance', {
             'fields': ('source_url', 'last_updated_date', 'is_active', 'is_featured')
         }),
+        ('Metadata', {
+            'classes': ('collapse',),
+            'fields': ('created_at', 'updated_at')
+        }),
     )
+
+    def has_delete_permission(self, request, obj=None):
+        """Only administrators can delete public transit routes."""
+        if request.user.is_superuser or getattr(request.user, 'role', '') == 'admin':
+            return True
+        return False
 
     def make_active(self, request, queryset):
         count = queryset.update(is_active=True)
@@ -91,6 +115,7 @@ class TransitStationAdmin(admin.ModelAdmin):
         'is_terminal',
         'is_underground',
         'has_wheelchair_access',
+        'created_at',
     )
     list_filter = (
         'route__mode',
@@ -100,8 +125,11 @@ class TransitStationAdmin(admin.ModelAdmin):
         'is_underground',
         'has_wheelchair_access',
         'has_parking',
+        'created_at',
     )
     search_fields = ('station_name', 'urdu_name', 'nearby_landmarks', 'interchange_details')
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at')
     prepopulated_fields = {'slug': ('station_name',)}
     ordering = ('route', 'station_number')
 
@@ -116,11 +144,20 @@ class TransitGuideAdmin(admin.ModelAdmin):
         'is_featured',
         'display_order',
         'last_verified_date',
+        'created_at',
     )
-    list_filter = ('category', 'is_published', 'is_featured')
-    search_fields = ('title', 'summary', 'content')
+    list_filter = ('category', 'is_published', 'is_featured', 'created_at')
+    search_fields = ('title', 'summary', 'content', 'source_url')
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at')
     prepopulated_fields = {'slug': ('title',)}
     actions = ['publish_guides', 'unpublish_guides', 'mark_featured', 'unmark_featured']
+
+    def has_delete_permission(self, request, obj=None):
+        """Only administrators can delete transit guides."""
+        if request.user.is_superuser or getattr(request.user, 'role', '') == 'admin':
+            return True
+        return False
 
     def publish_guides(self, request, queryset):
         count = queryset.update(is_published=True)

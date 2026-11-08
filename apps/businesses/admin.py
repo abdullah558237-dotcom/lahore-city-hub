@@ -5,10 +5,25 @@ from .models import BusinessCategory, Business, BusinessClaim, BusinessEditReque
 
 @admin.register(BusinessCategory)
 class BusinessCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'icon_class', 'is_active', 'created_at')
+    list_display = ('name', 'slug', 'icon_class', 'is_active', 'businesses_count', 'created_at')
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at')
+    actions = ['make_active', 'make_inactive']
+
+    def businesses_count(self, obj):
+        return obj.businesses.count()
+    businesses_count.short_description = 'Businesses'
+
+    def make_active(self, request, queryset):
+        queryset.update(is_active=True)
+    make_active.short_description = "Mark selected categories as Active"
+
+    def make_inactive(self, request, queryset):
+        queryset.update(is_active=False)
+    make_inactive.short_description = "Mark selected categories as Inactive"
 
 
 @admin.register(Business)
@@ -22,14 +37,18 @@ class BusinessAdmin(admin.ModelAdmin):
         'verification_status',
         'is_featured',
         'is_active',
+        'last_verified_at',
         'view_count',
+        'created_at',
     )
     list_filter = (
         'is_active',
         'verification_status',
         'is_featured',
         'category',
+        'locality__zone',
         'locality',
+        'created_at',
     )
     search_fields = (
         'title',
@@ -39,9 +58,11 @@ class BusinessAdmin(admin.ModelAdmin):
         'address',
         'registration_number',
         'phone_number',
+        'source_url',
     )
+    date_hierarchy = 'created_at'
     prepopulated_fields = {'slug': ('title',)}
-    readonly_fields = ('created_at', 'updated_at', 'view_count')
+    readonly_fields = ('created_at', 'updated_at', 'last_verified_at', 'verified_by', 'view_count')
     actions = [
         'approve_and_publish',
         'unpublish',
@@ -82,6 +103,12 @@ class BusinessAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+    def has_delete_permission(self, request, obj=None):
+        """Only administrators can delete registered local businesses."""
+        if request.user.is_superuser or getattr(request.user, 'role', '') == 'admin':
+            return True
+        return False
 
     def approve_and_publish(self, request, queryset):
         count = 0
@@ -131,6 +158,7 @@ class BusinessEditRequestAdmin(admin.ModelAdmin):
     list_display = ('business', 'requested_by', 'title', 'status', 'created_at', 'reviewed_by', 'reviewed_at')
     list_filter = ('status', 'created_at')
     search_fields = ('business__title', 'title', 'requested_by__email', 'address')
+    date_hierarchy = 'created_at'
     readonly_fields = ('created_at', 'updated_at', 'reviewed_at', 'reviewed_by')
     actions = ['approve_and_merge', 'reject_request']
 
@@ -177,6 +205,7 @@ class BusinessReportAdmin(admin.ModelAdmin):
     list_display = ('business', 'reason', 'reporter_name', 'reporter_email', 'status', 'created_at', 'resolved_by', 'resolved_at')
     list_filter = ('status', 'reason', 'created_at')
     search_fields = ('business__title', 'reporter_name', 'reporter_email', 'details')
+    date_hierarchy = 'created_at'
     readonly_fields = ('created_at', 'updated_at', 'resolved_at', 'resolved_by')
     actions = ['mark_resolved', 'dismiss_report']
 
@@ -202,6 +231,7 @@ class BusinessClaimAdmin(admin.ModelAdmin):
     list_display = ('business', 'claimant', 'claimant_role', 'official_email', 'status', 'created_at', 'reviewed_by')
     list_filter = ('status', 'created_at')
     search_fields = ('business__title', 'claimant__email', 'official_email', 'contact_phone')
+    date_hierarchy = 'created_at'
     readonly_fields = ('created_at', 'updated_at', 'reviewed_at', 'reviewed_by')
     actions = ['approve_claim', 'reject_claim']
 
