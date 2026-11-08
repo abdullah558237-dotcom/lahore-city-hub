@@ -1,6 +1,7 @@
 class SecurityHeadersMiddleware:
     """
     Appends defense-in-depth HTTP security headers to all outgoing responses:
+    - X-XSS-Protection: 1; mode=block
     - Referrer-Policy: strict-origin-when-cross-origin
     - Permissions-Policy: camera=(), microphone=()
     """
@@ -9,6 +10,8 @@ class SecurityHeadersMiddleware:
 
     def __call__(self, request):
         response = self.get_response(request)
+        if not response.has_header('X-XSS-Protection'):
+            response['X-XSS-Protection'] = '1; mode=block'
         if not response.has_header('Referrer-Policy'):
             response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         if not response.has_header('Permissions-Policy'):
