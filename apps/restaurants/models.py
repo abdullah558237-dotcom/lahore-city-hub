@@ -8,9 +8,9 @@ from apps.core.models import ListingBase, TimeStampedModel
 
 def validate_image_extension(value):
     ext = os.path.splitext(value.name)[1].lower()
-    valid_extensions = ['.jpg', '.jpeg', '.png', '.webp', '.svg']
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
     if ext not in valid_extensions:
-        raise ValidationError(f'Unsupported image format "{ext}". Allowed formats: JPG, PNG, WEBP, SVG.')
+        raise ValidationError(f'Unsupported image format "{ext}". Allowed formats: JPG, PNG, WEBP.')
 
 
 class Cuisine(TimeStampedModel):

@@ -10,9 +10,9 @@
 {
   "@context": "https://schema.org",
   "@type": "TouristAttraction",
-  "name": "{{ place.title }}",
+  "name": "{{ place.title|escapejs }}",
   {% if place.title_ur %}
-  "alternateName": "{{ place.title_ur }}",
+  "alternateName": "{{ place.title_ur|escapejs }}",
   {% endif %}
   "description": "{{ place.summary|escapejs }}",
   "image": "{% if place.primary_image %}{{ request.scheme }}://{{ request.get_host }}{{ place.primary_image.url }}{% else %}https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?auto=format&fit=crop&w=1200&q=80{% endif %}",

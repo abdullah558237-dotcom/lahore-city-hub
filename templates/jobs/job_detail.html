@@ -19,7 +19,7 @@
   "hiringOrganization": {
     "@type": "Organization",
     "name": "{{ job.employer.name|escapejs }}",
-    "sameAs": "{{ job.employer.website|default:'' }}"
+    "sameAs": "{{ job.employer.website|default:''|escapejs }}"
   },
   "jobLocation": {
     "@type": "Place",

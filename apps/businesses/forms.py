@@ -290,6 +290,18 @@ class BusinessClaimForm(forms.ModelForm):
             'proof_document': 'Proof Document (Visiting Card, Utility Bill, SECP Certificate)',
         }
 
+    def clean_proof_document(self):
+        doc = self.cleaned_data.get('proof_document')
+        if doc and hasattr(doc, 'name'):
+            if hasattr(doc, 'size') and doc.size > 10 * 1024 * 1024:
+                raise ValidationError("Proof document file size cannot exceed 10MB.")
+            ext = os.path.splitext(doc.name)[1].lower()
+            valid_exts = ['.pdf', '.jpg', '.jpeg', '.png', '.webp']
+            if ext not in valid_exts:
+                raise ValidationError(f"Unsupported file format '{ext}'. Allowed document formats: PDF, JPG, PNG, WEBP.")
+        return doc
+
+
 
 class BusinessPromotionRequestForm(forms.ModelForm):
     """

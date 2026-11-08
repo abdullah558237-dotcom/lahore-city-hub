@@ -9,12 +9,12 @@
 {
   "@context": "https://schema.org",
   "@type": "TouristAttraction",
-  "name": "{{ item.title }}",
-  "description": "{{ item.summary }}",
+  "name": "{{ item.title|escapejs }}",
+  "description": "{{ item.summary|escapejs }}",
   "image": "{{ item.image }}",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "{{ item.address }}",
+    "streetAddress": "{{ item.address|escapejs }}",
     "addressLocality": "Lahore",
     "addressRegion": "Punjab",
     "addressCountry": "PK"

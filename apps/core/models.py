@@ -1,7 +1,18 @@
+import os
 from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
 from django.core.exceptions import ValidationError
+
+
+def validate_listing_image(value):
+    if hasattr(value, 'size') and value.size > 5 * 1024 * 1024:
+        raise ValidationError('Image file size cannot exceed 5MB.')
+    ext = os.path.splitext(value.name)[1].lower()
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+    if ext not in valid_extensions:
+        raise ValidationError(f'Unsupported image format "{ext}". Allowed formats: JPG, PNG, WEBP.')
+
 
 class TimeStampedModel(models.Model):
     """Abstract base model tracking creation and modification timestamps."""
@@ -146,7 +157,7 @@ class SEOModel(models.Model):
     meta_title = models.CharField(max_length=80, blank=True)
     meta_description = models.CharField(max_length=160, blank=True)
     canonical_url = models.URLField(max_length=500, blank=True)
-    og_image = models.ImageField(upload_to='seo/', blank=True, null=True)
+    og_image = models.ImageField(upload_to='seo/', blank=True, null=True, validators=[validate_listing_image])
 
     class Meta:
         abstract = True
@@ -159,7 +170,7 @@ class ListingBase(TimeStampedModel, SluggableModel, VerifiableModel, Contactable
     """
     summary = models.CharField(max_length=350, verbose_name="Short Summary")
     description = models.TextField(verbose_name="Full Editorial Description")
-    primary_image = models.ImageField(upload_to='listings/banners/', blank=True, null=True)
+    primary_image = models.ImageField(upload_to='listings/banners/', blank=True, null=True, validators=[validate_listing_image])
     is_active = models.BooleanField(default=True, db_index=True)
     is_featured = models.BooleanField(default=False, db_index=True)
     featured_until = models.DateTimeField(null=True, blank=True)

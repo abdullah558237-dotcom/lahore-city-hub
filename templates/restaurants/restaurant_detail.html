@@ -22,8 +22,8 @@
     "addressRegion": "Punjab",
     "addressCountry": "PK"
   }{% if restaurant.phone_number %},
-  "telephone": "{{ restaurant.phone_number }}"{% endif %}{% if restaurant.website %},
-  "url": "{{ restaurant.website }}"{% endif %}{% if restaurant.latitude and restaurant.longitude %},
+  "telephone": "{{ restaurant.phone_number|escapejs }}"{% endif %}{% if restaurant.website %},
+  "url": "{{ restaurant.website|escapejs }}"{% endif %}{% if restaurant.latitude and restaurant.longitude %},
   "geo": {
     "@type": "GeoCoordinates",
     "latitude": {{ restaurant.latitude }},

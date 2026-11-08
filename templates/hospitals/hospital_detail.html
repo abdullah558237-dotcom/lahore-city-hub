@@ -20,8 +20,8 @@
     "addressRegion": "Punjab",
     "addressCountry": "PK"
   }{% if hospital.phone_number %},
-  "telephone": "{{ hospital.phone_number }}"{% endif %}{% if hospital.website %},
-  "url": "{{ hospital.website }}"{% endif %}{% if hospital.latitude and hospital.longitude %},
+  "telephone": "{{ hospital.phone_number|escapejs }}"{% endif %}{% if hospital.website %},
+  "url": "{{ hospital.website|escapejs }}"{% endif %}{% if hospital.latitude and hospital.longitude %},
   "geo": {
     "@type": "GeoCoordinates",
     "latitude": {{ hospital.latitude }},

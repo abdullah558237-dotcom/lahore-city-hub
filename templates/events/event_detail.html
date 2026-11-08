@@ -34,7 +34,7 @@
   "organizer": {
     "@type": "Organization",
     "name": "{{ event.organizer_name|escapejs }}"{% if event.source_url %},
-    "url": "{{ event.source_url }}"{% endif %}
+    "url": "{{ event.source_url|escapejs }}"{% endif %}
   }{% if event.ticket_policy == 'free' %},
   "offers": {
     "@type": "Offer",

@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.contrib import messages
 from django.utils import timezone
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from apps.places.models import Place
 from apps.jobs.models import JobListing
@@ -146,15 +148,23 @@ def about_view(request):
 
 
 def contact_view(request):
-    """Civic directory contact details and feedback form."""
+    """Civic directory contact details and feedback form with RFC email and length validation."""
     if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        email = request.POST.get('email', '').strip()
-        subject = request.POST.get('subject', '').strip()
-        message = request.POST.get('message', '').strip()
+        name = request.POST.get('name', '')[:100].strip()
+        email = request.POST.get('email', '')[:254].strip().lower()
+        subject = request.POST.get('subject', '')[:150].strip()
+        message = request.POST.get('message', '')[:3000].strip()
 
-        if name and email and message:
+        is_valid_email = True
+        try:
+            validate_email(email)
+        except ValidationError:
+            is_valid_email = False
+
+        if name and email and message and is_valid_email:
             messages.success(request, f"Thank you, {name}! Your message regarding '{subject}' has been received by our Lahore editorial team.")
+        elif not is_valid_email and email:
+            messages.error(request, "Please enter a valid email address.")
         else:
             messages.error(request, "Please fill in all required fields to submit your inquiry.")
 

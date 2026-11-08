@@ -20,9 +20,9 @@
     "addressRegion": "Punjab",
     "addressCountry": "PK"
   }{% if business.phone_number %},
-  "telephone": "{{ business.phone_number }}"{% endif %}{% if business.email %},
-  "email": "{{ business.email }}"{% endif %}{% if business.website %},
-  "url": "{{ business.website }}"{% endif %}{% if business.operating_hours %},
+  "telephone": "{{ business.phone_number|escapejs }}"{% endif %}{% if business.email %},
+  "email": "{{ business.email|escapejs }}"{% endif %}{% if business.website %},
+  "url": "{{ business.website|escapejs }}"{% endif %}{% if business.operating_hours %},
   "openingHours": "{{ business.operating_hours|escapejs }}"{% endif %}{% if business.latitude and business.longitude %},
   "geo": {
     "@type": "GeoCoordinates",

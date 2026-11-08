@@ -374,7 +374,7 @@ class BusinessDirectorySecurityAndFeatureTests(TestCase):
 
         response_bmp = self.client.post(url, file_post_bmp)
         self.assertEqual(response_bmp.status_code, 200)
-        self.assertFormError(response_bmp, 'form', 'primary_image', 'Unsupported image format ".bmp". Allowed formats: JPG, PNG, WEBP, SVG.')
+        self.assertFormError(response_bmp, 'form', 'primary_image', 'Unsupported image format ".bmp". Allowed formats: JPG, PNG, WEBP.')
 
     # =========================================================================
     # 4. OWNER DASHBOARD & RECORD ISOLATION

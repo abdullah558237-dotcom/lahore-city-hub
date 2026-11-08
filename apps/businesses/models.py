@@ -9,9 +9,18 @@ from apps.core.models import ListingBase, TimeStampedModel
 
 def validate_image_extension(value):
     ext = os.path.splitext(value.name)[1].lower()
-    valid_extensions = ['.jpg', '.jpeg', '.png', '.webp', '.svg']
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
     if ext not in valid_extensions:
-        raise ValidationError(f'Unsupported image format "{ext}". Allowed formats: JPG, PNG, WEBP, SVG.')
+        raise ValidationError(f'Unsupported image format "{ext}". Allowed formats: JPG, PNG, WEBP.')
+
+
+def validate_proof_document(value):
+    if hasattr(value, 'size') and value.size > 10 * 1024 * 1024:
+        raise ValidationError('Proof document file size cannot exceed 10MB.')
+    ext = os.path.splitext(value.name)[1].lower()
+    valid_extensions = ['.pdf', '.jpg', '.jpeg', '.png', '.webp']
+    if ext not in valid_extensions:
+        raise ValidationError(f'Unsupported file format "{ext}". Allowed document formats: PDF, JPG, PNG, WEBP.')
 
 
 class BusinessCategory(TimeStampedModel):
@@ -127,7 +136,12 @@ class BusinessClaim(TimeStampedModel):
     claimant_role = models.CharField(max_length=100, verbose_name="Role with Entity")
     official_email = models.EmailField()
     contact_phone = models.CharField(max_length=35)
-    proof_document = models.FileField(upload_to='claims/proofs/', blank=True, null=True)
+    proof_document = models.FileField(
+        upload_to='claims/proofs/',
+        blank=True,
+        null=True,
+        validators=[validate_proof_document]
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
     admin_notes = models.TextField(blank=True)
     reviewed_by = models.ForeignKey(

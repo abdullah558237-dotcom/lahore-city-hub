@@ -42,7 +42,13 @@ sys.path.insert(0, str(BASE_DIR / 'apps'))
 # Core Security
 SECRET_KEY = config('DJANGO_SECRET_KEY', default='django-insecure-lahore-city-hub-vibe-core-2026-key-development')
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='127.0.0.1,localhost,*', cast=Csv())
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='127.0.0.1,localhost,0.0.0.0', cast=Csv())
+
+# Baseline Security Headers & Clickjacking Protection
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 # Custom User Model (Mandated by Architecture before first migration)
 AUTH_USER_MODEL = 'accounts.CustomUser'
@@ -86,6 +92,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.core.middleware.SecurityHeadersMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -200,3 +207,10 @@ LOGGING = {
         },
     },
 }
+
+# Cookie & CSRF Configuration for Browser Compatibility
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
+

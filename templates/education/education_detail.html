@@ -20,8 +20,8 @@
     "addressRegion": "Punjab",
     "addressCountry": "PK"
   }{% if institution.phone_number %},
-  "telephone": "{{ institution.phone_number }}"{% endif %}{% if institution.website %},
-  "url": "{{ institution.website }}"{% endif %}{% if institution.latitude and institution.longitude %},
+  "telephone": "{{ institution.phone_number|escapejs }}"{% endif %}{% if institution.website %},
+  "url": "{{ institution.website|escapejs }}"{% endif %}{% if institution.latitude and institution.longitude %},
   "geo": {
     "@type": "GeoCoordinates",
     "latitude": {{ institution.latitude }},
