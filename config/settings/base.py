@@ -227,3 +227,6 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
 
+# Search Engine Console Verification
+GOOGLE_SITE_VERIFICATION = config('GOOGLE_SITE_VERIFICATION', default='')
+

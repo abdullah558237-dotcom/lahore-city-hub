@@ -34,6 +34,11 @@
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="{% static 'img/brand/favicon.svg' %}">
 
+  <!-- Search Engine Verification (Google Search Console) -->
+  {% if GOOGLE_SITE_VERIFICATION %}
+  <meta name="google-site-verification" content="{{ GOOGLE_SITE_VERIFICATION }}">
+  {% endif %}
+
   <!-- Web Fonts: Plus Jakarta Sans for crisp UI typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

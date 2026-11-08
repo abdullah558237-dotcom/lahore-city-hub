@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.conf import settings
 
 def global_city_context(request):
     """
@@ -52,5 +53,6 @@ def global_city_context(request):
             'recommendation': 'Sensitive groups should limit prolonged outdoor exertion.',
             'source': 'Punjab Environment Protection Agency (EPA)',
             'last_checked': 'Today, 09:30 AM PKT'
-        }
+        },
+        'GOOGLE_SITE_VERIFICATION': getattr(settings, 'GOOGLE_SITE_VERIFICATION', ''),
     }
