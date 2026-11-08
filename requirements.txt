@@ -1,11 +1,24 @@
-# Lahore City Hub - Python Dependencies
-# Python 3.12+ / Django 5.2 LTS Foundation
+# Lahore City Hub - Python Production Dependencies
+# Core Web Framework
+Django>=4.2,<5.3
+asgiref>=3.8.1
+sqlparse>=0.5.0
 
-Django>=5.0,<5.3
+# Configuration & 12-Factor App Environment
 python-decouple>=3.8
-dj-database-url>=2.1.0
-pillow>=10.0.0
+
+# Database Drivers & Connection Pooling (PostgreSQL)
+psycopg2-binary>=2.9.9
+dj-database-url>=2.1.0,<3.0.0
+
+# Production WSGI Application Server
+gunicorn>=21.2.0
+
+# Static Asset Serving & Compression
 whitenoise>=6.6.0
 
-# Optional PostgreSQL Driver (for production environments)
-# psycopg2-binary>=2.9.9
+# Image Processing (Listing banners, thumbnails, logos)
+pillow>=10.0.0
+
+# Cloud Media Storage (Optional: AWS S3 / Cloudflare R2 / DigitalOcean Spaces)
+# django-storages[boto3]>=1.14.0
