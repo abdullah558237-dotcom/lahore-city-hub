@@ -4,11 +4,7 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
-{% block extra_head %}
-  {% if canonical_url %}
-  <link rel="canonical" href="{{ canonical_url }}">
-  {% endif %}
-{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-lg-5 py-4">

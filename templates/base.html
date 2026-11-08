@@ -9,15 +9,27 @@
   <!-- Dynamic SEO Title & Meta -->
   <title>{% block title %}{{ page_title|default:"Lahore City Hub | Your Complete Guide to Lahore" }}{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}{{ meta_description|default:'Your complete, verified digital guide to Lahore, Pakistan. Explore tourist places, jobs, restaurants, hospitals, colleges, and civic updates.' }}{% endblock %}">
-  <link rel="canonical" href="https://lahorecityhub.pk{{ request.path }}">
+  <meta name="robots" content="{% block robots %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endblock %}">
+
+  <!-- Canonical URL -->
+  {% block canonical %}
+  <link rel="canonical" href="{% block canonical_url %}{{ canonical_url|default:request.build_absolute_uri }}{% endblock %}">
+  {% endblock %}
 
   <!-- Open Graph & Social Sharing -->
   <meta property="og:site_name" content="Lahore City Hub">
-  <meta property="og:title" content="{% block og_title %}{{ page_title|default:'Lahore City Hub' }}{% endblock %}">
-  <meta property="og:description" content="{% block og_description %}{{ meta_description|default:'Your complete verified guide to Lahore.' }}{% endblock %}">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://lahorecityhub.pk{{ request.path }}">
-  <meta property="og:image" content="{% static 'img/brand/logo.svg' %}">
+  <meta property="og:title" content="{% block og_title %}{{ page_title|default:'Lahore City Hub | Your Complete Guide to Lahore' }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ meta_description|default:'Your complete, verified digital guide to Lahore, Pakistan.' }}{% endblock %}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:url" content="{% block og_url %}{{ canonical_url|default:request.build_absolute_uri }}{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}{% if og_image %}{{ og_image }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/brand/logo.svg' %}{% endif %}{% endblock %}">
+  <meta property="og:locale" content="en_PK">
+
+  <!-- Twitter Card Metadata -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block twitter_title %}{{ page_title|default:'Lahore City Hub' }}{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}{{ meta_description|default:'Your complete, verified digital guide to Lahore, Pakistan.' }}{% endblock %}">
+  <meta name="twitter:image" content="{% block twitter_image %}{% if og_image %}{{ og_image }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/brand/logo.svg' %}{% endif %}{% endblock %}">
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="{% static 'img/brand/favicon.svg' %}">

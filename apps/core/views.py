@@ -766,3 +766,27 @@ def custom_500_view(request):
     }
     return render(request, '500.html', context, status=500)
 
+
+def robots_txt_view(request):
+    """
+    Renders robots.txt preventing indexing of administrative, private accounts,
+    and user submission/moderation endpoints while pointing to the XML sitemap.
+    """
+    from django.http import HttpResponse
+    sitemap_url = request.build_absolute_uri('/sitemap.xml')
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Disallow: /accounts/",
+        "Disallow: /member/",
+        "Disallow: /businesses/submit/",
+        "Disallow: /businesses/edit/",
+        "Disallow: /businesses/claim/",
+        "Disallow: /businesses/report/",
+        "Disallow: /404-preview/",
+        "Allow: /",
+        "",
+        f"Sitemap: {sitemap_url}",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
+

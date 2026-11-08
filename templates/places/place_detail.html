@@ -5,10 +5,6 @@
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block extra_head %}
-{% if canonical_url %}
-<link rel="canonical" href="{{ canonical_url }}">
-{% endif %}
-
 <!-- Schema.org JSON-LD Structured Data: TouristAttraction -->
 <script type="application/ld+json">
 {
@@ -62,6 +58,49 @@
       <li class="breadcrumb-item active" aria-current="page">{{ place.title }}</li>
     </ol>
   </nav>
+
+  <!-- Schema.org BreadcrumbList JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'core:home' %}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Tourist Places",
+        "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'places:list' %}"
+      }
+      {% if place.category %}
+      ,{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ place.category.name|escapejs }}",
+        "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'places:list' %}?category={{ place.category.slug }}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "{{ place.title|escapejs }}",
+        "item": "{{ canonical_url|default:request.build_absolute_uri }}"
+      }
+      {% else %}
+      ,{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ place.title|escapejs }}",
+        "item": "{{ canonical_url|default:request.build_absolute_uri }}"
+      }
+      {% endif %}
+    ]
+  }
+  </script>
 
   <!-- Hero Banner with Image & Title Overlay -->
   <div class="lch-detail-hero mb-4">

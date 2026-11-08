@@ -11,4 +11,28 @@
     {% endfor %}
   </ol>
 </nav>
+
+<!-- Schema.org BreadcrumbList Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'core:home' %}"
+    }
+    {% for crumb in breadcrumbs %}
+    ,{
+      "@type": "ListItem",
+      "position": {{ forloop.counter|add:1 }},
+      "name": "{{ crumb.title|escapejs }}",
+      "item": "{% if crumb.url %}{% if '://' in crumb.url %}{{ crumb.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ crumb.url }}{% endif %}{% else %}{{ request.build_absolute_uri }}{% endif %}"
+    }
+    {% endfor %}
+  ]
+}
+</script>
 {% endif %}
