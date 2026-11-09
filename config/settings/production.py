@@ -74,7 +74,8 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 # WhiteNoise for Static Assets in Production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 # Media Storage Configuration: Local Volume or S3-Compatible Cloud Storage
 MEDIA_STORAGE_BACKEND = config('MEDIA_STORAGE_BACKEND', default='local').lower()

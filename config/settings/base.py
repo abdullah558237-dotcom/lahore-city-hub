@@ -87,6 +87,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -117,13 +118,33 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Default Database: SQLite for development (cast to str for legacy compatibility)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(BASE_DIR / config('SQLITE_DB_NAME', default='db.sqlite3')),
+# Database Configuration with Serverless (Vercel / Lambda) Writable /tmp Support
+import os
+import shutil
+
+IS_VERCEL = bool(os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') or '/var/task' in str(BASE_DIR))
+
+if IS_VERCEL:
+    tmp_db = '/tmp/db.sqlite3'
+    src_db = BASE_DIR / config('SQLITE_DB_NAME', default='db.sqlite3')
+    if os.path.exists(src_db) and not os.path.exists(tmp_db):
+        try:
+            shutil.copy2(src_db, tmp_db)
+        except Exception:
+            pass
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': tmp_db if os.path.exists(tmp_db) or os.path.exists(src_db) else str(src_db),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': str(BASE_DIR / config('SQLITE_DB_NAME', default='db.sqlite3')),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
