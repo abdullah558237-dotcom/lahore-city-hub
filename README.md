@@ -1,8 +1,10 @@
 # Lahore City Hub (LCH)
 > **Tagline:** Your Complete Guide to Lahore  
 > **Platform Classification:** Comprehensive Civic, Tourism, Commercial, and Information Portal  
-> **Framework:** Django 5.2 LTS / Python 3.12+  
-> **Frontend:** Bootstrap 5.3 + Vanilla JavaScript + Semantic HTML5 Templates
+> **Framework:** Django 4.2 LTS / Python 3.8 - 3.12+  
+> **Frontend:** Mobile-First Vanilla CSS + Semantic HTML5 Templates + WhiteNoise  
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/abdullah558237-dotcom/lahore-city-hub)
 
 ---
 
