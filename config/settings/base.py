@@ -42,7 +42,8 @@ sys.path.insert(0, str(BASE_DIR / 'apps'))
 # Core Security
 SECRET_KEY = config('DJANGO_SECRET_KEY', default='django-insecure-lahore-city-hub-vibe-core-2026-key-development')
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='127.0.0.1,localhost,0.0.0.0', cast=Csv())
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='*', cast=Csv())
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://*.vercel.app,https://*.onrender.com,http://127.0.0.1:8000', cast=Csv())
 
 # Baseline Security Headers & Clickjacking Protection
 SECURE_CONTENT_TYPE_NOSNIFF = True

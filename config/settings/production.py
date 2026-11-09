@@ -2,12 +2,12 @@ from .base import *
 
 DEBUG = config('DJANGO_DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='lahorecityhub.pk,www.lahorecityhub.pk,127.0.0.1,localhost', cast=Csv())
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='*', cast=Csv())
 
 # CSRF Trusted Origins for HTTPS form submissions (Django 4.0+)
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='https://lahorecityhub.pk,https://www.lahorecityhub.pk',
+    default='https://lahorecityhub.pk,https://www.lahorecityhub.pk,https://*.vercel.app,https://*.onrender.com',
     cast=Csv()
 )
 
